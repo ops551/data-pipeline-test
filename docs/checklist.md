@@ -11,6 +11,7 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done and merged
 | # | Unit | What it does | Files | Test | Status |
 |---|------|--------------|-------|------|--------|
 | 0.1 | Working docs | Rewrite `working-style.md` for this project, create this checklist, commit and push | `docs/working-style.md`, `docs/checklist.md`, `CLAUDE.md`, `.gitignore` | Files committed, `.env` not in git | [x] |
+| 0.2 | Roadmap | Write `docs/path.md`: all phases (0–5), inputs/outputs, open decisions | `docs/path.md` | File committed, phases match `CLAUDE.md` scope | [x] |
 
 ## Phase 1 — Companies House collector
 
