@@ -8,7 +8,7 @@ Only **Phase 1 is being built.** Phase 2 is a note for later, nothing more.
 
 ```
 Phase 0  docs                                        (done)
-Phase 1  Companies House API  →  companies.csv       (now)
+Phase 1  Companies House API  →  companies.csv       (done)
 Phase 2  contact discovery                           (later, not planned yet)
 ```
 
@@ -20,7 +20,7 @@ Working style, checklist, this path file, `CLAUDE.md`, `.gitignore`.
 
 ---
 
-## Phase 1 — Companies House collector  `[ ] now`
+## Phase 1 — Companies House collector  `[x] done 2026-09-19`
 
 **Goal.** Pull recently incorporated UK companies from the official Companies
 House API and write them to `companies.csv`.
