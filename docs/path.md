@@ -3,13 +3,14 @@
 The roadmap. `docs/checklist.md` tracks the units of the phase being built.
 This file is the big picture.
 
-Only **Phase 1 is being built.** Phase 2 is a note for later, nothing more.
-`CLAUDE.md` forbids implementing anything from Phase 2 now.
+Phase 1 is done. Phase 2 is planned below and starts with a measurement
+unit, not code. `CLAUDE.md` still forbids Phase 2 features; Unit 2.1 updates
+it before any Phase 2 code is written.
 
 ```
 Phase 0  docs                                        (done)
 Phase 1  Companies House API  →  companies.csv       (done)
-Phase 2  contact discovery                           (later, not planned yet)
+Phase 2  companies.csv  →  leads.csv (email, WhatsApp-capable mobile)   (planned)
 ```
 
 ---
@@ -53,8 +54,81 @@ API client → pagination + dedupe → CSV → end-to-end run).
 
 ---
 
-## Phase 2 — Contact discovery  `[ ] later`
+## Phase 2 — Contact discovery  `[ ] planned`
 
-Find website, phone, email, socials for the companies in `companies.csv`.
-Not planned in detail yet. Nothing from it is built in Phase 1. It will be
-planned in this file only when Phase 1 is finished and Nahid says go.
+**Goal.** From the companies already in `companies.csv`, find the ones that
+have **no website** but can still be reached, and save their **email** and
+**UK mobile number** (WhatsApp candidate) to `leads.csv`.
+
+**Why no website.** Nahid sells websites. A company that already has one is
+not a lead and is dropped the moment a website is found.
+
+**Decisions made by Nahid.**
+- Channels wanted: email and WhatsApp-capable mobile. Landline not needed.
+  Telegram dropped: UK small businesses do not use it.
+- Everything free. Paid APIs only if Nahid later says so.
+- 30 leads a day is enough.
+
+**Decisions still open.**
+- Attach a card to Google Cloud for the Places API free tier? Yes → Unit 2.4
+  is built. No → Unit 2.4 is skipped and search quota does all the work.
+- Final SIC target list (Unit 2.2 proposes one, Nahid trims it).
+
+**Key insight: age, not website.** A company 2 days old has no footprint
+anywhere. The plan works on companies **30 to 60 days old** (window decided
+by the Unit 2.0 measurement) that have some public footprint (Google Maps
+listing, Facebook/Instagram page, directory entry) but no website.
+
+**Pipeline.**
+
+```
+companies.csv
+  → 2.2 filter: age window, target SIC codes, drop SPV/holding/dormant,
+                flag formation-agent addresses           → candidates.csv
+  → 2.3 Companies House officers (free)                   → director name
+  → 2.4 Google Places by name + postcode (free tier)      → phone, website?
+        website found → status has_website, stop
+  → 2.5 search engine, free quota (~100/day)              → social + directory URLs,
+        phone/email from result snippets
+  → 2.6 fetch only publicly readable pages (Facebook About, Yell,
+        Checkatrade…), polite, cached                     → email, phone
+  → 2.7 normalise +44 7…, whatsapp_candidate, source, collected_at
+                                                          → leads.csv
+```
+
+**Free-tier budget (the real bottleneck).**
+- Companies House: free, 600 requests / 5 min.
+- Google Places: monthly free tier in the low thousands, needs a card on the
+  Google Cloud account (no charge while inside the tier). Open decision.
+- Search: Google Custom Search JSON API, 100 queries/day free. Bing API is
+  retired. So roughly 100 to 200 companies checked per day.
+- Expected yield: 10 to 30 leads/day. Enough per Nahid.
+
+**Hard rules.**
+- Never log in to Instagram, LinkedIn or Facebook, never automate an account.
+  Take only what a search result snippet or a publicly readable page shows.
+- Respect `robots.txt`, one request at a time, cache every response on disk
+  so re-runs cost nothing.
+- Never guess emails. Empty is better than wrong.
+- WhatsApp is never verified (no free legal way). A UK `07` mobile is marked
+  `whatsapp_candidate = yes`, nothing more.
+- Every value in `leads.csv` carries `source` (URL or API) and `collected_at`.
+  UK GDPR / PECR: a sole director's personal mobile is personal data; keep
+  the provenance so "where did you get this" can always be answered.
+- A company checked once is not checked again for N days (`enriched.csv`
+  memory, same idea as Phase 1). `nothing_found` companies are re-checked
+  once after 30 more days, then dropped.
+
+**Output: `leads.csv`.**
+`company_number, company_name, date_of_creation, sic_codes,
+registered_office_address, director_name, phone, whatsapp_candidate, email,
+facebook, instagram, linkedin, google_maps, other_links, status, source,
+collected_at`. `status` is one of `lead`, `has_website`, `nothing_found`.
+Only `lead` rows have contact data.
+
+**Units.** See `docs/checklist.md` Phase 2.
+
+**Done when.** A daily `npm run enrich` turns candidates into `leads.csv`
+within the free quota, every lead has at least an email or a mobile, no
+company is checked twice inside the window, and the measured yield is written
+in the checklist.

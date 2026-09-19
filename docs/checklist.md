@@ -28,10 +28,29 @@ company already in `companies.csv`.
 | 1.5 | CSV read + append | Read existing `companies.csv` into a set of `company_number`s. Append new rows with `company_number`, `company_name`, `date_of_creation`, `company_status`, `company_type`, `sic_codes`, `registered_office_address` (flattened). Header only when file is new. Proper quoting, no extra dependency | `src/csv.js` | Unit test: quoting, commas/newlines in names, address flattening, read-back of numbers, header written once | [x] |
 | 1.6 | End-to-end run | Wire config → csv read → client → collect → csv append in `src/index.js`, progress logging, README "project structure" and "how it works" sections | `src/index.js`, `README.md` | `npm start` with real key produces `companies.csv`; run again, only new companies are added; eyeball the file | [x] |
 
-## Not in scope (Phase 2, later)
+## Phase 2 — Contact discovery
 
-Google Maps / Search, web scraping, email or WhatsApp discovery, social media,
-AI research, contact enrichment, lead scoring. None of this is built now.
+Decisions: email + WhatsApp-capable mobile only, everything free, companies
+30–60 days old, drop any company that has a website. Full plan in
+`docs/path.md`. Open: Google Cloud card (decides 2.4), final SIC list (2.2).
+
+| # | Unit | What it does | Files | Test | Status |
+|---|------|--------------|-------|------|--------|
+| 2.0 | Hit-rate test | No product code. Pull 30 companies each at 7, 30 and 60 days old with Phase 1 (`INCORPORATED_FROM/TO`). Check each by hand or with the free search quota: any Maps listing, social page or directory entry? Record hits per age in Notes. Decides the age window | `docs/checklist.md` | Table of hits per age written in Notes | [ ] |
+| 2.1 | Scope update | Rewrite `CLAUDE.md` rules 5–7 for Phase 2 scope (search API, public page fetch, Places allowed; still no logins, no scraping behind login walls, no paid APIs). Add new `.env` keys to `.env.example`. `leads.csv`, `candidates.csv`, `enriched.csv`, cache dir in `.gitignore` | `CLAUDE.md`, `.env.example`, `.gitignore`, `docs/path.md` | Docs reviewed by Nahid | [ ] |
+| 2.2 | Candidate filter | Read `companies.csv`, keep age window, keep target SIC list (proposed: food, beauty, trades, retail, fitness, cleaning, photography, tutoring…), drop SPV/holding/dormant SICs, flag formation-agent addresses (same address ≥ 20 companies in file). Write `candidates.csv`. Skip numbers already in `enriched.csv` | `src/enrich/filter.js`, `src/enrich/sic.js` | Unit tests: window, SIC include/exclude, agent-address flag | [ ] |
+| 2.3 | Officers | `GET /company/{number}/officers` (free, verified in docs first). Take active directors' names into candidates. Reuse `companiesHouse.js` auth and retry | `src/companiesHouse.js`, `src/enrich/officers.js` | Unit test with mocked fetch; real call for one company | [ ] |
+| 2.4 | Google Places (if card) | Text search by company name + postcode, free tier only, daily cap in `.env`. Returns phone, website, maps URL. Website found → `has_website`. Cache every response | `src/enrich/places.js` | Unit test with mocked fetch; real call for 5 companies; verify cap stops calls | [ ] |
+| 2.5 | Search | Google Custom Search JSON API, 100/day cap. Query `"company name" town`. Collect Facebook, Instagram, LinkedIn, TikTok, Yell, Checkatrade, Maps URLs. Regex email and UK mobile out of titles and snippets. Cache | `src/enrich/search.js`, `src/enrich/extract.js` | Unit tests: URL classification, phone/email regex on sample snippets; real run for 5 companies | [ ] |
+| 2.6 | Public page fetch | Fetch only publicly readable pages found in 2.5 (Facebook About, directories). `robots.txt` check, 1 request at a time, 2s gap, disk cache. Regex email and mobile. Never fetch Instagram/LinkedIn (login wall) | `src/enrich/fetchPage.js` | Unit tests: robots check, regex, cache hit; real fetch of 3 pages | [ ] |
+| 2.7 | leads.csv | Normalise phones to `+44 7…`, `whatsapp_candidate`, set `status`, append to `leads.csv` with `source` and `collected_at`, record every checked company in `enriched.csv`. Re-check `nothing_found` once after 30 days | `src/enrich/leads.js`, `src/enrich/phone.js` | Unit tests: normalisation, status rules, memory read/write | [ ] |
+| 2.8 | End-to-end | `npm run enrich` wires 2.2 → 2.7, stops at daily quota, resumes next day. README section. Measure real yield over 3 days and write it in Notes | `src/enrich/index.js`, `package.json`, `README.md` | 3 real daily runs, no company checked twice, yield recorded | [ ] |
+
+## Not in scope
+
+Anything that logs in to a social network, automated accounts, buying data,
+verifying WhatsApp numbers, sending messages, Telegram. Paid APIs only if
+Nahid decides later.
 
 ## Notes
 
