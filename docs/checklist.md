@@ -38,7 +38,7 @@ for email. Full plan in
 
 | # | Unit | What it does | Files | Test | Status |
 |---|------|--------------|-------|------|--------|
-| 2.0 | Hit-rate test | No product code. Pull 30 companies each at 7, 30 and 60 days old with Phase 1 (`INCORPORATED_FROM/TO`). Check each by hand or with the free search quota: any Maps listing, social page or directory entry? Record hits per age in Notes. Decides the age window | `docs/checklist.md` | Table of hits per age written in Notes | [ ] |
+| 2.0 | Hit-rate test | No product code. Pull 30 companies each at 7, 30 and 60 days old with Phase 1 (`INCORPORATED_FROM/TO`). Check each by hand or with the free search quota: any Maps listing, social page or directory entry? Record hits per age in Notes. Decides the age window | `docs/checklist.md` | Table of hits per age written in Notes | [x] |
 | 2.1 | Scope update | Rewrite `CLAUDE.md` rules 5–7 for Phase 2 scope (search API, public page fetch, Places allowed; still no logins, no scraping behind login walls, no paid APIs). Add new `.env` keys to `.env.example`. `leads.csv`, `candidates.csv`, `enriched.csv`, cache dir in `.gitignore` | `CLAUDE.md`, `.env.example`, `.gitignore`, `docs/path.md` | Docs reviewed by Nahid | [ ] |
 | 2.2 | Candidate filter | Read `companies.csv`, keep age window, keep target SIC list (proposed: food, beauty, trades, retail, fitness, cleaning, photography, tutoring…), drop SPV/holding/dormant SICs, flag formation-agent addresses (same address ≥ 20 companies in file). Write `candidates.csv`. Skip numbers already in `enriched.csv` | `src/enrich/filter.js`, `src/enrich/sic.js` | Unit tests: window, SIC include/exclude, agent-address flag | [ ] |
 | 2.3 | Officers | `GET /company/{number}/officers` (free, verified in docs first). Take active directors' names into candidates. Reuse `companiesHouse.js` auth and retry | `src/companiesHouse.js`, `src/enrich/officers.js` | Unit test with mocked fetch; real call for one company | [ ] |
@@ -84,3 +84,37 @@ real request with the `.env` key (HTTP 200).
   to know how long to wait on a 429.
 - **Sample:** 7-day range on 2026-09-19 reported `hits: 15059`, so a 1000 cap
   is reached in one or two pages at `size=500`.
+
+### Unit 2.0 — Hit-rate test, measured 2026-09-19
+
+Method: 500 companies pulled per age bucket with the Phase 1 script, SPV /
+holding SICs and repeated (agent) addresses excluded, 30 sampled at random
+per bucket, one web search per company (name + town). Companies House
+mirror sites ignored. Conservative: unclear match = no.
+
+| age | n | any presence | website | presence, no website | email seen | phone seen |
+|---|---|---|---|---|---|---|
+| 7 days | 30 | 5 | 3 | 2 | 1 | 1 |
+| 30 days | 30 | 2 | 1 | 1 | 0 | 1 |
+| 60 days | 30 | 4 | 4 | 0 | 0 | 0 |
+| 6 months | 30 | 6 | 3 | 3 | 0 | 3 |
+| 12 months | 30 | 8 | 8 | 0 | 0 | 1 |
+| **total** | **150** | **25 (17%)** | **19** | **6 (4%)** | **1** | **6** |
+
+What it means:
+- The target company (some footprint, no website) is **4% at every age**.
+  Age does not fix it. By 12 months, everyone with a footprint has a website.
+- Almost every hit was an existing business that just incorporated, not a
+  new venture that went online later.
+- Email appeared in a search snippet **once in 150**. Email will only come
+  from page fetches (Facebook About, directories), never from snippets.
+- Hits cluster in consumer-facing local businesses: takeaway, restaurant,
+  bar, garden centre, landscaper. Pure consulting / trading / holding names
+  had zero presence.
+- Google Maps listings never surfaced in web search snippets; Maps data
+  needs the Places API.
+- Companies-House-first + free search (100/day) would yield about **4
+  no-website companies per day, and roughly 1 email per week**. The
+  30-leads-a-day target is not reachable this way. Plan needs a decision
+  from Nahid before Unit 2.1.
+
