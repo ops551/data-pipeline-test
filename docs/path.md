@@ -90,8 +90,8 @@ companies.csv
         website found → status has_website, stop
   → 2.5 search engine, free quota (~100/day)              → social + directory URLs,
         phone/email from result snippets
-  → 2.6 fetch only publicly readable pages (Facebook About, Yell,
-        Checkatrade…), polite, cached                     → email, phone
+  → 2.6 fetch pages without login (Facebook About, Yell, Checkatrade,
+        one try at Instagram/LinkedIn), polite, cached    → email, phone
   → 2.7 normalise +44 7…, whatsapp_candidate, source, collected_at
                                                           → leads.csv
 ```
@@ -106,7 +106,9 @@ companies.csv
 
 **Hard rules.**
 - Never log in to Instagram, LinkedIn or Facebook, never automate an account.
-  Take only what a search result snippet or a publicly readable page shows.
+  Instagram and LinkedIn pages get one plain fetch each; a login wall means
+  skip, not retry. Otherwise take only what a search result snippet or a
+  publicly readable page shows.
 - Respect `robots.txt`, one request at a time, cache every response on disk
   so re-runs cost nothing.
 - Never guess emails. Empty is better than wrong.
