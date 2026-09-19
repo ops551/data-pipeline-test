@@ -57,15 +57,18 @@ API client → pagination + dedupe → CSV → end-to-end run).
 ## Phase 2 — Contact discovery  `[ ] planned`
 
 **Goal.** From the companies already in `companies.csv`, find the ones that
-have **no website** but can still be reached, and save their **email** and
-**UK mobile number** (WhatsApp candidate) to `leads.csv`.
+have **no website** but can still be reached, and save their **email** (main
+target) and **UK mobile number** (WhatsApp candidate, second) to `leads.csv`.
 
 **Why no website.** Nahid sells websites. A company that already has one is
 not a lead and is dropped the moment a website is found.
 
 **Decisions made by Nahid.**
-- Channels wanted: email and WhatsApp-capable mobile. Landline not needed.
-  Telegram dropped: UK small businesses do not use it.
+- Channels wanted: email first, WhatsApp-capable mobile second. Landlines are
+  kept in the file but are not WhatsApp candidates. Telegram dropped: UK small
+  businesses do not use it.
+- A phone found is a start, not an end. It proves the company is active, so
+  it is worth spending search quota on that company's email.
 - Everything free. Paid APIs only if Nahid later says so.
 - 30 leads a day is enough.
 
@@ -88,12 +91,16 @@ companies.csv
   → 2.3 Companies House officers (free)                   → director name
   → 2.4 Google Places by name + postcode (free tier)      → phone, website?
         website found → status has_website, stop
-  → 2.5 search engine, free quota (~100/day)              → social + directory URLs,
-        phone/email from result snippets
+        phone found   → keep, continue (email still wanted)
+  → 2.5 search engine, free quota (~100/day), up to 3 queries per company:
+        "name" town / "name" email / the phone number itself
+                                                          → social + directory URLs,
+                                                            email + phone from snippets
   → 2.6 fetch pages without login (Facebook About, Yell, Checkatrade,
-        one try at Instagram/LinkedIn), polite, cached    → email, phone
-  → 2.7 normalise +44 7…, whatsapp_candidate, source, collected_at
-                                                          → leads.csv
+        Gumtree, one try at Instagram/LinkedIn), polite, cached
+                                                          → email, phone
+  → 2.7 normalise +44…, whatsapp_candidate (07 only), priority,
+        email_source, phone_source, collected_at          → leads.csv
 ```
 
 **Free-tier budget (the real bottleneck).**
@@ -101,8 +108,19 @@ companies.csv
 - Google Places: monthly free tier in the low thousands, needs a card on the
   Google Cloud account (no charge while inside the tier). Open decision.
 - Search: Google Custom Search JSON API, 100 queries/day free. Bing API is
-  retired. So roughly 100 to 200 companies checked per day.
+  retired. With 2 to 3 queries per company for the email hunt, that is
+  roughly 35 to 50 companies fully checked per day. Places (if enabled) does
+  the cheap elimination first so search quota goes only to active,
+  no-website companies.
 - Expected yield: 10 to 30 leads/day. Enough per Nahid.
+
+**Where email lives for a company with no website.** Facebook page About,
+Instagram bio text (via search snippet), directories (Yell, Checkatrade, Bark,
+FreeIndex, Cylex, Thomson Local), Gumtree ads, and search snippets for
+`"name" email` / `"@gmail.com"`. Reverse-searching the phone number found in
+Places turns up ads and listings that carry the email. Not tried, because
+they never expose email: Google Places, Companies House (registered email is
+not public), LinkedIn contact info (login wall).
 
 **Hard rules.**
 - Never log in to Instagram, LinkedIn or Facebook, never automate an account.
@@ -113,7 +131,8 @@ companies.csv
   so re-runs cost nothing.
 - Never guess emails. Empty is better than wrong.
 - WhatsApp is never verified (no free legal way). A UK `07` mobile is marked
-  `whatsapp_candidate = yes`, nothing more.
+  `whatsapp_candidate = yes`; a landline is `no`. If the word "WhatsApp"
+  appeared next to the number, `whatsapp_mentioned = yes`.
 - Every value in `leads.csv` carries `source` (URL or API) and `collected_at`.
   UK GDPR / PECR: a sole director's personal mobile is personal data; keep
   the provenance so "where did you get this" can always be answered.
@@ -123,14 +142,17 @@ companies.csv
 
 **Output: `leads.csv`.**
 `company_number, company_name, date_of_creation, sic_codes,
-registered_office_address, director_name, phone, whatsapp_candidate, email,
-facebook, instagram, linkedin, google_maps, other_links, status, source,
-collected_at`. `status` is one of `lead`, `has_website`, `nothing_found`.
-Only `lead` rows have contact data.
+registered_office_address, director_name, email, email_source, phone,
+phone_source, whatsapp_candidate, whatsapp_mentioned, priority, facebook,
+instagram, linkedin, google_maps, other_links, status, collected_at`.
+`status` is one of `lead`, `has_website`, `nothing_found`; `lead` needs
+email or mobile. `priority` is `email+mobile`, `email` or `mobile`, so
+Nahid contacts email-bearing leads first.
 
 **Units.** See `docs/checklist.md` Phase 2.
 
 **Done when.** A daily `npm run enrich` turns candidates into `leads.csv`
-within the free quota, every lead has at least an email or a mobile, no
+within the free quota, every lead has at least an email or a mobile and
+email was actually hunted for every lead, no
 company is checked twice inside the window, and the measured yield is written
 in the checklist.
