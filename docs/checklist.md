@@ -15,14 +15,18 @@ Status: `[ ]` not started · `[~]` in progress · `[x]` done and merged
 
 ## Phase 1 — Companies House collector
 
+Decisions: no filters, max 1000 new companies per run, never collect a
+company already in `companies.csv`.
+
 | # | Unit | What it does | Files | Test | Status |
 |---|------|--------------|-------|------|--------|
-| 1.1 | Project setup | `package.json` (Node, `dotenv` only), `.env.example`, `src/` folder skeleton, `npm test` and `npm start` scripts, README run instructions | `package.json`, `.env.example`, `.gitignore`, `README.md`, `src/index.js` | `npm test` runs, `npm start` prints a placeholder | [ ] |
-| 1.2 | Config | Read `COMPANIES_HOUSE_API_KEY`, date range (`INCORPORATED_FROM`, `INCORPORATED_TO` or `DAYS_BACK`), `MAX_RESULTS`, `PAGE_SIZE` from `.env` with sane defaults; fail clearly if key is missing | `src/config.js`, `.env.example` | Unit test: defaults, date maths, missing key error | [ ] |
-| 1.3 | API client | Verify current official docs first. Call the advanced company search endpoint with HTTP Basic auth (key as username). Handle 401, 429 (rate limit: wait and retry), 5xx (retry with backoff), network errors | `src/companiesHouse.js` | Unit test with a mocked `fetch` for 200 / 429 / 500; real call with `.env` key returns rows | [ ] |
-| 1.4 | Pagination + dedupe | Loop over `start_index` pages until `MAX_RESULTS` reached or no more results; drop repeats by `company_number` | `src/collect.js` | Unit test: page loop stops correctly, duplicates removed | [ ] |
-| 1.5 | CSV export | Write `companies.csv` with `company_number`, `company_name`, `date_of_creation`, `company_status`, `company_type`, `sic_codes`, `registered_office_address` (flattened). Proper quoting, no extra dependency | `src/csv.js` | Unit test: quoting, commas/newlines in names, address flattening | [ ] |
-| 1.6 | End-to-end run | Wire config → client → collect → csv in `src/index.js`, progress logging, README "how it works" section | `src/index.js`, `README.md` | `npm start` with real key produces a valid `companies.csv`; open and eyeball it | [ ] |
+| 1.0 | Verify API docs | Read the official Companies House API docs. Confirm: search endpoint for incorporation date range, auth method, paging params, page size limit, rate limit. Write findings in the Notes section below. No code | `docs/checklist.md` | A real request with the `.env` key returns 200 | [ ] |
+| 1.1 | Project setup | `package.json` (Node, `dotenv` only), `.env.example`, `src/` folder skeleton, `npm test` and `npm start` scripts, README install/run commands, `companies.csv` added to `.gitignore` | `package.json`, `.env.example`, `.gitignore`, `README.md`, `src/index.js` | `npm test` runs, `npm start` prints a placeholder | [ ] |
+| 1.2 | Config | Read `COMPANIES_HOUSE_API_KEY`, date range (`INCORPORATED_FROM`, `INCORPORATED_TO`, or `DAYS_BACK`), `MAX_RESULTS` (default 1000) from `.env`; fail clearly if key is missing. No filter options | `src/config.js`, `.env.example` | Unit test: defaults, date maths, missing key error | [ ] |
+| 1.3 | API client | Call the endpoint confirmed in 1.0 with the confirmed auth. Handle 401, 429 (wait and retry), 5xx (retry with backoff), network errors | `src/companiesHouse.js` | Unit test with a mocked `fetch` for 200 / 429 / 500; real call with `.env` key returns rows | [ ] |
+| 1.4 | Pagination + dedupe | Loop over pages until `MAX_RESULTS` new companies collected or no more results. Skip a `company_number` seen in this run or passed in as already collected | `src/collect.js` | Unit test: page loop stops at cap, stops at empty page, duplicates and already-seen skipped | [ ] |
+| 1.5 | CSV read + append | Read existing `companies.csv` into a set of `company_number`s. Append new rows with `company_number`, `company_name`, `date_of_creation`, `company_status`, `company_type`, `sic_codes`, `registered_office_address` (flattened). Header only when file is new. Proper quoting, no extra dependency | `src/csv.js` | Unit test: quoting, commas/newlines in names, address flattening, read-back of numbers, header written once | [ ] |
+| 1.6 | End-to-end run | Wire config → csv read → client → collect → csv append in `src/index.js`, progress logging, README "project structure" and "how it works" sections | `src/index.js`, `README.md` | `npm start` with real key produces `companies.csv`; run again, only new companies are added; eyeball the file | [ ] |
 
 ## Not in scope (Phase 2, later)
 
@@ -31,7 +35,6 @@ AI research, contact enrichment, lead scoring. None of this is built now.
 
 ## Notes
 
-- Phase 1 units are a draft based on `CLAUDE.md`. Nahid will confirm or
-  adjust before Unit 1.1 starts.
 - Companies House rate limit is 600 requests per 5 minutes per key; the
   client must respect it.
+- Unit 1.0 findings go here once verified.
