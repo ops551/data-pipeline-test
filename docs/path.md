@@ -129,6 +129,12 @@ not public), LinkedIn contact info (login wall).
   publicly readable page shows.
 - Respect `robots.txt`, one request at a time, cache every response on disk
   so re-runs cost nothing.
+- "Has a website" means **its own domain only**. Auto-generated pages on
+  directory sites (`*.wheree.com`, `*.placejoys.com`, Yell, Thomson Local,
+  Restaurant Guru, Wanderlog, Zmenu, MenuCollector, Cylex, Yelp, Tripadvisor,
+  Uber Eats, Just Eat, Trustpilot…) count as **directory presence, not a
+  website**. Such a company is a lead. The code keeps a list of directory
+  domains and never treats them as the company's site.
 - Never guess emails. Empty is better than wrong.
 - WhatsApp is never verified (no free legal way). A UK `07` mobile is marked
   `whatsapp_candidate = yes`; a landline is `no`. If the word "WhatsApp"
