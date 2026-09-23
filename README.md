@@ -99,10 +99,3 @@ Companies House API → fetch → pagination → duplicate removal → CSV
 Rate limit: 600 requests per 5 minutes per key. At 500 results per page a
 default run of 1000 companies is two requests.
 
-## Development Workflow
-1. Create a branch for every task: `git checkout -b branch-name`
-2. Commit changes.
-3. Push the branch.
-4. Create a Pull Request via GitHub CLI: `gh pr create --fill`
-5. Merge the PR: `gh pr merge --merge`
-6. Delete the branch locally and remotely.
