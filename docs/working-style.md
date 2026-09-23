@@ -14,8 +14,10 @@ How work gets delivered on this project.
 
 ## Git — hard rules
 
-- **Claude commits, pushes and merges itself.** Nahid does not push by hand.
-  GitHub access is already set up (`gh` is logged in, `origin` is the repo).
+- **Workflow:** For every task, create a separate branch (`phase-<n>-unit-<n>`).
+- **Commit & Push:** Gemini commits the code and pushes it to origin.
+- **Pull Request:** Gemini creates a PR via `gh pr create --fill`.
+- **Merge & Clean:** Gemini merges the PR using `gh pr merge --merge`, then deletes the branch locally and remotely.
 - **Never run destructive git commands** (`reset --hard`, `checkout .`,
   force-push, `branch -D` on an unmerged branch) without being asked for that
   exact action in that moment.
