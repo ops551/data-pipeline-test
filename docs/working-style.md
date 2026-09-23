@@ -14,8 +14,9 @@ How work gets delivered on this project.
 
 ## Git — hard rules
 
-- **Claude commits, pushes and merges itself.** Nahid does not push by hand.
-  GitHub access is already set up (`gh` is logged in, `origin` is the repo).
+- **Commit frequently.** Make as many commits as possible for small logical steps.
+- **Do not push.** Gemini will commit locally but will NEVER push. Nahid will handle pushing.
+- **Signal when done.** Just tell Nahid "I have committed the changes, you can push now" when a unit is ready.
 - **Never run destructive git commands** (`reset --hard`, `checkout .`,
   force-push, `branch -D` on an unmerged branch) without being asked for that
   exact action in that moment.

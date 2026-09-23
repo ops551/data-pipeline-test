@@ -86,33 +86,22 @@ listing, Facebook/Instagram page, directory entry) but no website.
 
 ```
 companies.csv
-  → 2.2 filter: age window, target SIC codes, drop SPV/holding/dormant,
+  → 2.2 filter: 7-60 days age window, target SIC codes, drop SPV/holding/dormant,
                 flag formation-agent addresses           → candidates.csv
   → 2.3 Companies House officers (free)                   → director name
-  → 2.4 Google Places by name + postcode (free tier)      → phone, website?
-        website found → status has_website, stop
-        phone found   → keep, continue (email still wanted)
-  → 2.5 search engine, free quota (~100/day), up to 3 queries per company:
-        "name" town / "name" email / the phone number itself
-                                                          → social + directory URLs,
-                                                            email + phone from snippets
-  → 2.6 fetch pages without login (Facebook About, Yell, Checkatrade,
-        Gumtree, one try at Instagram/LinkedIn), polite, cached
-                                                          → email, phone
-  → 2.7 normalise +44…, whatsapp_candidate (07 only), priority,
+  → 2.4 Web Scraping (Puppeteer) Search Engine: search by name + postcode.
+        website found → status has_website, stop.
+        Otherwise extract social media URLs (Facebook, Instagram, LinkedIn).
+  → 2.5 Web Scraping Social/Directory Pages: visit extracted URLs with Puppeteer.
+        Scrape email and WhatsApp/mobile phone numbers directly from the pages.
+  → 2.6 normalise +44…, whatsapp_candidate (07 only), priority,
         email_source, phone_source, collected_at          → leads.csv
 ```
 
-**Free-tier budget (the real bottleneck).**
-- Companies House: free, 600 requests / 5 min.
-- Google Places: monthly free tier in the low thousands, needs a card on the
-  Google Cloud account (no charge while inside the tier). Open decision.
-- Search: Google Custom Search JSON API, 100 queries/day free. Bing API is
-  retired. With 2 to 3 queries per company for the email hunt, that is
-  roughly 35 to 50 companies fully checked per day. Places (if enabled) does
-  the cheap elimination first so search quota goes only to active,
-  no-website companies.
-- Expected yield: 10 to 30 leads/day. Enough per Nahid.
+**Scraping (No API Bottleneck).**
+- Companies House: free API, 600 requests / 5 min.
+- Search & Social: Puppeteer/Playwright is used to scrape DuckDuckGo/Google and social media pages. This bypasses the 100 queries/day API limit, allowing thousands of companies to be checked for free.
+- Expected yield: Maximum possible since we can search unlimited companies.
 
 **Where email lives for a company with no website.** Facebook page About,
 Instagram bio text (via search snippet), directories (Yell, Checkatrade, Bark,
