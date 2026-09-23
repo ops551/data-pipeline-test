@@ -14,9 +14,10 @@ How work gets delivered on this project.
 
 ## Git — hard rules
 
-- **Commit frequently.** Make as many commits as possible for small logical steps.
-- **Do not push.** Gemini will commit locally but will NEVER push. Nahid will handle pushing.
-- **Signal when done.** Just tell Nahid "I have committed the changes, you can push now" when a unit is ready.
+- **Workflow:** For every task, create a separate branch (`phase-<n>-unit-<n>`).
+- **Commit & Push:** Gemini commits the code and pushes it to origin.
+- **Pull Request:** Gemini creates a PR via `gh pr create --fill`.
+- **Merge & Clean:** Gemini merges the PR using `gh pr merge --merge`, then deletes the branch locally and remotely.
 - **Never run destructive git commands** (`reset --hard`, `checkout .`,
   force-push, `branch -D` on an unmerged branch) without being asked for that
   exact action in that moment.
