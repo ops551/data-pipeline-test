@@ -34,8 +34,20 @@ function decodeSearchUrl(href, baseUrl = 'https://duckduckgo.com') {
   try {
     const unescaped = href.replace(/&amp;/g, '&');
     const url = new URL(unescaped, baseUrl);
-    const uddg = url.searchParams.get('uddg');
-    if (uddg) return decodeURIComponent(uddg);
+    if (url.searchParams.has('uddg')) {
+      const uddg = url.searchParams.get('uddg');
+      if (!uddg || !uddg.trim()) {
+        return null;
+      }
+      try {
+        return decodeURIComponent(uddg);
+      } catch (err) {
+        if (err instanceof URIError || err.name === 'URIError') {
+          return null;
+        }
+        return null;
+      }
+    }
     return url.href;
   } catch {
     return href;
@@ -45,8 +57,9 @@ function decodeSearchUrl(href, baseUrl = 'https://duckduckgo.com') {
 function isSearchEngineInternalUrl(url) {
   try {
     const parsed = new URL(url);
-    if (parsed.hostname === 'duckduckgo.com' || parsed.hostname === 'html.duckduckgo.com') {
-      return !parsed.searchParams.has('uddg');
+    const hostname = parsed.hostname.toLowerCase();
+    if (hostname === 'duckduckgo.com' || hostname.endsWith('.duckduckgo.com')) {
+      return true;
     }
     return false;
   } catch {
@@ -117,8 +130,9 @@ async function createScraper(options = {}) {
       throw new Error(`Invalid URL "${url}": ${err.message}`);
     }
 
-    const page = await browser.newPage();
+    let page;
     try {
+      page = await browser.newPage();
       await page.setUserAgent(fetchOptions.userAgent || defaultUserAgent);
 
       if (fetchOptions.blockResources !== false) {
@@ -153,7 +167,9 @@ async function createScraper(options = {}) {
       }
       throw new Error(`Failed to navigate to "${url}": ${err.message}`);
     } finally {
-      await page.close().catch(() => {});
+      if (page) {
+        await page.close().catch(() => {});
+      }
     }
   }
 
@@ -165,9 +181,19 @@ async function createScraper(options = {}) {
       throw new Error('Search query must be a non-empty string');
     }
 
-    const searchUrl =
-      searchOptions.searchUrl ||
-      `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query.trim())}`;
+    let searchUrl = searchOptions.searchUrl;
+    if (!searchUrl && searchOptions.searchEndpoint) {
+      try {
+        const epUrl = new URL(searchOptions.searchEndpoint);
+        epUrl.searchParams.set('q', query.trim());
+        searchUrl = epUrl.toString();
+      } catch {
+        searchUrl = `${searchOptions.searchEndpoint}?q=${encodeURIComponent(query.trim())}`;
+      }
+    }
+    if (!searchUrl) {
+      searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query.trim())}`;
+    }
 
     const res = await fetchHtml(searchUrl, {
       throwOnError: false,
