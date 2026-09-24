@@ -45,7 +45,7 @@ for email. Full plan in
 | 2.4 | Scraping Setup | Install `puppeteer` (or `playwright`) and any stealth plugins needed to scrape Google/DuckDuckGo. Create a utility module that can open a headless browser and run searches. | `package.json`, `src/enrich/scraper.js` | Browser opens, searches "test", returns HTML/links | [x] |
 | 2.5 | Search & Social Extraction | For each candidate, use scraper to search `company name postcode`. If website found -> `has_website`, skip. Otherwise, grab Facebook, Instagram, LinkedIn, directory URLs. Then visit those URLs directly via scraper to extract emails and mobile numbers using Regex. | `src/enrich/search.js`, `src/enrich/extract.js` | Real run for 5 companies extracts emails/phones | [x] |
 | 2.6 | leads.csv | Normalise phones to `+44…`; `whatsapp_candidate = yes` only for `07` mobiles. `status = lead` needs email **or** mobile. Append to `leads.csv` with sources. Record checked in `enriched.csv`. | `src/enrich/leads.js`, `src/enrich/phone.js` | Unit tests: normalisation, status rules | [x] |
-| 2.7 | End-to-end | `npm run enrich` wires 2.2 → 2.6 using Puppeteer. Measure real yield over a few runs. | `src/enrich/index.js`, `package.json`, `README.md` | Real daily runs, yield recorded | [ ] |
+| 2.7 | End-to-end | `npm run enrich` wires 2.2 → 2.6 using Puppeteer. Measure real yield over a few runs. | `src/enrich/index.js`, `package.json`, `README.md` | Real daily runs, yield recorded | [x] |
 
 ## Not in scope
 

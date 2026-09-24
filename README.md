@@ -15,7 +15,7 @@ Open `.env` and put your Companies House API key in `COMPANIES_HOUSE_API_KEY`.
 Get a key by registering an "API Key" application at the
 [developer hub](https://developer.company-information.service.gov.uk/manage-applications).
 
-## Run
+## Run Collection (Phase 1)
 
 ```bash
 npm start
@@ -23,6 +23,14 @@ npm start
 
 Run it again later and it only adds companies that are not already in
 `companies.csv`. Delete the file to start from scratch.
+
+## Run Enrichment (Phase 2)
+
+```bash
+npm run enrich
+```
+
+This takes the companies from `companies.csv`, filters them by age and target industry (SIC), fetches their officers, searches for them on the web, extracts emails/phones, and saves the leads to `leads.csv`.
 
 ## Test
 
