@@ -52,14 +52,14 @@ async function runEnrichment() {
       
       let extractedData = { emails: [], phones: [] };
 
-      if (searchRes.has_website) {
-        console.log('  Company has an official website. Skipping contact extraction.');
-      } else if (searchRes.socialUrls.length > 0) {
+      if (searchRes.socialUrls.length > 0) {
         console.log(`  Found ${searchRes.socialUrls.length} social/directory URLs. Extracting contacts...`);
         extractedData = await extractContactDetails(scraper, searchRes.socialUrls);
         if (extractedData.emails.length > 0 || extractedData.phones.length > 0) {
           sources.push('web_scrape');
         }
+      } else if (searchRes.has_website) {
+        console.log('  Company has an official website but no social profiles found.');
       } else {
         console.log('  No website or social profiles found.');
       }

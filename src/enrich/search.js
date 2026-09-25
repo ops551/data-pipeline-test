@@ -11,7 +11,18 @@ const DIRECTORY_DOMAINS = [
   '192.com',
   'thomsonlocal.com',
   'yelp.co.uk',
-  'cylex-uk.co.uk'
+  'cylex-uk.co.uk',
+  'companiesintheuk.co.uk',
+  'corpium.co.uk',
+  'secret-bases.co.uk',
+  'kompass.com',
+  'scotlandscompanies.com',
+  'uk.globaldatabase.com',
+  'bizdb.co.uk',
+  'companydirectorcheck.com',
+  'checkcompany.co.uk',
+  'cbdb.co.uk',
+  'pomanda.com'
 ];
 
 const SOCIAL_DOMAINS = [
@@ -42,6 +53,21 @@ function isSocial(domain) {
 }
 
 function isDirectory(domain) {
+  if (
+    domain.includes('company') || 
+    domain.includes('companies') || 
+    domain.includes('director') || 
+    domain.includes('biz') ||
+    domain.includes('phonebook') ||
+    domain.includes('directory') ||
+    domain.includes('search') ||
+    domain.includes('find') ||
+    domain.includes('192') ||
+    domain.includes('data') ||
+    domain.includes('info')
+  ) {
+    return true;
+  }
   for (const d of DIRECTORY_DOMAINS) {
     if (domain === d || domain.endsWith(`.${d}`)) {
       return true;
@@ -71,11 +97,12 @@ async function searchCompany(scraper, company) {
       socialUrls.push(link);
     } else if (!isDirectory(domain) && !domain.includes('gov.uk')) {
       has_website = true;
-      break;
     }
   }
 
-  return { has_website, socialUrls: has_website ? [] : [...new Set(socialUrls)] };
+  // To maximise leads, we return social URLs even if we suspect a website exists,
+  // because "website" is very often a false-positive from directory sites.
+  return { has_website, socialUrls: [...new Set(socialUrls)] };
 }
 
 module.exports = { searchCompany, isSocialOrDirectory, getDomain };
