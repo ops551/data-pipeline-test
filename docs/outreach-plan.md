@@ -48,3 +48,4 @@ Once this plan is approved, we will hand it over to the Multi-Agent (Teamwork) s
 
 ## Future Enhancements
 - Add a simple dashboard or log viewer to track PR merges
+- Add WhatsApp automation inside outreach directory
