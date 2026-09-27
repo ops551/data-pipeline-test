@@ -6,7 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "enrich": "node src/enrich/index.js",
-    "test": "node --test"
+    "test": "node --test",
+    "verify": "npm run test"
   },
   "engines": {
     "node": ">=18"
@@ -14,6 +15,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "dotenv": "^18.0.1",
     "puppeteer": "^25.12.0",
     "puppeteer-extra": "^3.3.6",

@@ -1,0 +1,285 @@
+const test = require('node:test');
+const assert = require('node:assert/strict');
+const {
+  DEFAULT_MODEL,
+  DEFAULT_SENDER_NAME,
+  resolveApiKey,
+  extractFirstName,
+  mapSicToIndustry,
+  buildPrompt,
+  cleanEmailContent,
+  generateEmail
+} = require('./ai');
+
+test('constants are correctly configured', () => {
+  assert.equal(DEFAULT_MODEL, 'gemini-1.5-flash');
+  assert.equal(DEFAULT_SENDER_NAME, 'Nahid');
+});
+
+test('resolveApiKey returns key from options, GEMINI_API_KEY, or GEMINI', () => {
+  assert.equal(resolveApiKey({ apiKey: 'custom_key_123' }), 'custom_key_123');
+
+  const oldKey = process.env.GEMINI_API_KEY;
+  const oldGemini = process.env.GEMINI;
+  try {
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GEMINI;
+
+    assert.throws(
+      () => resolveApiKey({}),
+      /GEMINI_API_KEY is missing/
+    );
+
+    process.env.GEMINI_API_KEY = 'env_gemini_api_key';
+    assert.equal(resolveApiKey({}), 'env_gemini_api_key');
+
+    delete process.env.GEMINI_API_KEY;
+    process.env.GEMINI = 'env_gemini_var';
+    assert.equal(resolveApiKey({}), 'env_gemini_var');
+  } finally {
+    if (oldKey !== undefined) process.env.GEMINI_API_KEY = oldKey;
+    if (oldGemini !== undefined) process.env.GEMINI = oldGemini;
+  }
+});
+
+test('extractFirstName extracts natural first names from registry and normal formats', () => {
+  assert.equal(extractFirstName('SMITH, John David'), 'John');
+  assert.equal(extractFirstName('DOE, Jane'), 'Jane');
+  assert.equal(extractFirstName('O\'CONNOR, Dr. Alan Patrick'), 'Alan');
+  assert.equal(extractFirstName('Mr. Robert Evans'), 'Robert');
+  assert.equal(extractFirstName('Sarah Connor'), 'Sarah');
+  assert.equal(extractFirstName('DR. ALICE WONDERLAND'), 'Alice');
+  assert.equal(extractFirstName(''), '');
+  assert.equal(extractFirstName(null), '');
+  assert.equal(extractFirstName(undefined), '');
+  assert.equal(extractFirstName('MR.   '), '');
+});
+
+test('mapSicToIndustry maps SIC codes and descriptive names correctly', () => {
+  assert.equal(mapSicToIndustry('81210'), 'commercial and domestic cleaning');
+  assert.equal(mapSicToIndustry('81221; 81222'), 'commercial and domestic cleaning');
+  assert.equal(mapSicToIndustry('56101'), 'hospitality and food service');
+  assert.equal(mapSicToIndustry('43210'), 'construction and trades');
+  assert.equal(mapSicToIndustry('96020'), 'beauty and wellness');
+  assert.equal(mapSicToIndustry('93130'), 'health and fitness');
+  assert.equal(mapSicToIndustry('74201'), 'photography and creative services');
+  assert.equal(mapSicToIndustry('85590'), 'education and tutoring');
+  assert.equal(mapSicToIndustry('47110'), 'retail and e-commerce');
+  assert.equal(mapSicToIndustry('55100'), 'accommodation and hospitality');
+  assert.equal(mapSicToIndustry('62010'), 'technology and digital services');
+  assert.equal(mapSicToIndustry('70229'), 'professional services');
+  assert.equal(mapSicToIndustry('HVAC & Plumbing'), 'HVAC & Plumbing');
+  assert.equal(mapSicToIndustry(['81210', '43210']), 'commercial and domestic cleaning');
+  assert.equal(mapSicToIndustry('99999'), 'small business');
+  assert.equal(mapSicToIndustry(''), 'small business');
+  assert.equal(mapSicToIndustry(null), 'small business');
+});
+
+test('buildPrompt constructs tailored prompt with anti-boilerplate constraints', () => {
+  const prompt = buildPrompt({
+    company_name: 'Apex Cleaners Ltd',
+    sic_codes: '81210',
+    locality: 'Manchester',
+    active_directors: 'DAVIS, Mark Paul'
+  }, { senderName: 'Nahid' });
+
+  assert.ok(prompt.includes('Apex Cleaners Ltd'));
+  assert.ok(prompt.includes('commercial and domestic cleaning'));
+  assert.ok(prompt.includes('Location: Manchester'));
+  assert.ok(prompt.includes('Hi Mark,'));
+  assert.ok(prompt.includes('Best regards,\nNahid'));
+  assert.ok(prompt.includes('Do NOT include markdown code fences'));
+  assert.ok(prompt.includes('Return ONLY valid JSON'));
+});
+
+test('buildPrompt throws if company_name is missing or blank', () => {
+  assert.throws(
+    () => buildPrompt({}),
+    /company_name is required/
+  );
+  assert.throws(
+    () => buildPrompt({ company_name: '   ' }),
+    /company_name is required/
+  );
+});
+
+test('cleanEmailContent parses JSON with markdown fences and strips placeholders', () => {
+  const raw = [
+    '```json',
+    '{',
+    '  "subject": "Quick question for Apex Cleaners Ltd",',
+    '  "body": "Here is a draft:\\n\\nHi Mark,\\n\\nCongratulations on registering Apex Cleaners Ltd! We help cleaning businesses get more local clients with modern websites and automated inquiry booking.\\n\\nWould you be open to a 5-minute chat?\\n\\nBest regards,\\n[Your Name]\\n[Your Phone Number]"',
+    '}',
+    '```'
+  ].join('\n');
+
+  const cleaned = cleanEmailContent(raw, {
+    senderName: 'Nahid',
+    companyName: 'Apex Cleaners Ltd'
+  });
+
+  assert.equal(cleaned.subject, 'Quick question for Apex Cleaners Ltd');
+  assert.ok(cleaned.body.includes('Hi Mark,'));
+  assert.ok(cleaned.body.includes('Congratulations on registering Apex Cleaners Ltd!'));
+  assert.ok(cleaned.body.includes('Nahid'));
+  assert.equal(cleaned.body.includes('Here is a draft:'), false);
+  assert.equal(cleaned.body.includes('[Your Name]'), false);
+  assert.equal(cleaned.body.includes('[Your Phone Number]'), false);
+  assert.equal(cleaned.body.includes('```'), false);
+  assert.equal(cleaned.text, `Subject: ${cleaned.subject}\n\n${cleaned.body}`);
+});
+
+test('cleanEmailContent handles fallback text parsing without JSON', () => {
+  const raw = [
+    'Certainly! Here is your personalized email:',
+    '',
+    'Subject: Web design & automation for Kirbys Catering Ltd',
+    '',
+    'Hi Peter,',
+    '',
+    'Congratulations on incorporating Kirbys Catering Ltd!',
+    'We build mobile-friendly catering websites with automated menu requests.',
+    '',
+    'Open to a quick 5-min chat?',
+    '',
+    'Best regards,',
+    '[Your Name]'
+  ].join('\n');
+
+  const cleaned = cleanEmailContent(raw, {
+    senderName: 'Nahid',
+    companyName: 'Kirbys Catering Ltd'
+  });
+
+  assert.equal(cleaned.subject, 'Web design & automation for Kirbys Catering Ltd');
+  assert.ok(cleaned.body.startsWith('Hi Peter,'));
+  assert.ok(cleaned.body.includes('Best regards,\nNahid'));
+  assert.equal(cleaned.body.includes('Certainly!'), false);
+  assert.equal(cleaned.body.includes('[Your Name]'), false);
+});
+
+test('cleanEmailContent handles null or empty input with robust fallback', () => {
+  const cleaned = cleanEmailContent('', { companyName: 'Delta Ltd' });
+  assert.equal(cleaned.subject, 'Web design & automation for Delta Ltd');
+  assert.ok(cleaned.body.includes('Delta Ltd'));
+  assert.ok(cleaned.body.includes('Best regards,\nNahid'));
+});
+
+test('generateEmail throws when company_name is missing', async () => {
+  await assert.rejects(
+    () => generateEmail({}),
+    /company_name is required/
+  );
+});
+
+test('generateEmail throws when API key is missing and no mock provided', async () => {
+  const oldKey = process.env.GEMINI_API_KEY;
+  const oldGemini = process.env.GEMINI;
+  try {
+    delete process.env.GEMINI_API_KEY;
+    delete process.env.GEMINI;
+    await assert.rejects(
+      () => generateEmail({ company_name: 'Test Co' }),
+      /GEMINI_API_KEY is missing/
+    );
+  } finally {
+    if (oldKey !== undefined) process.env.GEMINI_API_KEY = oldKey;
+    if (oldGemini !== undefined) process.env.GEMINI = oldGemini;
+  }
+});
+
+test('generateEmail generates clean email using injected genAI mock', async () => {
+  let capturedModelName = '';
+  let capturedPrompt = '';
+
+  const mockGenAI = {
+    getGenerativeModel: ({ model }) => {
+      capturedModelName = model;
+      return {
+        generateContent: async (prompt) => {
+          capturedPrompt = prompt;
+          return {
+            response: {
+              text: () => JSON.stringify({
+                subject: 'High-converting site for Zenith Ltd',
+                body: 'Hi Sarah,\n\nCongrats on Zenith Ltd!\n\nWe build websites with instant quotes.\n\nBest regards,\nNahid'
+              })
+            }
+          };
+        }
+      };
+    }
+  };
+
+  const result = await generateEmail(
+    {
+      company_name: 'Zenith Ltd',
+      active_directors: 'CONNOR, Sarah',
+      sic_codes: '43210',
+      locality: 'Leeds'
+    },
+    { genAI: mockGenAI, apiKey: 'test_key' }
+  );
+
+  assert.equal(capturedModelName, 'gemini-1.5-flash');
+  assert.ok(capturedPrompt.includes('Zenith Ltd'));
+  assert.ok(capturedPrompt.includes('construction and trades'));
+  assert.equal(result.subject, 'High-converting site for Zenith Ltd');
+  assert.ok(result.body.includes('Hi Sarah,'));
+  assert.ok(result.body.includes('Best regards,\nNahid'));
+  assert.equal(result.text, `Subject: ${result.subject}\n\n${result.body}`);
+});
+
+test('generateEmail retries on 429 rate limit with exponential backoff and succeeds', async () => {
+  let attempts = 0;
+  const sleepDelays = [];
+
+  const mockModel = {
+    generateContent: async () => {
+      attempts++;
+      if (attempts < 3) {
+        const error = new Error('Rate limit exceeded: RESOURCE_EXHAUSTED');
+        error.status = 429;
+        throw error;
+      }
+      return {
+        response: {
+          text: () => JSON.stringify({
+            subject: 'Success after rate limit',
+            body: 'Hi,\n\nWe are live!\n\nBest regards,\nNahid'
+          })
+        }
+      };
+    }
+  };
+
+  const result = await generateEmail(
+    { company_name: 'Retry Ltd' },
+    {
+      model: mockModel,
+      sleepFn: async (ms) => {
+        sleepDelays.push(ms);
+      }
+    }
+  );
+
+  assert.equal(attempts, 3);
+  assert.deepEqual(sleepDelays, [2000, 4000]);
+  assert.equal(result.subject, 'Success after rate limit');
+});
+
+test('generateEmail propagates error when API fails permanently or exceeds retries', async () => {
+  const fatalError = new Error('API key not valid. [400 Bad Request]');
+  fatalError.status = 400;
+
+  const mockModel = {
+    generateContent: async () => {
+      throw fatalError;
+    }
+  };
+
+  await assert.rejects(
+    () => generateEmail({ company_name: 'Fatal Co' }, { model: mockModel }),
+    /API key not valid/
+  );
+});
