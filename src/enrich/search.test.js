@@ -29,7 +29,7 @@ test('searchCompany separates website from social URLs', async (t) => {
 
   const res = await searchCompany(mockScraper, { company_name: 'RS LETZ LTD', registered_office_address: 'DE22 2EH' });
   assert.strictEqual(res.has_website, true);
-  assert.deepStrictEqual(res.socialUrls, []);
+  assert.deepStrictEqual(res.socialUrls, ['https://www.facebook.com/rsletzltd']);
 });
 
 test('searchCompany returns social URLs if no website', async (t) => {
