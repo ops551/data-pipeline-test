@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const {
   DEFAULT_MODEL,
   DEFAULT_SENDER_NAME,
+  DEFAULT_SIGNATURE,
+  buildSignature,
   resolveApiKey,
   extractFirstName,
   mapSicToIndustry,
@@ -14,6 +16,11 @@ const {
 test('constants are correctly configured', () => {
   assert.equal(DEFAULT_MODEL, 'gemini-1.5-flash');
   assert.equal(DEFAULT_SENDER_NAME, 'Nahid');
+  assert.equal(DEFAULT_SIGNATURE.name, 'Nahid');
+  assert.equal(DEFAULT_SIGNATURE.whatsapp, '+880 1615-753465');
+  assert.equal(DEFAULT_SIGNATURE.github, 'https://github.com/Nahid625');
+  assert.equal(DEFAULT_SIGNATURE.portfolio, 'https://github.com/Nahid625');
+  assert.equal(DEFAULT_SIGNATURE.title, 'Web Design & Business Automation');
 });
 
 test('resolveApiKey returns key from options, GEMINI_API_KEY, or GEMINI', () => {
@@ -75,6 +82,54 @@ test('mapSicToIndustry maps SIC codes and descriptive names correctly', () => {
   assert.equal(mapSicToIndustry(null), 'small business');
 });
 
+test('buildSignature formats default signature block with WhatsApp, GitHub, and Portfolio', () => {
+  const signature = buildSignature();
+  const expected = [
+    'Best regards,',
+    'Nahid',
+    'Web Design & Business Automation',
+    'WhatsApp: +880 1615-753465',
+    'GitHub: https://github.com/Nahid625',
+    'Portfolio: https://github.com/Nahid625'
+  ].join('\n');
+
+  assert.equal(signature, expected);
+});
+
+test('buildSignature supports custom options and environment variable overrides', () => {
+  const custom = buildSignature({
+    senderName: 'John Doe',
+    senderTitle: 'Full-Stack Developer',
+    senderWhatsapp: '+44 7123 456789',
+    senderGithub: 'https://github.com/johndoe',
+    senderPortfolio: 'https://johndoe.com'
+  });
+
+  assert.ok(custom.includes('John Doe'));
+  assert.ok(custom.includes('Full-Stack Developer'));
+  assert.ok(custom.includes('WhatsApp: +44 7123 456789'));
+  assert.ok(custom.includes('GitHub: https://github.com/johndoe'));
+  assert.ok(custom.includes('Portfolio: https://johndoe.com'));
+
+  const oldEnv = { ...process.env };
+  try {
+    process.env.SENDER_NAME = 'Env Sender';
+    process.env.SENDER_TITLE = 'Automation Consultant';
+    process.env.SENDER_WHATSAPP = '+880 1700-000000';
+    process.env.SENDER_GITHUB = 'https://github.com/envuser';
+    process.env.SENDER_PORTFOLIO = 'https://envuser.dev';
+
+    const fromEnv = buildSignature();
+    assert.ok(fromEnv.includes('Env Sender'));
+    assert.ok(fromEnv.includes('Automation Consultant'));
+    assert.ok(fromEnv.includes('WhatsApp: +880 1700-000000'));
+    assert.ok(fromEnv.includes('GitHub: https://github.com/envuser'));
+    assert.ok(fromEnv.includes('Portfolio: https://envuser.dev'));
+  } finally {
+    process.env = oldEnv;
+  }
+});
+
 test('buildPrompt constructs tailored prompt with anti-boilerplate constraints', () => {
   const prompt = buildPrompt({
     company_name: 'Apex Cleaners Ltd',
@@ -88,6 +143,9 @@ test('buildPrompt constructs tailored prompt with anti-boilerplate constraints',
   assert.ok(prompt.includes('Location: Manchester'));
   assert.ok(prompt.includes('Hi Mark,'));
   assert.ok(prompt.includes('Best regards,\nNahid'));
+  assert.ok(prompt.includes('WhatsApp: +880 1615-753465'));
+  assert.ok(prompt.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(prompt.includes('Portfolio: https://github.com/Nahid625'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
 });
@@ -158,11 +216,31 @@ test('cleanEmailContent handles fallback text parsing without JSON', () => {
   assert.equal(cleaned.body.includes('[Your Name]'), false);
 });
 
+test('cleanEmailContent appends personal signature by default and honors includeSignature false', () => {
+  const raw = JSON.stringify({
+    subject: 'Partnership opportunity',
+    body: 'Hi Sarah,\n\nWe love your work.\n\nBest regards,\nNahid'
+  });
+
+  const withSig = cleanEmailContent(raw);
+  assert.ok(withSig.body.endsWith(buildSignature()));
+  assert.ok(withSig.body.includes('WhatsApp: +880 1615-753465'));
+  assert.ok(withSig.body.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(withSig.body.includes('Portfolio: https://github.com/Nahid625'));
+
+  const withoutSig = cleanEmailContent(raw, { includeSignature: false });
+  assert.ok(withoutSig.body.endsWith('Best regards,\nNahid'));
+  assert.equal(withoutSig.body.includes('WhatsApp:'), false);
+  assert.equal(withoutSig.body.includes('GitHub:'), false);
+  assert.equal(withoutSig.body.includes('Portfolio:'), false);
+});
+
 test('cleanEmailContent handles null or empty input with robust fallback', () => {
   const cleaned = cleanEmailContent('', { companyName: 'Delta Ltd' });
   assert.equal(cleaned.subject, 'Web design & automation for Delta Ltd');
   assert.ok(cleaned.body.includes('Delta Ltd'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
+  assert.ok(cleaned.body.includes('WhatsApp: +880 1615-753465'));
 });
 
 test('generateEmail throws when company_name is missing', async () => {
@@ -227,6 +305,10 @@ test('generateEmail generates clean email using injected genAI mock', async () =
   assert.equal(result.subject, 'High-converting site for Zenith Ltd');
   assert.ok(result.body.includes('Hi Sarah,'));
   assert.ok(result.body.includes('Best regards,\nNahid'));
+  assert.ok(result.body.includes('WhatsApp: +880 1615-753465'));
+  assert.ok(result.body.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(result.body.includes('Portfolio: https://github.com/Nahid625'));
+  assert.ok(result.body.endsWith(buildSignature()));
   assert.equal(result.text, `Subject: ${result.subject}\n\n${result.body}`);
 });
 

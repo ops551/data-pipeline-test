@@ -6,6 +6,61 @@ const FALLBACK_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-latest'];
 const DEFAULT_SENDER_NAME = 'Nahid';
 const DEFAULT_MAX_RETRIES = 3;
 
+const DEFAULT_SIGNATURE = Object.freeze({
+  name: 'Nahid',
+  title: 'Web Design & Business Automation',
+  service: 'Web Design & Business Automation',
+  whatsapp: '+880 1615-753465',
+  github: 'https://github.com/Nahid625',
+  portfolio: 'https://github.com/Nahid625',
+  toString() {
+    return [
+      'Best regards,',
+      this.name,
+      this.title,
+      `WhatsApp: ${this.whatsapp}`,
+      `GitHub: ${this.github}`,
+      `Portfolio: ${this.portfolio}`
+    ].join('\n');
+  },
+  includes(sub) {
+    return this.toString().includes(sub);
+  }
+});
+
+function buildSignature(options = {}) {
+  const name = options.senderName !== undefined ? options.senderName
+    : (options.name !== undefined ? options.name
+    : (process.env.SENDER_NAME || DEFAULT_SIGNATURE.name));
+
+  const title = options.senderTitle !== undefined ? options.senderTitle
+    : (options.senderService !== undefined ? options.senderService
+    : (options.title !== undefined ? options.title
+    : (options.service !== undefined ? options.service
+    : (process.env.SENDER_TITLE || process.env.SENDER_SERVICE || DEFAULT_SIGNATURE.title))));
+
+  const whatsapp = options.senderWhatsapp !== undefined ? options.senderWhatsapp
+    : (options.whatsapp !== undefined ? options.whatsapp
+    : (process.env.SENDER_WHATSAPP || DEFAULT_SIGNATURE.whatsapp));
+
+  const github = options.senderGithub !== undefined ? options.senderGithub
+    : (options.github !== undefined ? options.github
+    : (process.env.SENDER_GITHUB || DEFAULT_SIGNATURE.github));
+
+  const portfolio = options.senderPortfolio !== undefined ? options.senderPortfolio
+    : (options.portfolio !== undefined ? options.portfolio
+    : (process.env.SENDER_PORTFOLIO || DEFAULT_SIGNATURE.portfolio));
+
+  const lines = ['Best regards,'];
+  if (name && String(name).trim()) lines.push(String(name).trim());
+  if (title && String(title).trim()) lines.push(String(title).trim());
+  if (whatsapp && String(whatsapp).trim()) lines.push(`WhatsApp: ${String(whatsapp).trim()}`);
+  if (github && String(github).trim()) lines.push(`GitHub: ${String(github).trim()}`);
+  if (portfolio && String(portfolio).trim()) lines.push(`Portfolio: ${String(portfolio).trim()}`);
+
+  return lines.join('\n');
+}
+
 const TITLES = new Set(['MR', 'MRS', 'MS', 'MISS', 'DR', 'PROF', 'SIR', 'LORD', 'LADY']);
 
 function extractFirstName(rawName) {
@@ -76,6 +131,9 @@ function buildPrompt(company = {}, options = {}) {
   const locality = (company.locality || company.registered_office_address || '').trim();
   const directorName = extractFirstName(company.active_directors || company.contact_name || company.director_name || '');
   const senderName = (options.senderName || process.env.SENDER_NAME || DEFAULT_SENDER_NAME).trim();
+  const signature = options.includeSignature === false
+    ? `Best regards,\n${senderName}`
+    : buildSignature(options);
   const greeting = directorName ? `Hi ${directorName},` : `Hi ${companyName} team,`;
 
   return [
@@ -95,19 +153,21 @@ function buildPrompt(company = {}, options = {}) {
     `3. Value Proposition: Pitch a modern, high-converting website and business automation (instant client inquiry handling, automated bookings, or fast quote intake) tailored for a ${industry} business.`,
     '4. Tone: Friendly, casual, helpful, peer-to-peer. Never sound like a spammy agency.',
     '5. Call to Action: Low pressure (e.g. asking if they would like a quick 5-min chat or to see a free preview).',
-    `6. Sign-off: Must end with:\nBest regards,\n${senderName}`,
+    `6. Sign-off: Must end with:\n${signature}`,
     '7. Format: Return ONLY valid JSON with keys "subject" and "body".',
     '8. Anti-Boilerplate: Do NOT include markdown code fences (```json or ```). Do NOT include conversational preambles ("Here is your draft:"). Do NOT use bracket placeholders like [Your Name] or [Your Phone].'
   ].filter(Boolean).join('\n');
 }
 
 function cleanEmailContent(rawText, options = {}) {
-  const senderName = (options.senderName || process.env.SENDER_NAME || DEFAULT_SENDER_NAME).trim();
+  const senderName = (options.senderName || options.name || process.env.SENDER_NAME || DEFAULT_SIGNATURE.name).trim();
   const companyName = (options.companyName || 'your business').trim();
+  const includeSignature = options.includeSignature !== false;
+  const signature = includeSignature ? buildSignature(options) : `Best regards,\n${senderName}`;
 
   if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
     const subject = `Web design & automation for ${companyName}`;
-    const body = `Hi,\n\nCongratulations on recently registering ${companyName}!\n\nWe help new UK businesses build modern, mobile-friendly websites and automate customer inquiries so you can focus on winning clients.\n\nWould you be open to a quick 5-minute chat this week?\n\nBest regards,\n${senderName}`;
+    const body = `Hi,\n\nCongratulations on recently registering ${companyName}!\n\nWe help new UK businesses build modern, mobile-friendly websites and automate customer inquiries so you can focus on winning clients.\n\nWould you be open to a quick 5-minute chat this week?\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 
@@ -175,13 +235,14 @@ function cleanEmailContent(rawText, options = {}) {
     .replace(/\n{3,}/g, '\n\n')
     .trim();
 
-  if (!body.includes(senderName)) {
-    if (/(?:best regards|best|cheers|sincerely|kind regards),?\s*$/i.test(body)) {
-      body = `${body.trim()}\n${senderName}`;
-    } else {
-      body = `${body.trim()}\n\nBest regards,\n${senderName}`;
-    }
+  const signoffRegex = /(?:\r?\n)+(?:best regards|kind regards|warm regards|with regards|regards|cheers|sincerely|yours sincerely|thanks and best regards|(?:thanks|thank you))\b,?\s*(?:\r?\n[\s\S]*)?$/i;
+  body = body.replace(signoffRegex, '');
+  if (senderName) {
+    const escapedSender = senderName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    body = body.replace(new RegExp(`(?:\\r?\\n)+${escapedSender}\\s*$`, 'i'), '');
   }
+
+  body = `${body.trim()}\n\n${signature}`;
 
   const text = `Subject: ${subject}\n\n${body}`;
   return { subject, body, text };
@@ -209,7 +270,7 @@ async function generateEmail(company, options = {}) {
           }
         }
         return cleanEmailContent(rawText, {
-          senderName: options.senderName,
+          ...options,
           companyName: company.company_name
         });
       } catch (err) {
@@ -255,7 +316,7 @@ async function generateEmail(company, options = {}) {
           }
         }
         return cleanEmailContent(rawText, {
-          senderName: options.senderName,
+          ...options,
           companyName: company.company_name
         });
       } catch (err) {
@@ -284,6 +345,8 @@ module.exports = {
   DEFAULT_MODEL,
   DEFAULT_SENDER_NAME,
   DEFAULT_MAX_RETRIES,
+  DEFAULT_SIGNATURE,
+  buildSignature,
   resolveApiKey,
   extractFirstName,
   mapSicToIndustry,
