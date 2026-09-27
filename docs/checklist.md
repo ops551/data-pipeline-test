@@ -47,6 +47,18 @@ for email. Full plan in
 | 2.6 | leads.csv | Normalise phones to `+44…`; `whatsapp_candidate = yes` only for `07` mobiles. `status = lead` needs email **or** mobile. Append to `leads.csv` with sources. Record checked in `enriched.csv`. | `src/enrich/leads.js`, `src/enrich/phone.js` | Unit tests: normalisation, status rules | [x] |
 | 2.7 | End-to-end | `npm run enrich` wires 2.2 → 2.6 using Puppeteer. Measure real yield over a few runs. | `src/enrich/index.js`, `package.json`, `README.md` | Real daily runs, yield recorded | [x] |
 
+## Phase 3 — Outreach Automation
+
+Decisions: Fully automate the outreach process via GitHub Actions for emails and eventually WhatsApp. Use `leads.csv` as the queue and `sent_leads.csv` as the archive to prevent rescraping and keep the queue clean. Every successful run creates a PR and automatically merges it to earn the GitHub "Pull Shark" achievement.
+
+| # | Unit | What it does | Files | Test | Status |
+|---|------|--------------|-------|------|--------|
+| 3.1 | CSV Workflow Update | Create utility to move rows from `leads.csv` to `sent_leads.csv` after successful outreach, keeping the queue clean. | `src/outreach/csv.js` | Unit test: row correctly moved, `leads.csv` shrunk, `sent_leads.csv` appended | [x] |
+| 3.2 | Email Content AI | Integrate `@google/generative-ai` (Gemini 1.5 Flash). Send the company name and industry to get a short, casual B2B cold email pitching the user's services. | `src/outreach/ai.js` | Unit test: returns a valid string without boilerplate | [ ] |
+| 3.3 | Email Sending | Integrate `nodemailer`. Read `.env` for SMTP credentials. Send the AI-generated email to the company's email address. | `src/outreach/email.js` | Unit test: mocked transport sends email | [ ] |
+| 3.4 | Outreach Pipeline | `npm run outreach`. Read `leads.csv`, filter for `status=lead` and has email. Call AI -> Send Email -> Move to `sent_leads.csv`. | `src/outreach/index.js`, `package.json` | Real run with a test email address | [ ] |
+| 3.5 | GitHub Actions CI/CD | Create `.github/workflows/outreach.yml`. Set a daily cron. Run outreach. Commit changes, open PR, and use `gh pr merge --auto` to auto-merge. | `.github/workflows/outreach.yml` | Manual trigger creates and merges a PR successfully | [ ] |
+
 ## Not in scope
 
 Anything that logs in to a social network, automated accounts, buying data,
