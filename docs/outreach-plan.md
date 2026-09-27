@@ -45,3 +45,6 @@ Once this plan is approved, we will hand it over to the Multi-Agent (Teamwork) s
 1. Install dependencies.
 2. Build `email.js`.
 3. Setup the GitHub Actions workflow.
+
+## Future Enhancements
+- Add a simple dashboard or log viewer to track PR merges
