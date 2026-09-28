@@ -2,7 +2,7 @@ name: Outreach Automation
 
 'on':
   schedule:
-    - cron: '0 9 * * *'
+    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -10,6 +10,10 @@ name: Outreach Automation
         required: false
         type: boolean
         default: false
+
+concurrency:
+  group: outreach-pipeline
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -30,7 +34,7 @@ jobs:
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-      OUTREACH_LIMIT: ${{ secrets.OUTREACH_LIMIT || '50' }}
+      OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
 
     steps:
@@ -55,8 +59,8 @@ jobs:
         run: |
           LEADS_COUNT=$(tail -n +2 leads.csv 2>/dev/null | grep -v '^$' | wc -l || echo 0)
           echo "Current pending leads: $LEADS_COUNT"
-          if [ "$LEADS_COUNT" -lt 50 ]; then
-            echo "Queue is running low! Auto-scraping new companies..."
+          if [ "$LEADS_COUNT" -lt 5 ]; then
+            echo "Queue is running very low! Auto-scraping new companies..."
             npm start
             echo "Enriching new companies with Puppeteer..."
             npm run enrich
