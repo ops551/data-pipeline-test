@@ -54,6 +54,7 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
 
   const from = (
     overrides.from ||
+    env.EMAIL_FROM ||
     env.SMTP_FROM ||
     (user ? `${senderName} <${user}>` : '')
   ).trim();
@@ -68,7 +69,7 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
       throw new Error('SMTP_PASS is required when SMTP_USER is set.');
     }
     if (!from && !user) {
-      throw new Error('SMTP_FROM or SMTP_USER is required to identify the sender.');
+      throw new Error('EMAIL_FROM or SMTP_FROM or SMTP_USER is required to identify the sender.');
     }
   }
 
@@ -267,7 +268,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
   }
 
   if (!from && !isMockOrInjected) {
-    throw new Error('Sender (from) address is required. Set SMTP_FROM or pass from in options.');
+    throw new Error('Sender (from) address is required. Set EMAIL_FROM or SMTP_FROM or pass from in options.');
   }
 
   // Fallback sender for mock or injected transporters if unspecified
