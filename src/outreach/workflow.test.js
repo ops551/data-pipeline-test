@@ -115,8 +115,8 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     const checkStep = steps.find((s) => s.id === 'check_changes');
     assert.ok(checkStep, 'check_changes step must be present');
     assert.ok(
-      checkStep.run.includes('git status --porcelain leads.csv sent_leads.csv'),
-      'check_changes must inspect leads.csv and sent_leads.csv'
+      checkStep.run.includes('git status --porcelain *.csv'),
+      'check_changes must inspect *.csv'
     );
     assert.ok(
       checkStep.run.includes('has_changes=true'),
@@ -162,11 +162,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
       'Branch name must follow outreach-run pattern with run_id'
     );
     assert.ok(prStep.run.includes('git checkout -b "$BRANCH_NAME"'), 'Must checkout branch');
-    assert.ok(prStep.run.includes('git add leads.csv'), 'Must stage leads.csv');
-    assert.ok(
-      prStep.run.includes('git add sent_leads.csv'),
-      'Must stage sent_leads.csv if present'
-    );
+    assert.ok(prStep.run.includes('git add *.csv'), 'Must stage *.csv');
     assert.ok(prStep.run.includes('git commit -m'), 'Must commit changes');
     assert.ok(prStep.run.includes('git push origin "$BRANCH_NAME"'), 'Must push branch to origin');
 
