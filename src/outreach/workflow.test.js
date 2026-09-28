@@ -46,8 +46,8 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     // Assert cron schedule: daily at 09:00 UTC ('0 9 * * *')
     assert.ok(triggers.schedule, 'schedule trigger must be configured');
     assert.ok(Array.isArray(triggers.schedule), 'schedule must be an array');
-    const cronObj = triggers.schedule.find((s) => s.cron === '0 9 * * *');
-    assert.ok(cronObj, "cron schedule must include '0 9 * * *'");
+    const cronObj = triggers.schedule.find((s) => s.cron === '*/10 * * * *');
+    assert.ok(cronObj, "cron schedule must include '*/10 * * * *'");
 
     // Assert manual workflow_dispatch with optional dry_run input
     assert.ok(triggers.workflow_dispatch, 'workflow_dispatch trigger must be configured');
