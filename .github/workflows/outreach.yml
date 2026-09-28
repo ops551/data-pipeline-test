@@ -23,12 +23,14 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
       SMTP_PORT: ${{ secrets.SMTP_PORT }}
       SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      OUTREACH_LIMIT: ${{ secrets.OUTREACH_LIMIT || '50' }}
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
 
     steps:
@@ -45,6 +47,22 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+        
+      - name: Install Puppeteer Browsers
+        run: npx puppeteer browsers install chrome
+
+      - name: Auto-Replenish Leads (if empty)
+        run: |
+          LEADS_COUNT=$(tail -n +2 leads.csv 2>/dev/null | grep -v '^$' | wc -l || echo 0)
+          echo "Current pending leads: $LEADS_COUNT"
+          if [ "$LEADS_COUNT" -lt 50 ]; then
+            echo "Queue is running low! Auto-scraping new companies..."
+            npm start
+            echo "Enriching new companies with Puppeteer..."
+            npm run enrich
+          else
+            echo "Sufficient leads in queue. Skipping scraping phase."
+          fi
 
       - name: Run outreach
         run: npm run outreach
@@ -52,12 +70,12 @@ jobs:
       - name: Check CSV changes
         id: check_changes
         run: |
-          if [ -n "$(git status --porcelain leads.csv sent_leads.csv)" ]; then
+          if [ -n "$(git status --porcelain *.csv)" ]; then
             echo "has_changes=true" >> "$GITHUB_OUTPUT"
-            echo "Changes detected in outreach CSV files."
+            echo "Changes detected in CSV files."
           else
             echo "has_changes=false" >> "$GITHUB_OUTPUT"
-            echo "No changes detected in outreach CSV files."
+            echo "No changes detected in CSV files."
           fi
 
       - name: Create PR & Auto-Merge
@@ -67,15 +85,12 @@ jobs:
           git config user.name "Nahid"
           git config user.email "jr6259094@gmail.com"
           git checkout -b "$BRANCH_NAME"
-          git add leads.csv
-          if [ -f sent_leads.csv ]; then
-            git add sent_leads.csv
-          fi
-          git commit -m "chore(outreach): update sent leads [run ${{ github.run_id }}]"
+          git add *.csv
+          git commit -m "chore(outreach): auto-replenish and update sent leads [run ${{ github.run_id }}]"
           git push origin "$BRANCH_NAME"
           PR_URL=$(gh pr create \
-            --title "chore(outreach): update sent leads [run ${{ github.run_id }}]" \
-            --body "Automated daily outreach run. Successfully processed and archived sent leads." \
+            --title "chore(outreach): auto-replenish and update sent leads [run ${{ github.run_id }}]" \
+            --body "Automated daily outreach run. Replenished data if needed and processed sent leads." \
             --base main \
             --head "$BRANCH_NAME")
           gh pr merge "$PR_URL" --auto --merge --delete-branch || gh pr merge "$PR_URL" --merge --delete-branch

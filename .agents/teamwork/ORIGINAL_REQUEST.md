@@ -78,3 +78,30 @@ Please include the following in the email body (either by instructing the AI in 
 - WhatsApp number: +880 1615-753465
 
 Please integrate this signature requirement into the current or next unit.
+
+## Follow-up — 2026-09-28T03:49:39Z
+
+We are resuming Phase 3 from `docs/checklist.md` after yesterday's quota limit exhaustion.
+Unit 3.1 and 3.2 are fully implemented and merged.
+Please proceed immediately with Unit 3.3 ("Email Sending").
+Use `nodemailer` to read `.env` (SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS) and send emails.
+Follow the strict TDD and Git workflow (Branch -> Commit -> Test -> PR -> Merge -> Delete Branch).
+After Unit 3.3 is merged, proceed to Unit 3.4 ("Outreach Pipeline") and 3.5 ("GitHub Actions CI/CD").
+
+## Follow-up — 2026-09-28T04:43:18Z
+
+We are resuming Phase 3 from `docs/checklist.md`.
+Unit 3.1 and 3.2 are complete.
+Please implement Unit 3.3 ("Email Sending").
+Create `src/outreach/email.js` using `nodemailer`. Read the SMTP variables from `.env` (SMTP_HOST, SMTP_PORT, SMTP_SECURE, SMTP_USER, SMTP_PASS, EMAIL_FROM).
+Write unit tests with a mocked transport to ensure it sends the email properly.
+Follow the strict TDD and Git workflow: use a branch (e.g. `phase-3-unit-3.3`), commit, create PR, and merge.
+After completing 3.3, proceed directly to Unit 3.4 (Pipeline) and 3.5 (GitHub Actions).
+## Follow-up — 2026-09-28T10:35:22Z
+
+We are resuming Phase 3 from `docs/checklist.md`.
+Units 3.1, 3.2, 3.3, and 3.4 are fully completed and merged.
+Please proceed immediately with Unit 3.5 ("GitHub Actions CI/CD").
+Create `.github/workflows/outreach.yml`. Set a daily cron. The workflow should run `npm run outreach`. It should commit any changes to the CSV files, open a PR using `gh pr create`, and use `gh pr merge --auto` to auto-merge it to farm the 'Pull Shark' achievement.
+Follow the strict TDD and Git workflow: use a branch (e.g., `phase-3-unit-3.5`), commit, test (or dry-run), PR, merge, and delete branch.
+Update the checklist when done.
