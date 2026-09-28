@@ -56,7 +56,7 @@ Decisions: Fully automate the outreach process via GitHub Actions for emails and
 | 3.1 | CSV Workflow Update | Create utility to move rows from `leads.csv` to `sent_leads.csv` after successful outreach, keeping the queue clean. | `src/outreach/csv.js` | Unit test: row correctly moved, `leads.csv` shrunk, `sent_leads.csv` appended | [x] |
 | 3.2 | Email Content AI | Integrate `@google/generative-ai` (Gemini 1.5 Flash). Send the company name and industry to get a short, casual B2B cold email pitching the user's services. | `src/outreach/ai.js` | Unit test: returns a valid string without boilerplate | [x] |
 | 3.3 | Email Sending | Integrate `nodemailer`. Read `.env` for SMTP credentials. Send the AI-generated email to the company's email address. | `src/outreach/email.js` | Unit test: mocked transport sends email | [x] |
-| 3.4 | Outreach Pipeline | `npm run outreach`. Read `leads.csv`, filter for `status=lead` and has email. Call AI -> Send Email -> Move to `sent_leads.csv`. | `src/outreach/index.js`, `package.json` | Real run with a test email address | [ ] |
+| 3.4 | Outreach Pipeline | `npm run outreach`. Read `leads.csv`, filter for `status=lead` and has email. Call AI -> Send Email -> Move to `sent_leads.csv`. | `src/outreach/index.js`, `package.json` | Real run with a test email address | [x] |
 | 3.5 | GitHub Actions CI/CD | Create `.github/workflows/outreach.yml`. Set a daily cron. Run outreach. Commit changes, open PR, and use `gh pr merge --auto` to auto-merge. | `.github/workflows/outreach.yml` | Manual trigger creates and merges a PR successfully | [ ] |
 
 ## Not in scope
