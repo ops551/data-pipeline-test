@@ -95,10 +95,10 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.ok(checkoutStep, 'Checkout step must be present');
     assert.strictEqual(checkoutStep.with['fetch-depth'], 0, 'Checkout must set fetch-depth: 0');
 
-    // 2. Setup Node.js step with node-version 20.x and cache npm
+    // 2. Setup Node.js step with node-version 24.x and cache npm
     const nodeStep = steps.find((s) => s.uses && s.uses.startsWith('actions/setup-node'));
     assert.ok(nodeStep, 'Setup Node step must be present');
-    assert.strictEqual(nodeStep.with['node-version'], '20.x');
+    assert.strictEqual(nodeStep.with['node-version'], '24.x');
     assert.strictEqual(nodeStep.with.cache, 'npm');
 
     // 3. Dependency installation
