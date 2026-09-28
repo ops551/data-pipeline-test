@@ -1,0 +1,81 @@
+name: Outreach Automation
+
+'on':
+  schedule:
+    - cron: '0 9 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Run in dry-run mode (no emails sent, no CSV changes)'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  outreach:
+    name: Run Outreach and Auto-Merge
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run outreach
+        run: npm run outreach
+
+      - name: Check CSV changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain leads.csv sent_leads.csv)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in outreach CSV files."
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in outreach CSV files."
+          fi
+
+      - name: Create PR & Auto-Merge
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          BRANCH_NAME="outreach-run-${{ github.run_id }}"
+          git config user.name "Nahid"
+          git config user.email "jr6259094@gmail.com"
+          git checkout -b "$BRANCH_NAME"
+          git add leads.csv
+          if [ -f sent_leads.csv ]; then
+            git add sent_leads.csv
+          fi
+          git commit -m "chore(outreach): update sent leads [run ${{ github.run_id }}]"
+          git push origin "$BRANCH_NAME"
+          PR_URL=$(gh pr create \
+            --title "chore(outreach): update sent leads [run ${{ github.run_id }}]" \
+            --body "Automated daily outreach run. Successfully processed and archived sent leads." \
+            --base main \
+            --head "$BRANCH_NAME")
+          gh pr merge "$PR_URL" --auto --merge --delete-branch || gh pr merge "$PR_URL" --merge --delete-branch
