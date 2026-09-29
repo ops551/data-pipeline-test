@@ -34,7 +34,7 @@ function filterCandidates(companiesFile, enrichedFile, candidatesFile) {
     if (enrichedNumbers.has(company.company_number)) continue;
 
     const daysOld = getDaysOld(company.date_of_creation);
-    if (daysOld < 7 || daysOld > 60) continue;
+    if (daysOld < 0 || daysOld > 60) continue;
 
     if (!isTargetSic(company.sic_codes)) continue;
 
