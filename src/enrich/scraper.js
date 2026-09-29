@@ -54,12 +54,17 @@ function decodeSearchUrl(href, baseUrl = 'https://duckduckgo.com') {
   }
 }
 
+const DIRECTORY_DOMAINS = ["gov.uk","endole.co.uk","opengovuk.com","bizdb.co.uk","clarity-project.co.uk","companydata.com","pomanda.com","company-information.service.gov.uk","cazoo.co.uk","companieshouse.gov.uk","datocapital.uk","checkcompany.co.uk","companycheck.co.uk","192.com","yell.com","thomsonlocal.com"];
+
 function isSearchEngineInternalUrl(url) {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
-    if (hostname === 'duckduckgo.com' || hostname.endsWith('.duckduckgo.com') || hostname.includes('yahoo.com') || hostname.includes('bing.com')) {
+    if (hostname === 'duckduckgo.com' || hostname.endsWith('.duckduckgo.com') || hostname.includes('yahoo.com') || hostname.includes('bing.com') || hostname.includes('google.com')) {
       return true;
+    }
+    for (const d of DIRECTORY_DOMAINS) {
+      if (hostname === d || hostname.endsWith('.' + d)) return true;
     }
     return false;
   } catch {
