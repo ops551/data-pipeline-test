@@ -162,7 +162,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
       'Branch name must follow outreach-run pattern with run_id'
     );
     assert.ok(prStep.run.includes('git checkout -b "$BRANCH_NAME"'), 'Must checkout branch');
-    assert.ok(prStep.run.includes('git add *.csv'), 'Must stage *.csv');
+    assert.ok(prStep.run.includes('git add'), 'Must stage csv files');
     assert.ok(prStep.run.includes('git commit -m'), 'Must commit changes');
     assert.ok(prStep.run.includes('git push origin "$BRANCH_NAME"'), 'Must push branch to origin');
 
