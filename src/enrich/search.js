@@ -26,9 +26,7 @@ const DIRECTORY_DOMAINS = [
 ];
 
 const SOCIAL_DOMAINS = [
-  'facebook.com',
-  'instagram.com',
-  'linkedin.com',
+  // User requested to remove FB and LinkedIn as they block scrapers
   'twitter.com',
   'x.com',
   'tiktok.com'
@@ -102,7 +100,7 @@ async function searchCompany(scraper, company) {
 
   // To maximise leads, we return social URLs even if we suspect a website exists,
   // because "website" is very often a false-positive from directory sites.
-  return { has_website, socialUrls: [...new Set(socialUrls)] };
+  return { has_website, searchResHtml: res.html, socialUrls: [...new Set(socialUrls)] };
 }
 
 module.exports = { searchCompany, isSocialOrDirectory, getDomain };
