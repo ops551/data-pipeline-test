@@ -192,7 +192,7 @@ async function createScraper(options = {}) {
       }
     }
     if (!searchUrl) {
-      searchUrl = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query.trim())}`;
+      searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query.trim())}`;
     }
 
     const res = await fetchHtml(searchUrl, {
