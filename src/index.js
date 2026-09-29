@@ -10,6 +10,11 @@ async function main() {
   console.log(`Collecting companies incorporated ${config.incorporatedFrom} to ${config.incorporatedTo}, up to ${config.maxResults} new.`);
 
   const alreadySeen = readCompanyNumbers(OUTPUT_FILE);
+  const enrichedFile = path.join(process.cwd(), 'enriched.csv');
+  if (require('fs').existsSync(enrichedFile)) {
+    const enriched = readCompanyNumbers(enrichedFile);
+    for (const id of enriched) alreadySeen.add(id);
+  }
   if (alreadySeen.size > 0) {
     console.log(`${alreadySeen.size} companies already in companies.csv will be skipped.`);
   }
