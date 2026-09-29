@@ -93,7 +93,7 @@ async function searchCompany(scraper, company) {
     const domain = getDomain(link);
     if (!domain) continue;
 
-    if (isSocial(domain)) {
+    if (isSocialOrDirectory(domain) && !domain.includes("gov.uk")) {
       socialUrls.push(link);
     } else if (!isDirectory(domain) && !domain.includes('gov.uk')) {
       has_website = true;
