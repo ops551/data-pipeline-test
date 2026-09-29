@@ -89,7 +89,7 @@ jobs:
           git config user.name "Nahid"
           git config user.email "jr6259094@gmail.com"
           git checkout -b "$BRANCH_NAME"
-          git add *.csv
+          git add leads.csv sent_leads.csv candidates.csv enriched.csv
           git commit -m "chore(outreach): auto-replenish and update sent leads [run ${{ github.run_id }}]"
           git push origin "$BRANCH_NAME"
           PR_URL=$(gh pr create \
