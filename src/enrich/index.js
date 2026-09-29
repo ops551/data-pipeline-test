@@ -52,6 +52,15 @@ async function runEnrichment() {
       
       let extractedData = { emails: [], phones: [] };
 
+      // Extract from DuckDuckGo search snippets first
+      if (searchRes.searchResHtml) {
+        const { extractEmails, extractPhones } = require('./extract');
+        const snippetEmails = extractEmails(searchRes.searchResHtml);
+        const snippetPhones = extractPhones(searchRes.searchResHtml);
+        if (snippetEmails.length > 0) extractedData.emails.push(...snippetEmails);
+        if (snippetPhones.length > 0) extractedData.phones.push(...snippetPhones);
+      }
+
       if (searchRes.socialUrls.length > 0) {
         console.log(`  Found ${searchRes.socialUrls.length} social/directory URLs. Extracting contacts...`);
         extractedData = await extractContactDetails(scraper, searchRes.socialUrls);
