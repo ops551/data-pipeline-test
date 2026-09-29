@@ -58,7 +58,7 @@ function isSearchEngineInternalUrl(url) {
   try {
     const parsed = new URL(url);
     const hostname = parsed.hostname.toLowerCase();
-    if (hostname === 'duckduckgo.com' || hostname.endsWith('.duckduckgo.com')) {
+    if (hostname === 'duckduckgo.com' || hostname.endsWith('.duckduckgo.com') || hostname.includes('yahoo.com') || hostname.includes('bing.com')) {
       return true;
     }
     return false;
@@ -67,7 +67,7 @@ function isSearchEngineInternalUrl(url) {
   }
 }
 
-function extractLinksFromHtml(html, baseUrl = 'https://duckduckgo.com') {
+function extractLinksFromHtml(html, baseUrl = 'https://uk.search.yahoo.com') {
   if (!html || typeof html !== 'string') return [];
   const links = [];
   const regex = /<a\s+(?:[^>]*?\s+)?href=["']([^"']+)["']/gi;
@@ -182,23 +182,36 @@ async function createScraper(options = {}) {
     }
 
     let searchUrl = searchOptions.searchUrl;
-    if (!searchUrl && searchOptions.searchEndpoint) {
-      try {
-        const epUrl = new URL(searchOptions.searchEndpoint);
-        epUrl.searchParams.set('q', query.trim());
-        searchUrl = epUrl.toString();
-      } catch {
-        searchUrl = `${searchOptions.searchEndpoint}?q=${encodeURIComponent(query.trim())}`;
-      }
-    }
     if (!searchUrl) {
-      searchUrl = `https://www.bing.com/search?q=${encodeURIComponent(query.trim())}`;
+      searchUrl = `https://uk.search.yahoo.com/search?p=${encodeURIComponent(query.trim())}`;
     }
 
-    const res = await fetchHtml(searchUrl, {
+    let res = await fetchHtml(searchUrl, {
       throwOnError: false,
       ...searchOptions
     });
+    
+    // Handle Yahoo consent
+    if (res.html && res.html.includes('consent')) {
+       try {
+         const page = await browser.newPage();
+         await page.setUserAgent(defaultUserAgent);
+         await page.goto(searchUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
+         
+         const consentBtn = await page.$('button[name="agree"]');
+         if (consentBtn) {
+            await Promise.all([
+               page.waitForNavigation({ waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {}),
+               consentBtn.click()
+            ]);
+            res.html = await page.content();
+            res.finalUrl = page.url();
+         }
+         await page.close().catch(() => {});
+       } catch (e) {
+         // ignore
+       }
+    }
 
     const links = extractLinksFromHtml(res.html, res.finalUrl || searchUrl);
     return {
