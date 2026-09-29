@@ -8,6 +8,13 @@ function extractEmails(text) {
     e = e.toLowerCase();
     if (e.endsWith('.png') || e.endsWith('.jpg') || e.endsWith('.jpeg') || e.endsWith('.gif') || e.endsWith('.webp')) return false;
     if (e.includes('sentry.io')) return false;
+    if (e.includes('duckduckgo.com')) return false;
+    if (e.includes('example.com')) return false;
+    if (e.includes('companyinformation.co.uk')) return false;
+    if (e.includes('w3.org')) return false;
+    if (e.includes('schema.org')) return false;
+    if (e.includes('1.8.0')) return false;
+    if (e.includes('companieshouse.gov.uk')) return false;
     return true;
   });
   return [...new Set(valid.map(e => e.toLowerCase()))];
