@@ -39,7 +39,7 @@ function loadConfig(env = process.env, today = new Date()) {
     incorporatedFrom = parseDate('INCORPORATED_FROM', env.INCORPORATED_FROM);
     incorporatedTo = parseDate('INCORPORATED_TO', env.INCORPORATED_TO);
   } else {
-    const daysBack = parsePositiveInt('DAYS_BACK', env.DAYS_BACK, 7);
+    const daysBack = parsePositiveInt('DAYS_BACK', env.DAYS_BACK, 30);
     const from = new Date(today);
     from.setUTCDate(from.getUTCDate() - daysBack);
     incorporatedFrom = toDateString(from);
