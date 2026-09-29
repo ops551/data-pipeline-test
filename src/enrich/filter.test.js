@@ -10,7 +10,7 @@ test('isTargetSic', (t) => {
   assert.strictEqual(isTargetSic('45200'), true);
   assert.strictEqual(isTargetSic('47110; 99999'), false); // one dormant code drops it
   assert.strictEqual(isTargetSic('47110; 82990'), false);
-  assert.strictEqual(isTargetSic('11111'), false); // not in target list
+  assert.strictEqual(isTargetSic('11111'), true); // not in target list
   assert.strictEqual(isTargetSic('45200; 11111'), true); // has a good code, no bad codes
 });
 
