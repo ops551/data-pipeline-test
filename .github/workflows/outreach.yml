@@ -57,7 +57,7 @@ jobs:
 
       - name: Auto-Replenish Leads (if empty)
         run: |
-          LEADS_COUNT=$(tail -n +2 leads.csv 2>/dev/null | grep -v '^$' | wc -l || echo 0)
+          LEADS_COUNT=$(awk -F',' 'NR>1 && $4!=""' leads.csv 2>/dev/null | wc -l || echo 0)
           echo "Current pending leads: $LEADS_COUNT"
           if [ "$LEADS_COUNT" -lt 5 ]; then
             echo "Queue is running very low! Auto-scraping new companies..."
