@@ -34,12 +34,8 @@ function isTargetSic(sicString) {
     if (EXCLUDED_SICS.includes(code)) return false;
   }
   
-  // Keep if it has at least one target SIC
-  for (const code of codes) {
-    if (TARGET_SICS.includes(code)) return true;
-  }
-  
-  return false;
+  // Accept all other non-excluded SIC codes
+  return true;
 }
 
 module.exports = { TARGET_SICS, EXCLUDED_SICS, isTargetSic };
