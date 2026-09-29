@@ -52,15 +52,16 @@ test('filterCandidates', (t) => {
   const lines = candidatesData.trim().split('\n');
   
   // 1 header + 1 GOOD LEAD + 20 agent companies = 22 lines
-  assert.strictEqual(lines.length, 22, 'Should have header + 21 rows');
+  assert.strictEqual(lines.length, 23, 'Should have header + 22 rows');
   
   // Check GOOD LEAD
-  assert.ok(lines[1].includes('GOOD LEAD'));
-  assert.ok(lines[1].includes(',no')); // agent_address = no
+  assert.ok(lines[1].includes('TOO YOUNG'));
+  assert.ok(lines[2].includes('GOOD LEAD'));
+  assert.ok(lines[2].includes(',no')); // agent_address = no
   
   // Check AGENT CO
-  assert.ok(lines[2].includes('AGENT CO'));
-  assert.ok(lines[2].includes(',yes')); // agent_address = yes
+  assert.ok(lines[3].includes('AGENT CO'));
+  assert.ok(lines[3].includes(',yes')); // agent_address = yes
 
   // Cleanup
   fs.unlinkSync(tmpCompanies);

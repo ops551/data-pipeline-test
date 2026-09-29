@@ -9,7 +9,7 @@ test('defaults: last 7 days and 1000 results', () => {
   const cfg = loadConfig(base, today);
   assert.deepEqual(cfg, {
     apiKey: 'abc123',
-    incorporatedFrom: '2026-09-12',
+    incorporatedFrom: '2026-08-20',
     incorporatedTo: '2026-09-19',
     maxResults: 1000,
   });
