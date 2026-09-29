@@ -66,7 +66,11 @@ async function runEnrichment() {
 
       if (searchRes.socialUrls.length > 0) {
         console.log(`  Found ${searchRes.socialUrls.length} social/directory URLs. Extracting contacts...`);
-        extractedData = await extractContactDetails(scraper, searchRes.socialUrls);
+        const moreData = await extractContactDetails(scraper, searchRes.socialUrls);
+        extractedData.emails.push(...moreData.emails);
+        extractedData.phones.push(...moreData.phones);
+        extractedData.emails = [...new Set(extractedData.emails)];
+        extractedData.phones = [...new Set(extractedData.phones)];
         if (extractedData.emails.length > 0 || extractedData.phones.length > 0) {
           sources.push('web_scrape');
         }
