@@ -32,10 +32,13 @@ async function runEnrichment() {
   // 2. Initialize scraper
   console.log('Initializing Puppeteer scraper...');
   const scraper = await createScraper();
+  const delay = ms => new Promise(r => setTimeout(r, ms));
 
   try {
-    for (const [index, company] of candidates.entries()) {
-      console.log(`\nProcessing [${index + 1}/${count}]: ${company.company_name} (${company.company_number})`);
+    const BATCH_SIZE = process.env.ENRICH_BATCH_SIZE || 25;
+    const candidatesToProcess = candidates.slice(0, BATCH_SIZE);
+    for (const [index, company] of candidatesToProcess.entries()) {
+      console.log(`\nProcessing [${index + 1}/${candidatesToProcess.length}] (Total pending: ${count}): ${company.company_name} (${company.company_number})`);
       
       let sources = [];
       
