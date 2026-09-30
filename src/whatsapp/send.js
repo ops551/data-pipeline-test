@@ -95,7 +95,15 @@ async function runWhatsAppOutreach() {
         process.exit(1);
     });
 
+    
+    client.on('qr', () => {
+        console.error('\n❌ Session expired or invalid! The bot is stuck waiting for a QR code scan.');
+        console.error('Please press Ctrl+C and run: node src/whatsapp/setup.js to log in again.');
+        process.exit(1);
+    });
+
     client.initialize();
+
 }
 
 // Run if called directly
