@@ -34,19 +34,37 @@ async function runWhatsAppOutreach() {
             try {
                 console.log(`\nProcessing: ${lead.company_name} (${lead.target_phone})`);
                 
-                // 1. Generate Message
+                const jid = normalizeToWhatsAppId(lead.target_phone);
+                if (!jid) {
+                    console.log(`⏭️  Skipping - Invalid format`);
+                    continue;
+                }
+
+                // 1. Check Registration First!
+                const isRegistered = await client.isRegisteredUser(jid);
+                if (!isRegistered) {
+                    console.log(`⏭️  Skipping ${lead.target_phone} - Not registered on WhatsApp.`);
+                    appendSentWhatsapp({
+                        company_number: lead.company_number,
+                        company_name: lead.company_name,
+                        phone_number: lead.target_phone,
+                        status: 'no_whatsapp',
+                        message_preview: 'Skipped - no WhatsApp account'
+                    });
+                    continue;
+                }
+
+                // 2. Generate Message (only for valid users)
                 const msg = await generateWhatsAppMessage({
                     companyName: lead.company_name,
-                    sicCodes: lead.sic_codes // Usually not in leads.csv directly but ai.js handles missing gracefully
+                    sicCodes: lead.sic_codes
                 });
 
-                // 2. Send Message
+                // 3. Send Message
                 console.log(`Sending message to ${lead.target_phone}...`);
-                const jid = normalizeToWhatsAppId(lead.target_phone);
-                if (!jid) throw new Error('Invalid WhatsApp format for ' + lead.target_phone);
                 await client.sendMessage(jid, msg);
                 
-                // 3. Mark as Sent
+                // 4. Mark as Sent
                 appendSentWhatsapp({
                     company_number: lead.company_number,
                     company_name: lead.company_name,
@@ -57,13 +75,14 @@ async function runWhatsAppOutreach() {
 
                 console.log(`✅ Success for ${lead.company_name}`);
 
-                // 4. Delay (10-20 seconds) to avoid spam filters
+                // 5. Delay
                 const delay = Math.floor(Math.random() * 10000) + 10000;
                 console.log(`Sleeping for ${Math.round(delay/1000)}s...`);
                 await sleep(delay);
 
             } catch (error) {
                 console.error(`❌ Failed to send to ${lead.company_name}:`, error.message);
+            }:`, error.message);
             }
         }
 

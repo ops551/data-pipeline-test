@@ -17,7 +17,7 @@ async function generateWhatsAppMessage(data, mock = false) {
     return `Saw you just registered ${data.companyName}. I build modern websites and business automation tools to help startups get clients faster. Would you be open to a quick 2-min chat on how we can collaborate?`;
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
   const prompt = `
 You are sending a casual, one-off WhatsApp message to a newly registered UK company.
@@ -46,7 +46,7 @@ Write the message now:
     text = text.replace(/https?:\/\/[^\s]+/g, '');
     return text.trim();
   } catch (error) {
-    console.error('AI Generation Failed:', error);
+    console.error('⚠️  AI API failed (using backup message instead):', error.message);
     // Silent fallback to avoid crashing the bot
     return `Saw you just registered ${data.companyName}. I build modern websites and business automation tools to help startups get clients faster. Would you be open to a quick chat?`;
   }
