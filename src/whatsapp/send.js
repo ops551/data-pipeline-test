@@ -27,7 +27,7 @@ async function runWhatsAppOutreach() {
         }
     });
 
-    client.on('ready', async () => {
+    client.once('ready', async () => {
         console.log('WhatsApp Client is READY! Starting outreach...');
 
         for (const lead of candidates) {
@@ -82,7 +82,6 @@ async function runWhatsAppOutreach() {
 
             } catch (error) {
                 console.error(`❌ Failed to send to ${lead.company_name}:`, error.message);
-            }:`, error.message);
             }
         }
 
