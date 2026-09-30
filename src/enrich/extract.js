@@ -102,7 +102,11 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
       if (joinedName && domainName.includes(joinedName)) score += 100;
       
       words.forEach(w => {
-        if (domainName.includes(w)) score += 20;
+        if (w.length > 3) {
+          if (domainName.includes(w)) score += 20;
+        } else {
+          if (domainName === w || domainName.startsWith(w) || domainName.endsWith(w)) score += 20;
+        }
       });
       
       const ispDomains = ['gmail', 'yahoo', 'aol', 'hotmail', 'outlook', 'icloud', 'live'];
@@ -113,10 +117,18 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
     
     if (user) {
       words.forEach(w => {
-        if (user.includes(w)) score += 10;
+        if (w.length > 3) {
+          if (user.includes(w)) score += 10;
+        } else {
+          if (user === w || user.startsWith(w) || user.endsWith(w)) score += 10;
+        }
       });
       officerWords.forEach(w => {
-        if (user.includes(w)) score += 30; // High bonus for matching director name
+        if (w.length > 3) {
+          if (user.includes(w)) score += 30;
+        } else {
+          if (user === w || user.startsWith(w) || user.endsWith(w)) score += 30;
+        }
       });
     }
 
