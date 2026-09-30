@@ -105,3 +105,44 @@ Please proceed immediately with Unit 3.5 ("GitHub Actions CI/CD").
 Create `.github/workflows/outreach.yml`. Set a daily cron. The workflow should run `npm run outreach`. It should commit any changes to the CSV files, open a PR using `gh pr create`, and use `gh pr merge --auto` to auto-merge it to farm the 'Pull Shark' achievement.
 Follow the strict TDD and Git workflow: use a branch (e.g., `phase-3-unit-3.5`), commit, test (or dry-run), PR, merge, and delete branch.
 Update the checklist when done.
+## Follow-up — 2026-09-30T09:46:32Z
+
+# Teamwork Project Prompt — Phase 4: WhatsApp Automation
+
+> Status: Launched
+> Goal: Implement Phase 4 strictly following `docs/whatsapp-plan.md` and `docs/working-style.md`
+> Requested team: Orchestrator, Worker, QA/Tester (focused entirely on unit tests), and Bug Hunter/Reviewer (focused on edge cases and logic flaws).
+
+We are beginning **Phase 4: WhatsApp Automation** for the "Recent UK Companies" project. The user has requested a full multi-agent team execution.
+
+Working directory: /home/nahid/Documents/Recent-uk-Companys
+Integrity mode: development
+Documentation to follow: `docs/whatsapp-plan.md`, `docs/working-style.md`, `docs/checklist.md`
+
+## Requirements
+
+### R1. Sequential Unit Implementation
+The team must implement the units defined in `docs/whatsapp-plan.md` sequentially. Start with **Unit 4.1**, then proceed to **Unit 4.2**, and so on. Do not start a new unit until the previous one is fully tested, committed, and merged via PR.
+
+### R2. Strict Testing & Quality Assurance
+The user explicitly requested:
+- A dedicated testing process. **If tests fail, do NOT commit, push, or create a PR.** The QA/Tester must verify `npm test` passes completely.
+- A dedicated bug hunting process. The Reviewer/Bug Hunter must rigorously check for edge cases, undefined variables, and logical flaws before approving any code.
+
+### R3. Safe Git Workflow
+All code must be developed on unit-specific branches (e.g., `phase-4-unit-4.1`). The team must create a Pull Request and merge it before moving on, strictly adhering to `docs/working-style.md`. Keep changes atomic. **CRITICAL:** When pushing to main, you must push to BOTH `origin main` AND `dummy main` to keep the dual-repo setup in sync.
+
+### R4. Adhere to Anti-Spam Rules
+When implementing Unit 4.3 (AI Prompt) and 4.6 (GitHub Actions), strictly follow the anti-spam rules outlined in `docs/whatsapp-plan.md` (e.g., soft-sell tone, no AI emojis, limited cron schedule).
+
+## Acceptance Criteria
+- [ ] Unit 4.1 (`csv.js`) is implemented and fully tested.
+- [ ] Unit 4.2 (`format.js`) is implemented and fully tested.
+- [ ] Code is merged into `main` (and pushed to both `origin` and `dummy`) via PRs.
+- [ ] `docs/checklist.md` (or equivalent tracking) is updated to reflect progress.
+## Follow-up — 2026-09-30T10:05:47Z
+
+The user has provided additional explicit instructions for the rest of Phase 4:
+"The Tester must always think entirely out of the box to catch as many bugs as possible within scope. It must catch edge cases and logic flaws itself, then report them back so the worker fixes them and tests again. The Leader (Orchestrator) must supervise this process extremely strictly to ensure there are absolutely 0 mistakes."
+
+Please instruct your QA/Tester and Bug Hunter to adopt a highly adversarial, "out-of-the-box" mindset for all upcoming units (especially 4.2 formatting and 4.5 bot logic), and ensure you (the Orchestrator) rigorously review the test coverage before merging.
