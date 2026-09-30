@@ -59,11 +59,23 @@ Decisions: Fully automate the outreach process via GitHub Actions for emails and
 | 3.4 | Outreach Pipeline | `npm run outreach`. Read `leads.csv`, filter for `status=lead` and has email. Call AI -> Send Email -> Move to `sent_leads.csv`. | `src/outreach/index.js`, `package.json` | Real run with a test email address | [x] |
 | 3.5 | GitHub Actions CI/CD | Create `.github/workflows/outreach.yml`. Set a daily cron. Run outreach. Commit changes, open PR, and use `gh pr merge --auto` to auto-merge. | `.github/workflows/outreach.yml` | Manual trigger creates and merges a PR successfully | [x] |
 
+## Phase 4 — WhatsApp Automation
+
+Decisions: Automated WhatsApp messaging using `whatsapp-web.js` with session authentication. Drip messaging (max 10-15/day, runs every 2-3 hours) to avoid bans. Source leads from both `leads.csv` and `sent_leads.csv`. Track sent messages in `sent_whatsapp.csv` to ensure complete isolation from the email pipeline. Human-like, soft-sell tone via Gemini AI with strict anti-spam rules. PR-based CI/CD workflow.
+
+| # | Unit | What it does | Files | Test | Status |
+|---|------|--------------|-------|------|--------|
+| 4.1 | Data Preparation & CSV Tracking | Read leads from `leads.csv` and `sent_leads.csv`, extract valid mobile numbers, filter out already messaged companies from `sent_whatsapp.csv`, append contacted leads to `sent_whatsapp.csv`. | `src/whatsapp/csv.js` | Unit tests: empty/missing files, CSV parsing, quote/comma handling, deduplication against `sent_whatsapp.csv` | [x] |
+| 4.2 | Number Formatting & Validation | Validate UK mobile numbers (`07...` or `447...`) and format into WhatsApp ID (`447XXXXXXXXX@c.us`), reject landlines and invalid formats. | `src/whatsapp/format.js` | Unit tests: strip whitespace, format valid UK mobile, reject landlines (`020...`), reject invalid length/characters | [ ] |
+| 4.3 | Anti-Spam AI Prompt | Integrate Gemini AI to generate soft-sell, personalized, conversational B2B intro messages without pushy sales language or AI emojis. | `src/whatsapp/ai.js` | Unit tests: mock generation, verify anti-spam prompt constraints, tone and signature verification | [ ] |
+| 4.4 | WhatsApp Client Setup | Local setup script to initialize `whatsapp-web.js`, present QR code for authentication, and cache session credentials for CI execution. | `src/whatsapp/setup.js` | Manual dry run: browser launches, QR code displays, session directory is saved | [ ] |
+| 4.5 | Messaging Bot Pipeline | Combine CSV tracking, phone validation, AI generation, and `whatsapp-web.js` client into end-to-end messaging script. Checks registration via `isRegisteredUser`, sends message, and logs to `sent_whatsapp.csv`. | `src/whatsapp/bot.js`, `package.json` | Unit test with mocked WhatsApp client; dry run with test phone number | [ ] |
+| 4.6 | GitHub Actions Pipeline | Create `.github/workflows/whatsapp.yml` with scheduled cron (every 2-3 hours). Restores session, runs bot, commits `sent_whatsapp.csv`, creates and auto-merges PR via `gh pr create` and `gh pr merge --auto`. | `.github/workflows/whatsapp.yml` | Workflow syntax validation, dry run / manual workflow dispatch | [ ] |
+
 ## Not in scope
 
-Anything that logs in to a social network, automated accounts, buying data,
-verifying WhatsApp numbers, sending messages, Telegram. Paid APIs only if
-Nahid decides later.
+Anything that logs in to a personal social network, automated social accounts,
+buying data, Telegram. Paid APIs only if Nahid decides later.
 
 ## Notes
 
