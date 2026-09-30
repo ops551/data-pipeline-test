@@ -22,6 +22,7 @@ permissions:
 jobs:
   outreach:
     name: Run Outreach and Auto-Merge
+    if: github.repository == 'ops551/data-pipeline-test'
     runs-on: ubuntu-latest
 
     env:
