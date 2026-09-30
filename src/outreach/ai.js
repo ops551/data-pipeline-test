@@ -150,7 +150,9 @@ function buildPrompt(company = {}, options = {}) {
     'Rules:',
     '1. Length: Short, concise, between 70 and 110 words.',
     `2. Opening: Warmly congratulate them on registering ${companyName}.`,
-    `3. Value Proposition: Pitch a modern website and business automation. You MUST include a sentence explicitly stating that you have a "strategy to grow your business online" (or similar wording) tailored for a ${industry} business.`,
+    (company.sources || '').includes('existing_website') 
+      ? `3. Value Proposition: Since they already have a basic website, pitch a "website redesign and business automation upgrade" to help them modernize and scale their ${industry} business.`
+      : `3. Value Proposition: Pitch a brand new modern website and business automation. You MUST include a sentence explicitly stating that you have a "strategy to grow your business online" tailored for a ${industry} business.`,
     '4. Tone: Friendly, casual, helpful, peer-to-peer. Never sound like a spammy agency.',
     '5. Call to Action: Low pressure (e.g. asking if they would like a quick 5-min chat or to see a free preview).',
     `6. Sign-off: Must end with:\n${signature}`,

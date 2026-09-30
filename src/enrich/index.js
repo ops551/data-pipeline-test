@@ -52,6 +52,9 @@ async function runEnrichment() {
       // Search & Social
       console.log('  Searching for website and social profiles...');
       const searchRes = await searchCompany(scraper, company);
+      if (searchRes.has_website) {
+        sources.push('existing_website');
+      }
       
       let extractedData = { emails: [], phones: [] };
 
