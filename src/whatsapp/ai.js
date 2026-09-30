@@ -17,7 +17,7 @@ async function generateWhatsAppMessage(data, mock = false) {
     return `Hey, saw you just registered ${data.companyName}. I build websites and automation tools at https://nahid-yf63.onrender.com/. No pressure at all, just dropping the link in case you ever need anything for the business. Cheers!`;
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
   const prompt = `
 You are sending a casual, one-off WhatsApp message to a newly registered UK company.
