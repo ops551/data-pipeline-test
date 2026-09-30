@@ -562,3 +562,208 @@ test('full cycle: candidate discovery, message sending, and queue depletion', ()
 
   ws.cleanup();
 });
+
+// --- Suite 8: Remediation & Hardening Tests ---
+test('Fix 1: appendSentWhatsapp guarantees trailing newline when appending to file missing trailing newline', () => {
+  const ws = createTempWorkspace();
+  // Write file without trailing newline
+  fs.writeFileSync(
+    ws.sentWhatsappPath,
+    'company_number,company_name,phone,status,sent_at\n11111111,Co1,+447111111111,sent,2026-09-30T10:00:00.000Z'
+  );
+
+  appendSentWhatsapp(ws.sentWhatsappPath, {
+    company_number: '22222222',
+    company_name: 'Co2',
+    phone: '+447222222222',
+    status: 'sent'
+  });
+
+  const records = readSentWhatsapp(ws.sentWhatsappPath);
+  assert.equal(records.length, 2);
+  assert.equal(records[0].company_number, '11111111');
+  assert.equal(records[1].company_number, '22222222');
+
+  const nums = readSentWhatsappCompanyNumbers(ws.sentWhatsappPath);
+  assert.equal(nums.has('22222222'), true);
+
+  const phones = readSentWhatsappPhones(ws.sentWhatsappPath);
+  assert.equal(phones.has('+447222222222'), true);
+
+  const raw = fs.readFileSync(ws.sentWhatsappPath, 'utf8');
+  assert.ok(raw.endsWith('\n'));
+  assert.ok(!raw.includes('2026-09-30T10:00:00.000Z22222222'));
+  ws.cleanup();
+});
+
+test('Fix 2: getWhatsAppCandidates performs intra-batch phone deduplication for shared phones', () => {
+  const ws = createTempWorkspace();
+  const leadsWithSharedPhones = [
+    {
+      company_number: '11111111',
+      company_name: 'First Co Ltd',
+      phones: '07999999999',
+      whatsapp_candidate: 'yes',
+      status: 'lead'
+    },
+    {
+      company_number: '22222222',
+      company_name: 'Second Co Ltd',
+      phones: '+44 7999 999 999',
+      whatsapp_candidate: 'yes',
+      status: 'lead'
+    },
+    {
+      company_number: '33333333',
+      company_name: 'Third Co Ltd',
+      phones: '+447888888888',
+      whatsapp_candidate: 'yes',
+      status: 'lead'
+    }
+  ];
+
+  writeCSV(ws.leadsPath, leadsWithSharedPhones, LEADS_COLUMNS);
+
+  const candidates = getWhatsAppCandidates({
+    leadsPath: ws.leadsPath,
+    sentLeadsPath: ws.sentLeadsPath,
+    sentWhatsappPath: ws.sentWhatsappPath
+  });
+
+  // Out of 3 leads, 11111111 and 22222222 share phone +447999999999.
+  // Intra-batch phone deduplication must accept only the first, returning 2 candidates total.
+  assert.equal(candidates.length, 2);
+  assert.equal(candidates[0].company_number, '11111111');
+  assert.equal(candidates[0].target_phone, '+447999999999');
+  assert.equal(candidates[1].company_number, '33333333');
+  assert.equal(candidates[1].target_phone, '+447888888888');
+  ws.cleanup();
+});
+
+test('Fix 3: appendSentWhatsapp atomically creates header with { flag: "wx" } under concurrent creation', async () => {
+  const ws = createTempWorkspace();
+  const { spawn } = require('node:child_process');
+
+  const count = 10;
+  const children = Array.from({ length: count }, (_, i) => {
+    const code = `const { appendSentWhatsapp } = require('./src/whatsapp/csv'); appendSentWhatsapp(process.argv[1], { company_number: 'CONC' + process.argv[2], phone: '+44700000000' + process.argv[2], status: 'sent' });`;
+    const child = spawn(process.execPath, ['-e', code, ws.sentWhatsappPath, String(i)]);
+    return new Promise(resolve => child.on('close', resolve));
+  });
+
+  await Promise.all(children);
+
+  const records = readSentWhatsapp(ws.sentWhatsappPath);
+  assert.equal(records.length, count);
+  const nums = readSentWhatsappCompanyNumbers(ws.sentWhatsappPath);
+  for (let i = 0; i < count; i++) {
+    assert.equal(nums.has(`CONC${i}`), true);
+  }
+  ws.cleanup();
+});
+
+test('Fix 4: normaliseToE164Mobile handles @c.us, +44(0)7, and 00447 variations', () => {
+  // @c.us and @s.whatsapp.net stripping
+  assert.equal(normaliseToE164Mobile('447123456789@c.us'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('+447123456789@c.us'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('07123456789@c.us'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('447123456789@s.whatsapp.net'), '+447123456789');
+
+  // UK trunk zero notation +44(0)7...
+  assert.equal(normaliseToE164Mobile('+44 (0) 7123 456789'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('+44(0)7123456789'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('44(0)7123456789'), '+447123456789');
+
+  // International European exit code 0044 7...
+  assert.equal(normaliseToE164Mobile('0044 7123 456789'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('00447123456789'), '+447123456789');
+  assert.equal(normaliseToE164Mobile('0044 (0) 7123 456789'), '+447123456789');
+
+  // readSentWhatsappPhones excludes lead messaged via @c.us phone
+  const ws = createTempWorkspace();
+  writeCSV(ws.leadsPath, [
+    { company_number: '22222222', company_name: 'Co Two', phones: '+447123456789', whatsapp_candidate: 'yes', status: 'lead' }
+  ], LEADS_COLUMNS);
+  appendSentWhatsapp(ws.sentWhatsappPath, {
+    company_number: '11111111',
+    company_name: 'Co One',
+    phone: '447123456789@c.us',
+    status: 'sent'
+  });
+
+  const candidates = getWhatsAppCandidates({
+    leadsPath: ws.leadsPath,
+    sentLeadsPath: ws.sentLeadsPath,
+    sentWhatsappPath: ws.sentWhatsappPath
+  });
+  assert.equal(candidates.length, 0);
+  ws.cleanup();
+});
+
+test('Fix 5: parseCSV and getWhatsAppCandidates strip UTF-8 BOM from CSV files', () => {
+  const ws = createTempWorkspace();
+  // Write leads.csv with UTF-8 BOM
+  fs.writeFileSync(
+    ws.leadsPath,
+    '\uFEFFcompany_number,company_name,date_of_creation,emails,phones,whatsapp_candidate,status,sources\n11111111,BOM Ltd,2026-08-01,,+447123456789,yes,lead,scrape\n',
+    'utf8'
+  );
+  // Write sent_whatsapp.csv with UTF-8 BOM
+  fs.writeFileSync(
+    ws.sentWhatsappPath,
+    '\uFEFFcompany_number,company_name,phone,status,sent_at\n99999999,Sent BOM Ltd,+447999999999,sent,2026-09-30T10:00:00Z\n',
+    'utf8'
+  );
+
+  const sentNums = readSentWhatsappCompanyNumbers(ws.sentWhatsappPath);
+  assert.equal(sentNums.has('99999999'), true);
+  assert.equal(sentNums.has('\uFEFF99999999'), false);
+
+  const candidates = getWhatsAppCandidates({
+    leadsPath: ws.leadsPath,
+    sentLeadsPath: ws.sentLeadsPath,
+    sentWhatsappPath: ws.sentWhatsappPath
+  });
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].company_number, '11111111');
+  assert.equal(candidates[0].target_phone, '+447123456789');
+  ws.cleanup();
+});
+
+test('Fix 6: Case-insensitive company number matching between leads and sent_whatsapp', () => {
+  const ws = createTempWorkspace();
+  // Scottish & NI company numbers with lowercase prefixes
+  writeCSV(ws.leadsPath, [
+    { company_number: 'sc901517', company_name: 'Scot Ltd', phones: '+447111111111', whatsapp_candidate: 'yes', status: 'lead' },
+    { company_number: 'ni654321', company_name: 'NI Ltd', phones: '+447222222222', whatsapp_candidate: 'yes', status: 'lead' }
+  ], LEADS_COLUMNS);
+
+  // sent_leads with uppercase duplicate of sc901517
+  writeCSV(ws.sentLeadsPath, [
+    { company_number: 'SC901517', company_name: 'Scot Ltd Dupe', phones: '+447111111111', whatsapp_candidate: 'yes', status: 'lead', sent_at: '2026-09-30T10:00:00Z' }
+  ], [...LEADS_COLUMNS, 'sent_at']);
+
+  // sent_whatsapp with uppercase SC901517
+  appendSentWhatsapp(ws.sentWhatsappPath, {
+    company_number: 'SC901517',
+    company_name: 'Scot Ltd',
+    phone: '+447999999999',
+    status: 'sent'
+  });
+
+  const sentNums = readSentWhatsappCompanyNumbers(ws.sentWhatsappPath);
+  assert.equal(sentNums.has('SC901517'), true);
+
+  const candidates = getWhatsAppCandidates({
+    leadsPath: ws.leadsPath,
+    sentLeadsPath: ws.sentLeadsPath,
+    sentWhatsappPath: ws.sentWhatsappPath
+  });
+
+  // sc901517 should be excluded by SC901517 in sent_whatsapp
+  // ni654321 should remain
+  assert.equal(candidates.length, 1);
+  assert.equal(candidates[0].company_number, 'ni654321');
+  assert.equal(candidates[0].target_phone, '+447222222222');
+  ws.cleanup();
+});
