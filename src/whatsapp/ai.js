@@ -17,7 +17,10 @@ async function generateWhatsAppMessage(data, mock = false) {
     return `Saw you just registered ${data.companyName}. I build modern websites and business automation tools to help startups get clients faster. Would you be open to a quick 2-min chat on how we can collaborate?`;
   }
 
-  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const candidateModels = ['gemini-1.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-pro'];
+  let model = null;
+  let text = '';
+  let aiSuccess = false;
 
   
   // Heuristic to check if they have a website
@@ -47,12 +50,25 @@ Write the message now:
 
 
   try {
-    const result = await model.generateContent(prompt);
-    let text = result.response.text().trim();
+    for (const m of candidateModels) {
+      try {
+        model = genAI.getGenerativeModel({ model: m });
+        const result = await model.generateContent(prompt);
+        text = result.response.text().trim();
+        aiSuccess = true;
+        break; // Stop loop if successful
+      } catch (err) {
+        // Model failed (e.g. 404), try the next one
+        continue;
+      }
+    }
+    
+    if (!aiSuccess) throw new Error("All AI models failed");
+
     // Strip out links just in case AI ignores the rule
     text = text.replace(/https?:\/\/[^\s]+/g, '');
     return text.trim();
-  } catch (error) {
+  } catch (error) { catch (error) {
     console.error('⚠️  AI API failed (using backup message instead):', error.message);
     // Silent fallback to avoid crashing the bot
     
