@@ -44,7 +44,19 @@ function writeCSVAtomic(filePath, data, columns) {
 
 function normaliseToE164Mobile(phoneStr) {
   if (!phoneStr || typeof phoneStr !== 'string') return null;
-  const cleaned = phoneStr.replace(/[\s\(\)\-\.]/g, '');
+  let cleaned = phoneStr.trim().replace(/@c\.us$/i, '').replace(/@s\.whatsapp\.net$/i, '');
+  cleaned = cleaned.replace(/[\s\(\)\-\.]/g, '');
+
+  if (cleaned.startsWith('004407')) {
+    cleaned = '+44' + cleaned.slice(5);
+  } else if (cleaned.startsWith('00447')) {
+    cleaned = '+44' + cleaned.slice(4);
+  } else if (cleaned.startsWith('+4407')) {
+    cleaned = '+44' + cleaned.slice(4);
+  } else if (cleaned.startsWith('4407')) {
+    cleaned = '+44' + cleaned.slice(3);
+  }
+
   if (/^\+447\d{9}$/.test(cleaned)) {
     return cleaned;
   }
@@ -106,7 +118,8 @@ function readSentWhatsappCompanyNumbers(filePath = DEFAULT_SENT_WHATSAPP_PATH) {
   const rows = parseCSV(filePath);
   for (const r of rows) {
     if (r.company_number) {
-      numbers.add(String(r.company_number).trim());
+      const num = String(r.company_number).trim().toUpperCase();
+      if (num) numbers.add(num);
     }
   }
   return numbers;
@@ -118,12 +131,12 @@ function readSentWhatsappPhones(filePath = DEFAULT_SENT_WHATSAPP_PATH) {
   const rows = parseCSV(filePath);
   for (const r of rows) {
     if (r.phone) {
-      const norm = normaliseToE164Mobile(r.phone);
-      if (norm) phones.add(norm);
+      const mobiles = extractMobileNumbers(r.phone);
+      for (const m of mobiles) phones.add(m);
     }
     if (r.whatsapp_phone) {
-      const norm = normaliseToE164Mobile(r.whatsapp_phone);
-      if (norm) phones.add(norm);
+      const mobiles = extractMobileNumbers(r.whatsapp_phone);
+      for (const m of mobiles) phones.add(m);
     }
     if (r.phones) {
       const mobiles = extractMobileNumbers(r.phones);
@@ -150,16 +163,16 @@ function getWhatsAppCandidates(options = {}) {
 
   for (const lead of leads) {
     const num = lead.company_number ? String(lead.company_number).trim() : '';
-    if (num && !seenNumbers.has(num)) {
-      seenNumbers.add(num);
+    if (num && !seenNumbers.has(num.toUpperCase())) {
+      seenNumbers.add(num.toUpperCase());
       combined.push({ ...lead, _source: 'leads.csv' });
     }
   }
 
   for (const lead of sentLeads) {
     const num = lead.company_number ? String(lead.company_number).trim() : '';
-    if (num && !seenNumbers.has(num)) {
-      seenNumbers.add(num);
+    if (num && !seenNumbers.has(num.toUpperCase())) {
+      seenNumbers.add(num.toUpperCase());
       combined.push({ ...lead, _source: 'sent_leads.csv' });
     }
   }
@@ -175,7 +188,7 @@ function getWhatsAppCandidates(options = {}) {
     const companyNum = lead.company_number ? String(lead.company_number).trim() : '';
     if (!companyNum) continue;
 
-    if (excludeSent && sentCompanyNumbers.has(companyNum)) {
+    if (excludeSent && sentCompanyNumbers.has(companyNum.toUpperCase())) {
       continue;
     }
 
@@ -194,6 +207,11 @@ function getWhatsAppCandidates(options = {}) {
 
     if (customFilter && !customFilter(lead)) {
       continue;
+    }
+
+    // Intra-batch phone deduplication: prevent subsequent candidates from using the same phone
+    if (excludeSentPhones) {
+      sentPhones.add(targetPhone);
     }
 
     candidates.push({
@@ -226,7 +244,11 @@ function appendSentWhatsapp(arg1, arg2) {
 
   const dir = path.dirname(filePath);
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    try {
+      fs.mkdirSync(dir, { recursive: true });
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+    }
   }
 
   const defaultSentAt = new Date().toISOString();
@@ -241,16 +263,43 @@ function appendSentWhatsapp(arg1, arg2) {
     };
   });
 
-  const needsHeader = !fs.existsSync(filePath) || fs.statSync(filePath).size === 0;
-
-  if (needsHeader) {
-    writeCSVAtomic(filePath, records, SENT_WHATSAPP_COLUMNS);
+  // Atomic exclusive header creation if file does not exist
+  if (!fs.existsSync(filePath)) {
+    try {
+      fs.writeFileSync(filePath, SENT_WHATSAPP_COLUMNS.join(',') + '\n', { flag: 'wx' });
+    } catch (e) {
+      if (e.code !== 'EEXIST') throw e;
+    }
   } else {
-    const lines = records.map(record =>
-      SENT_WHATSAPP_COLUMNS.map(col => formatField(record[col])).join(',')
-    );
-    fs.appendFileSync(filePath, lines.join('\n') + '\n', 'utf8');
+    try {
+      if (fs.statSync(filePath).size === 0) {
+        fs.writeFileSync(filePath, SENT_WHATSAPP_COLUMNS.join(',') + '\n');
+      }
+    } catch {}
   }
+
+  // Ensure trailing newline before appending new lines
+  let prefix = '';
+  try {
+    const fd = fs.openSync(filePath, 'r');
+    try {
+      const stat = fs.fstatSync(fd);
+      if (stat.size > 0) {
+        const buf = Buffer.alloc(1);
+        fs.readSync(fd, buf, 0, 1, stat.size - 1);
+        if (buf[0] !== 0x0a) {
+          prefix = '\n';
+        }
+      }
+    } finally {
+      fs.closeSync(fd);
+    }
+  } catch {}
+
+  const lines = records.map(record =>
+    SENT_WHATSAPP_COLUMNS.map(col => formatField(record[col])).join(',')
+  );
+  fs.appendFileSync(filePath, prefix + lines.join('\n') + '\n', 'utf8');
 
   return records.length;
 }

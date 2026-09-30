@@ -34,14 +34,19 @@ function parseLine(line) {
 
 function parseCSV(filePath) {
   if (!fs.existsSync(filePath)) return [];
-  const content = fs.readFileSync(filePath, 'utf8');
+  let content = fs.readFileSync(filePath, 'utf8');
+  if (content.charCodeAt(0) === 0xFEFF) {
+    content = content.slice(1);
+  }
   const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
   if (lines.length === 0) return [];
-  const headers = parseLine(lines[0]);
+  const headers = parseLine(lines[0]).map(h => (h ? h.replace(/^\uFEFF/, '').trim() : h));
   return lines.slice(1).map(line => {
     const values = parseLine(line);
     const obj = {};
-    headers.forEach((h, i) => obj[h] = values[i] || '');
+    headers.forEach((h, i) => {
+      if (h) obj[h] = values[i] || '';
+    });
     return obj;
   });
 }
