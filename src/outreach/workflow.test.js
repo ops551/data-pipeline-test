@@ -132,53 +132,21 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     );
   });
 
-  await t.test('configures PR creation and auto-merge step with Nahid attribution and fallback', () => {
+  await t.test('configures direct push step with bot attribution', () => {
     const steps = parsed.jobs.outreach.steps;
     const prStep = steps.find(
       (s) =>
         s.run &&
-        s.run.includes('gh pr create') &&
-        s.run.includes('gh pr merge')
+        s.run.includes('git push origin HEAD:main')
     );
-    assert.ok(prStep, 'PR creation & auto-merge step must be present');
+    assert.ok(prStep, 'Direct push step must be present');
     assert.ok(
       prStep.if && prStep.if.includes("steps.check_changes.outputs.has_changes == 'true'"),
-      'PR step must only run if has_changes is true'
-    );
-
-    // Git config attribution
-    assert.ok(
-      prStep.run.includes('git config user.name "Nahid"'),
-      'Git commit author name must be configured as Nahid'
+      'Push step must be conditional on check_changes'
     );
     assert.ok(
-      prStep.run.includes('git config user.email "jr6259094@gmail.com"'),
-      'Git commit author email must be jr6259094@gmail.com for Pull Shark attribution'
-    );
-
-    // Branch creation and staging
-    assert.ok(
-      prStep.run.includes('BRANCH_NAME="outreach-run-${{ github.run_id }}"'),
-      'Branch name must follow outreach-run pattern with run_id'
-    );
-    assert.ok(prStep.run.includes('git checkout -b "$BRANCH_NAME"'), 'Must checkout branch');
-    assert.ok(prStep.run.includes('git add'), 'Must stage csv files');
-    assert.ok(prStep.run.includes('git commit -m'), 'Must commit changes');
-    assert.ok(prStep.run.includes('git push origin "$BRANCH_NAME"'), 'Must push branch to origin');
-
-    // PR creation
-    assert.ok(prStep.run.includes('gh pr create'), 'Must call gh pr create');
-    assert.ok(prStep.run.includes('--base main'), 'PR base must be main');
-    assert.ok(prStep.run.includes('--head "$BRANCH_NAME"'), 'PR head must be $BRANCH_NAME');
-
-    // Auto-merge with fallback
-    assert.ok(
-      prStep.run.includes('gh pr merge "$PR_URL" --auto --merge --delete-branch'),
-      'Must attempt auto-merge with delete-branch'
-    );
-    assert.ok(
-      prStep.run.includes('|| gh pr merge "$PR_URL" --merge --delete-branch'),
-      'Must include fallback direct merge for free private repos'
+      prStep.run.includes('git config user.name "github-actions[bot]"'),
+      'Must use bot identity for commits'
     );
   });
 
