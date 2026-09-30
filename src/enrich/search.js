@@ -32,6 +32,24 @@ const SOCIAL_DOMAINS = [
   'tiktok.com'
 ];
 
+
+function isLikelyCompanyWebsite(domain, companyName) {
+  if (!companyName) return false;
+  const cleanName = companyName.toLowerCase().replace(/\b(ltd|limited|uk|co|inc|cic)\b/g, '').replace(/[^a-z0-9]/g, ' ').trim();
+  const words = cleanName.split(/\s+/).filter(w => w.length > 2);
+  const joinedName = words.join('');
+  const d = domain.split('.')[0]; // e.g. autodesign.works -> autodesign
+  
+  if (joinedName && d.includes(joinedName)) return true;
+  if (joinedName && joinedName.includes(d)) return true;
+  
+  let matchCount = 0;
+  for (const w of words) {
+    if (d.includes(w)) matchCount++;
+  }
+  return matchCount > 0;
+}
+
 function getDomain(url) {
   try {
     const hostname = new URL(url).hostname.toLowerCase();
@@ -94,7 +112,9 @@ async function searchCompany(scraper, company) {
     if (isSocialOrDirectory(domain) && !domain.includes("gov.uk")) {
       socialUrls.push(link);
     } else if (!isDirectory(domain) && !domain.includes('gov.uk')) {
-      has_website = true;
+      if (isLikelyCompanyWebsite(domain, company.company_name)) {
+        has_website = true;
+      }
     }
   }
 
