@@ -31,7 +31,8 @@ async function collectCompanies(config, deps = {}) {
 
     startIndex += items.length;
     page += 1;
-    if (typeof result.hits === 'number' && startIndex >= result.hits) break;\n    if (startIndex >= 10000) { log('Reached API limit of 10,000 results. Please narrow date range to get more.'); break; }
+   if (typeof result.hits === 'number' && startIndex >= result.hits) break;
+    if (startIndex >= 10000) { log('Reached API limit of 10,000 results. Please narrow date range to get more.'); break; }
   }
 
   return collected;
