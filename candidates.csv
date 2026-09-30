@@ -1,29 +1,4 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17436311,FLEETWISE CONSULTING LTD,2026-09-03,active,ltd,70221,"299 Down Road, Portishead, Bristol, BS20 8HZ, England",no
-17436315,LIVING NEST LTD,2026-09-03,active,ltd,55100,"47 Hooper Street, Birmingham, B18 7AP, United Kingdom",no
-17436324,NO TWO STUDIO LTD,2026-09-03,active,ltd,62090,"The Litehouse Business Centre, Crocus Street, Nottingham, NG2 3EJ, England",no
-17436331,SAAS 21 LIMITED,2026-09-03,active,ltd,58290,"3 Hornby Close, Burscough, Ormskirk, L40 7AW, England",no
-17436316,HXT COMMISSIONING LTD,2026-09-03,active,ltd,71129,"44 Pump Lane, Rainham, Gillingham, ME8 7AD, England",no
-17436330,ARS VELETA LIMITED,2026-09-03,active,ltd,90030,"11a Colbeck Mews, London, SW7 4LX, United Kingdom",no
-17436611,AUREX-MEDICAL LTD,2026-09-03,active,ltd,74100,"Ash House Kirkham Road, Treales, Preston, PR4 3SF, England",no
-17436605,KAY ACCOUNTANCY CONSULTING LIMITED,2026-09-03,active,ltd,69201,"Jubilee House, East Beach, Lytham St.Annes, Lancashire, FY8 5FT, England",no
-17436596,TARKABEAM LTD,2026-09-03,active,ltd,55209,"Tanglewood Gardens Limers Lane, Northam, Bideford, EX39 2RG, England",no
-17436602,CAMPO & CO DEVELOPMENTS LTD,2026-09-03,active,ltd,41202,"11 Goldsmith Close, Llanrumney, Cardiff, CF3 5ND, Wales",no
-SC901509,SCOTIVO LTD,2026-09-03,active,ltd,81210;81222,"118 Whitacres Road, Glasgow, G53 7LJ, United Kingdom",no
-17436786,1845 FLAVOUR KITCHEN LIMITED,2026-09-03,active,ltd,56101;56103;56210;77400,"124-128 City Road, London, EC1V 2NX, England",no
-17436779,RAMFORD LOGISTICS LTD,2026-09-03,active,ltd,49410;52103;52211;52290,"17 Green Lanes, London, N16 9BS, United Kingdom",no
-17436782,CARING EVERY STEP LTD,2026-09-03,active,ltd,87900,"26 Station Road, Watford, WD17 1JU, England",no
-17436785,BALNECROFT LIMITED,2026-09-03,active,ltd,47820;47910,"South Pasture Farm Dobella Lane, Rawcliffe, Goole, DN14 8SH, United Kingdom",no
-17436788,ARIANA HRENIUC LTD,2026-09-03,active,ltd,49410,"83 Newport Street, Leicester, LE3 9FU, England",no
-17436882,JUPITER5 LIMITED,2026-09-03,active,ltd,58210,"5 Danehurst Street, London, SW6 6SA, England",no
-SC901512,COACH2PITCH LIMITED,2026-09-03,active,ltd,78200,"4/5 18 Riverford Court, Glasgow, G43 1FB, Scotland",no
-17436888,ODYSSEUS RESTORATION LTD,2026-09-03,active,ltd,43310;43390;43999,"26 The Grove, London, N13 5LG, England",no
-17436884,J DURHAM BUILDING CONTROL ENGINEERING SERVICES LTD,2026-09-03,active,ltd,71200,"The Warehouse, Canal Street, Retford, Nottinghamshire, DN22 6EZ, England",no
-17436879,ANECIX LTD,2026-09-03,active,ltd,47910;62012;63110;63120,"Office 21081 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
-17436930,MERCÉLUXEUK LTD,2026-09-03,active,ltd,46420,"Flat 401 Ewhurst House 20 West Parkside, London, SE10 0WA, England",no
-17436932,D&C MOBILE SERVICES LTD,2026-09-03,active,ltd,71129,"16 Chestnut Avenue, Spalding, PE11 2LL, United Kingdom",no
-17437033,ARCO WHOLESALE UK LIMITED,2026-09-03,active,ltd,46310,"Unit 5 Plymouth Court Business Centre, 164 Plymouth Grove, Manchester, M13 0AF, England",no
-17437036,SIDE BY SIDE AFRICA ADVENTURES LTD,2026-09-03,active,ltd,79120,"North Dean Crabgate Lane, Skellow, Doncaster, DN6 8RA, England",no
 17437030,MILANOS DESSERTS LIMITED,2026-09-03,active,ltd,56290,"11 Burton Street, Dawley, Telford, TF4 2ES, England",no
 17437163,INTELLIGENT TECH GROUP LTD,2026-09-03,active,ltd,62012,"54 Talbot Road, Hatfield, Herts, AL10 0QY, United Kingdom",no
 17437168,BUILDHER WORKS LTD,2026-09-03,active,ltd,41202,"8 Hillcroft Close, Pontefract, WF8 3BD, United Kingdom",no
@@ -433,3 +408,24 @@ SC901100,KITCHENS BY DBR LIMITED,2026-09-01,active,ltd,43320,"Office 2/3, 48, Cl
 17431273,EFRATA TRADING LTD,2026-09-01,active,ltd,47910,"3, Hitard Court, Red Lion Row, London, SE17 2FF, United Kingdom",no
 17431263,THE LONDON LANDSCAPING COMPANY LTD,2026-09-01,active,ltd,71112,"9a Westgate, Southwell, NG25 0JN, United Kingdom",no
 17431269,MODERNHOUSEEXTENSIONS LTD,2026-09-01,active,ltd,41202,"41 Helmshore Road, Rossendale, BB4 4BW, United Kingdom",no
+17431291,STAFFSCENE EVENT GROUP LTD,2026-09-01,active,ltd,78200,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",no
+17431287,WILLOW DEVELOPMENTS (WM) LTD,2026-09-01,active,ltd,43290,"15a Anchor Road, Walsall, WS9 8PT, England",no
+17431294,MODIA LIMITED,2026-09-01,active,ltd,17230;47620,"6 Lon Caer Seion, Conwy, LL32 8BA, Wales",no
+17431286,ELSHARIF LTD,2026-09-01,active,ltd,84120,"Flat 7 757 London Road, Thornton Heath, CR7 6AW, England",no
+17431280,RABIGENIX HEALTHCARE SOLUTIONS LTD,2026-09-01,active,ltd,46460,"5 Brayford Square, London, E1 0SG, United Kingdom",no
+17431267,THE RUNNING HORSE NOTTS LTD,2026-09-01,active,ltd,56302,"16 Alfreton Road, Nottingham, NG7 3NG, England",no
+17431274,GOLDEN DUNE ENTERPRISES LIMITED,2026-09-01,active,ltd,46900,"01 182-184 Office 15452 High Street North East Ham, London, E6 2JA, United Kingdom",no
+17431276,VICI PERFORMANCE LTD,2026-09-01,active,ltd,47910;86900,"82a James Carter Road, Mildenhall, IP28 7DE, United Kingdom",no
+17431292,GROSVENOR HATHAWAY LTD,2026-09-01,active,ltd,62012,"261 Bolton Road, Bury, BL8 2NZ, England",no
+17431301,COMFY ROOMS AIR-CONDITIONING LTD,2026-09-01,active,ltd,43220,"46 Burwood Close, Walton-On-Thames, KT12 4JL, United Kingdom",no
+17431300,R COCKCROFT LTD,2026-09-01,active,ltd,90030,"10 Beightons Walk, Rochdale, OL12 6EA, England",no
+17431531,TRILLION GROUP LTD,2026-09-01,active,ltd,25620,"86 Bury Old Road, Manchester, Lancashire, M45 6TQ, United Kingdom",no
+17431535,MCKOSI ACCESS LTD,2026-09-01,active,ltd,43999,"Ford Farm Totties, Totties, Holmfirth, HD9 1UL, England",no
+17431540,VOXALFLOW LTD,2026-09-01,active,ltd,62090,"51 Wolverton Road, Newport Pagnell, MK16 8BH, England",no
+17431538,TOP BILLING LIMITED,2026-09-01,active,ltd,59112,"35 Chedworth Drive, Manchester, M23 1LW, England",no
+17431548,R2G HAULAGE LTD,2026-09-01,active,ltd,49410;52103;77120,"14 Acorn Close, Slough, SL3 8GU, England",no
+17431534,NEXTGEN RISK ADVISORY LTD,2026-09-01,active,ltd,70229,"33 Rushout Avenue, Harrow, HA3 0AS, England",no
+17431521,THE FERREIRA COLLECTIVE LTD,2026-09-01,active,ltd,78109;78200,"107 St. Albans Avenue, Ashton-Under-Lyne, OL6 8XF, England",no
+17431550,VANOPHEM GROUP LTD,2026-09-01,active,ltd,62020;70229,"45 Albemarle Street, London, W1S 4JL, England",no
+17431539,NICCARPENTER LTD,2026-09-01,active,ltd,43310;43320;43999,"123 Eliot Bank, London, SE23 3XD, England",no
+17431842,ALBER ANALYTICS LTD,2026-09-01,active,ltd,62090,"3 Allington Lane, Ebbsfleet Valley, Swanscombe, DA10 1GA, England",no
