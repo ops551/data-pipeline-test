@@ -27,6 +27,7 @@ jobs:
 
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+      ENRICH_BATCH_SIZE: '50'
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
