@@ -4,8 +4,15 @@ const PHONE_REGEX = /(?:(?:\+44\s?|0)7\d{3}\s?\d{6}|(?:\+44\s?|0)7\d{4}\s?\d{5})
 function extractEmails(text) {
   if (!text) return [];
   const matches = text.match(EMAIL_REGEX) || [];
-  const valid = matches.filter(e => {
-    e = e.toLowerCase();
+  
+  // Clean up glued text like .comwebsite before filtering
+  const cleanedMatches = matches.map(e => {
+    return e.toLowerCase()
+      .replace(/\.com(website|web|www|http|info|tel|mob|call|contact|email).*$/, '.com')
+      .replace(/\.co\.uk(website|web|www|http|info|tel|mob|call|contact|email).*$/, '.co.uk');
+  });
+
+  const valid = cleanedMatches.filter(e => {
     
     // Check if username is a long hex hash (typical for Sentry/tracking keys)
     const username = e.split('@')[0];
