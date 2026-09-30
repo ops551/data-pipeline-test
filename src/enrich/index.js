@@ -87,7 +87,9 @@ async function runEnrichment() {
 
       // Format and append lead
       const leadObj = formatLead(company, extractedData, sources);
-      appendLead(leadsFile, leadObj);
+      if (leadObj.status !== 'no_contact') {
+        appendLead(leadsFile, leadObj);
+      }
       recordEnriched(enrichedFile, company.company_number);
       
       console.log(`  Status: ${leadObj.status}. Emails: ${extractedData.emails.length}, Phones: ${extractedData.phones.length}`);
