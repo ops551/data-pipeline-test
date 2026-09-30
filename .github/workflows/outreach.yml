@@ -57,7 +57,7 @@ jobs:
 
       - name: Auto-Replenish Leads (if empty)
         run: |
-          LEADS_COUNT=$(awk -F',' 'NR>1 && $4!=""' leads.csv 2>/dev/null | wc -l || echo 0)
+          LEADS_COUNT=$(node -e "const fs=require('fs'); try { const d=fs.readFileSync('leads.csv','utf8').split('\n').filter(l=>l.includes(',lead,') && l.includes('@')).length; console.log(d); } catch(e){console.log(0)}")
           echo "Current pending leads: $LEADS_COUNT"
           if [ "$LEADS_COUNT" -lt 5 ]; then
             echo "Queue is running very low! Auto-scraping new companies..."
