@@ -19,7 +19,7 @@ test('constants are correctly configured', () => {
   assert.equal(DEFAULT_SIGNATURE.name, 'Nahid');
   assert.equal(DEFAULT_SIGNATURE.whatsapp, '+880 1615-753465');
   assert.equal(DEFAULT_SIGNATURE.github, 'https://github.com/Nahid625');
-  assert.equal(DEFAULT_SIGNATURE.portfolio, 'https://github.com/Nahid625');
+  assert.equal(DEFAULT_SIGNATURE.portfolio, 'https://nahid-yf63.onrender.com/');
   assert.equal(DEFAULT_SIGNATURE.title, 'Web Design & Business Automation');
 });
 
@@ -90,7 +90,7 @@ test('buildSignature formats default signature block with WhatsApp, GitHub, and 
     'Web Design & Business Automation',
     'WhatsApp: +880 1615-753465',
     'GitHub: https://github.com/Nahid625',
-    'Portfolio: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   assert.equal(signature, expected);
@@ -145,7 +145,7 @@ test('buildPrompt constructs tailored prompt with anti-boilerplate constraints',
   assert.ok(prompt.includes('Best regards,\nNahid'));
   assert.ok(prompt.includes('WhatsApp: +880 1615-753465'));
   assert.ok(prompt.includes('GitHub: https://github.com/Nahid625'));
-  assert.ok(prompt.includes('Portfolio: https://github.com/Nahid625'));
+  assert.ok(prompt.includes('Portfolio: https://nahid-yf63.onrender.com/'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
 });
@@ -226,7 +226,7 @@ test('cleanEmailContent appends personal signature by default and honors include
   assert.ok(withSig.body.endsWith(buildSignature()));
   assert.ok(withSig.body.includes('WhatsApp: +880 1615-753465'));
   assert.ok(withSig.body.includes('GitHub: https://github.com/Nahid625'));
-  assert.ok(withSig.body.includes('Portfolio: https://github.com/Nahid625'));
+  assert.ok(withSig.body.includes('Portfolio: https://nahid-yf63.onrender.com/'));
 
   const withoutSig = cleanEmailContent(raw, { includeSignature: false });
   assert.ok(withoutSig.body.endsWith('Best regards,\nNahid'));
@@ -307,7 +307,7 @@ test('generateEmail generates clean email using injected genAI mock', async () =
   assert.ok(result.body.includes('Best regards,\nNahid'));
   assert.ok(result.body.includes('WhatsApp: +880 1615-753465'));
   assert.ok(result.body.includes('GitHub: https://github.com/Nahid625'));
-  assert.ok(result.body.includes('Portfolio: https://github.com/Nahid625'));
+  assert.ok(result.body.includes('Portfolio: https://nahid-yf63.onrender.com/'));
   assert.ok(result.body.endsWith(buildSignature()));
   assert.equal(result.text, `Subject: ${result.subject}\n\n${result.body}`);
 });

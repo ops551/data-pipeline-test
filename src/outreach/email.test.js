@@ -255,7 +255,7 @@ test('ensureSignature appends mandatory personal signature when missing', () => 
   assert.ok(signed.includes('Nahid'));
   assert.ok(signed.includes('WhatsApp: +880 1615-753465'));
   assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
-  assert.ok(signed.includes('Portfolio: https://github.com/Nahid625'));
+  assert.ok(signed.includes('Portfolio: https://nahid-yf63.onrender.com/'));
 });
 
 test('ensureSignature deduplicates and prevents repeating signature if already present', () => {
@@ -269,7 +269,7 @@ test('ensureSignature deduplicates and prevents repeating signature if already p
     'Web Design & Business Automation',
     'WhatsApp: +880 1615-753465',
     'GitHub: https://github.com/Nahid625',
-    'Portfolio: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   const result = ensureSignature(existing);
@@ -277,7 +277,7 @@ test('ensureSignature deduplicates and prevents repeating signature if already p
   const ghMatches = result.match(/https:\/\/github\.com\/Nahid625/g);
 
   assert.equal(waMatches.length, 1);
-  assert.equal(ghMatches.length, 2); // 1 for GitHub, 1 for Portfolio
+  assert.equal(ghMatches.length, 1); // 1 for GitHub (Portfolio has different URL now)
   assert.equal(result.trim(), existing.trim());
 });
 
