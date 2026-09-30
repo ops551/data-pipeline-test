@@ -249,7 +249,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       const subject = emailContent.subject || `Web Design & Business Automation for ${companyName}`;
 
       // 4. Determine destination recipient
-      const recipient = testEmail || lead.emails;
+      const recipient = testEmail || (lead.emails ? lead.emails.split(';')[0].trim() : null);
       if (!recipient || !recipient.trim()) {
         throw new Error(`No email address available for ${companyName} (${companyNum})`);
       }
