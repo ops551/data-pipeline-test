@@ -70,7 +70,9 @@ async function runEnrichment() {
         extractedData.emails.push(...moreData.emails);
         extractedData.phones.push(...moreData.phones);
         extractedData.emails = [...new Set(extractedData.emails)];
-        extractedData.phones = [...new Set(extractedData.phones)];
+        const { rankEmailsByCompanyName } = require('./extract');
+        extractedData.emails = rankEmailsByCompanyName(extractedData.emails, company.company_name);
+        extractedData.phones = [...new Set(extractedData.phones)].slice(0, 5);
         if (extractedData.emails.length > 0 || extractedData.phones.length > 0) {
           sources.push('web_scrape');
         }
