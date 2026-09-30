@@ -107,7 +107,7 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
       
       const ispDomains = ['gmail', 'yahoo', 'aol', 'hotmail', 'outlook', 'icloud', 'live'];
       if (ispDomains.some(isp => domainName === isp)) {
-        score += 5;
+        // Do not give free points just for being gmail. It must match user/officer to get > 0.
       }
     }
     
