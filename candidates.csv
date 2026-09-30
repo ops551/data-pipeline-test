@@ -1,54 +1,4 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17441675,VOLTAIRE COMMERCE LTD,2026-09-05,active,ltd,47910,"7 Hughlings Close, York, YO26 8FL, United Kingdom",no
-17441783,LOGIXFLOW LTD,2026-09-06,active,ltd,58290,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17441829,AM INTERIOR CONSTRUCTION LTD,2026-09-06,active,ltd,41201,"19 The Mile End, London, E17 5QE, England",no
-17441832,HAMAAZS LTD,2026-09-06,active,ltd,43999,"63a Commercial Road, Swindon, SN1 5NX, United Kingdom",no
-17441965,THE QUIET HARBOUR SPACE LTD,2026-09-06,active,ltd,86900,"57 Gainsborough Road, Felixstowe, IP11 7HS, England",no
-17441957,SET CARPENTRY LTD,2026-09-06,active,ltd,43290,"Flat 2 38 Foxley Lane, Purley, CR8 3EE, England",no
-17441959,WOODS SWEETS LTD,2026-09-06,active,ltd,47240,"25 Railway View, Darlington, DL1 4LX, England",no
-17442055,BALNEO LTD,2026-09-06,active,ltd,47910,"23 Lewis Road, Mitcham, CR4 3DF, England",no
-17442057,GEDM ROOFING SERVICES LTD,2026-09-06,active,ltd,16230;43910,"12 Lenham Way, Pitsea, Basildon, SS13 2NT, England",no
-17442053,ESSEX MECHANICAL INSTALLATIONS LTD,2026-09-06,active,ltd,43220,"4 Badgers Keep, Burnham-On-Crouch, CM0 8UD, England",no
-17442062,BAGEL SOCIAL LTD,2026-09-06,active,ltd,56103,"49 South End, Croydon, CR0 1BF, United Kingdom",no
-17442060,HIZAM LTD,2026-09-06,active,ltd,53201,"278 Olton Boulevard West, Birmingham, B11 3HE, England",no
-17442232,SIP STATION MILDENHALL LIMITED,2026-09-07,active,ltd,47250,"Unit 321 Bedford Heights Bizspace, Brickhill Drive, Bedford, MK41 7PH, United Kingdom",no
-17442239,VOLANTEUS HOLDINGS LIMITED,2026-09-07,active,ltd,51102,"2nd Floor Explorer 2 Fleming Way, Crawley, RH10 9EA, United Kingdom",no
-17442233,VENDRI LTD,2026-09-07,active,ltd,47990,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17442223,RUNBUDDY APP LTD,2026-09-07,active,ltd,62012;63120;73110,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17442235,4SURV LTD,2026-09-07,active,ltd,58290;62012;62020;62090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17442219,SOFTECH LTD,2026-09-07,active,ltd,62012;62020;62090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17442251,"KM PHOENIX POND, GARDEN & GENERAL MAINTENANCE LTD",2026-09-07,active,ltd,81300,"24 Appledore Rd, Cardiff, South Glam, CF14 3HU, Wales",no
-17442265,NAGS HEAD LITTLE HADHAM LTD,2026-09-07,active,ltd,56101,"Nags Head, The Ford, Litlle Hadham, SG11 2AX, United Kingdom",no
-17442244,M3TA CONSULTING LTD,2026-09-07,active,ltd,43290,"C/O Vaghela & Co. Services, 10 Clarks Courtyard, 145 Granville Street, Birmingham, B1 1SB, United Kingdom",no
-17442248,VVR (LUDLOW) LTD,2026-09-07,active,ltd,45200,"64 Corve Street, Ludlow, SY8 1DU, United Kingdom",no
-17442258,LJJCOMPOSITI LTD,2026-09-07,active,ltd,29320,"3 Anderson Court, Newnham Road, Cambridge, CB3 9EZ, United Kingdom",no
-17442267,CODEXALL LTD,2026-09-07,active,ltd,62012,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17442272,MARIA LTD LTD,2026-09-07,active,ltd,46360,"57 Merton Road, Bootle, L20 7AP, United Kingdom",no
-17442406,R.B.BUILDERS AND MANAGMENT LTD,2026-09-07,active,ltd,41201;41202,"18a King Street, Chatham, ME4 4LX, England",no
-17442401,WEMMA-RIGGING LTD,2026-09-07,active,ltd,41202,"71 Gilkes Street, Middlesbrough, TS1 5EH, United Kingdom",no
-17442400,MICHHE LIMITED,2026-09-07,active,ltd,64922,"The Broadgate Tower 20th Floor, 20 Primrose Street, London, EC2A 2EW, England",no
-17442530,MOVI REMOVAL LTD,2026-09-07,active,ltd,49420;52103,"658 Hyde Road, Manchester, M18 7EE, England",no
-17442527,ABSOLUTE SAFETY SOLUTIONS LTD,2026-09-07,active,ltd,74901,"8 Dalton Terrace, Chopwell, Newcastle Upon Tyne, NE17 7EF, United Kingdom",no
-17442515,DRIFT WINE LTD,2026-09-07,active,ltd,46342;47250,"167-169 Great Portland Street, London, W1W 5PF, England",yes
-17442519,SKYHIGHDRIVE LTD,2026-09-07,active,ltd,86900,"81a London Park, Mirfield, WF14 0LW, England",no
-17442525,PIRUZ TRADE LTD,2026-09-07,active,ltd,47910,"Office 21142 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
-SC901708,KESTREL APPLIED INTELLIGENCE LTD,2026-09-07,active,ltd,62012;62020,"242 Seatown, Cullen, Buckie, AB56 4SN, Scotland",no
-17442521,PACIFIC LAB UK LTD,2026-09-07,active,ltd,46420;47910,"First Floor, 2 Hampton Court Road, Birmingham, B17 9AE, England",no
-17442537,ADZ CLOTHES LIMITED,2026-09-07,active,ltd,46420;47820,"8 Hampton Street, Birmingham, B19 3LN, England",no
-17442810,KITANESQUE LTD,2026-09-07,active,ltd,47910,"Annexe Moat Farm Pershore Road, Earls Croome, Worcester, WR8 9DH, England",no
-17442815,KURAL TRANSPORT LIMITED,2026-09-07,active,ltd,49410,"24 Rhodesia Court Bawtry Road, Doncaster, DN4 7AQ, England",no
-17442821,ANANDAMAYA NOIR LTD,2026-09-07,active,ltd,96090,"27-29 Bold Street, Liverpool, L1 4DN, England",no
-17442834,ROLYAT CONSULTING LIMITED,2026-09-07,active,ltd,70229,"8 Strath Terrace, London, SW11 1RF, England",no
-17442831,MUSA CORPORATION LIMITED,2026-09-07,active,ltd,47630,"37 Hatcher Crescent, Colchester, CO2 8JL, England",no
-17442832,KMM HYDRAULICS LTD,2026-09-07,active,ltd,46190;70229,"38 Mapperley Drive, Northampton, NN3 9UF, England",no
-17442840,MW AERO LTD,2026-09-07,active,ltd,33160;46690;71122,"17 Ashley Road, Clevedon, BS21 7UX, England",no
-17442824,META PEPTIDES LTD,2026-09-07,active,private-limited-guarant-nsc,93130,"3b Cornmarket, Thame, OX9 3DX, England",no
-17442829,HEDGEHUNT LTD,2026-09-07,active,ltd,78109,"7 Battle Street, Gravesend, DA12 3DB, United Kingdom",no
-NI743533,EAST ESSENCE ONLINE LTD,2026-09-07,active,ltd,47910,"4 Quay Street, Ardglass, Downpatrick, BT30 7SA, Northern Ireland",no
-17442830,LOCKJUICE LTD,2026-09-07,active,ltd,46900,"Little Sands, Fore Street, Sidbury, EX10 0SD, United Kingdom",no
-17442953,ANAJON DEVELOPMENTS LTD,2026-09-07,active,ltd,84110,"Bramhall House 14 Ack Lane East, Bramhall, Stockport, SK7 2BY, England",no
-SC901733,MARBLE HOUSE FILMS LTD,2026-09-07,active,ltd,59111,"3/2 Newhaven Place, Edinburgh, EH6 4TW, Scotland",no
-17442960,OSKA ENTERPRISES LIMITED,2026-09-07,active,ltd,56302,"The Stag, 35 Little Park Gardens, Enfield, Middlesex, EN2 6PH, England",no
 17442956,WHITBURN KIDS CLUB LTD,2026-09-07,active,ltd,88910,"50 Oakfields, Burnopfield, Newcastle Upon Tyne, NE16 6PQ, United Kingdom",no
 17442971,PARCEL WORKS DEVELOPMENT LIMITED,2026-09-07,active,ltd,41100,"151c Chadwick Road, London, SE15 4PY, England",no
 17442957,SLATE ACCOUNTANCY LIMITED,2026-09-07,active,ltd,69201;69202;69203,"124 City Road, London, EC1V 2NX, United Kingdom",yes
@@ -9911,3 +9861,5 @@ SC904494,11 RT LIMITED,2026-09-30,active,ltd,55100,"4 Carrick Drive, Glasgow, G3
 17492747,JMAC TRADING LTD,2026-09-30,active,ltd,47910,"246a Court Oak Road, Birmingham, B32 2EG, England",no
 17492751,MALIKS EMPIRE LIMITED,2026-09-30,active,ltd,73110,"70 Brook Path, Slough, SL1 5EN, England",no
 17492748,FRONTERA DATA LABS LIMITED,2026-09-30,active,ltd,62012,"Flat 12 Kings House 34a Widmore Road, Bromley, BR1 1AP, England",no
+17492753,FUMEISHAN LTD,2026-09-30,active,ltd,59112;73110;85590;96020,"13b Wellspring Crescent, Wembley, HA9 9UZ, England",no
+17492750,SPUD BOYS HAVELOCK LTD,2026-09-30,active,ltd,56103,"45-47 New Wellington Street, Blackburn, BB2 4DY, England",no
