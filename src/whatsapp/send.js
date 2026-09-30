@@ -1,6 +1,7 @@
 const { Client, LocalAuth } = require('whatsapp-web.js');
 const { getPendingWhatsAppLeads, appendSentWhatsapp } = require('./csv.js');
 const { generateWhatsAppMessage } = require('./ai.js');
+const { normalizeToWhatsAppId } = require('./format.js');
 
 const BATCH_LIMIT = parseInt(process.env.WHATSAPP_BATCH_SIZE) || 5;
 
@@ -41,7 +42,9 @@ async function runWhatsAppOutreach() {
 
                 // 2. Send Message
                 console.log(`Sending message to ${lead.target_phone}...`);
-                await client.sendMessage(lead.target_phone, msg);
+                const jid = normalizeToWhatsAppId(lead.target_phone);
+                if (!jid) throw new Error('Invalid WhatsApp format for ' + lead.target_phone);
+                await client.sendMessage(jid, msg);
                 
                 // 3. Mark as Sent
                 appendSentWhatsapp({
