@@ -55,6 +55,9 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.ok(inputs.dry_run, 'workflow_dispatch must declare dry_run input');
     assert.strictEqual(inputs.dry_run.type, 'boolean');
     assert.strictEqual(inputs.dry_run.default, false);
+    assert.ok(inputs.test_email, 'workflow_dispatch must declare test_email input');
+    assert.strictEqual(inputs.test_email.type, 'string');
+    assert.strictEqual(inputs.test_email.default, 'nahidhosan027@gmail.com');
   });
 
   await t.test('configures top-level permissions: contents write and pull-requests write', () => {
@@ -80,6 +83,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
     assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
+    assert.strictEqual(env.TEST_EMAIL, "${{ inputs.test_email || '' }}");
     assert.ok(
       env.OUTREACH_DRY_RUN.includes('inputs.dry_run'),
       'OUTREACH_DRY_RUN must map inputs.dry_run'

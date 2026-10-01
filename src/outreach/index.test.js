@@ -377,7 +377,7 @@ test('runOutreachPipeline isolates per-lead SMTP failure and leaves failed lead 
   }
 });
 
-test('runOutreachPipeline redirects recipient when testEmail is provided', async () => {
+test('runOutreachPipeline redirects recipient and keeps the lead pending when testEmail is provided', async () => {
   const ws = createWorkspace();
   try {
     writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
@@ -403,10 +403,13 @@ test('runOutreachPipeline redirects recipient when testEmail is provided', async
 
     assert.equal(result.sent, 1);
     assert.equal(deliveredTo, 'nahid-test@example.com');
+    assert.equal(result.remaining, 1);
 
-    // Lead is still marked as sent and moved
+    // Redirected test delivery must not count as sending to the lead.
     const remaining = require('./csv').readLeads(ws.leadsPath);
-    assert.equal(remaining.length, 0);
+    assert.equal(remaining.length, 1);
+    assert.equal(remaining[0].company_number, sampleLeadsData[0].company_number);
+    assert.equal(require('./csv').readLeads(ws.sentLeadsPath).length, 0);
   } finally {
     ws.cleanup();
   }

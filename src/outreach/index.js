@@ -272,17 +272,22 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         const sendResult = await send(mailOptions, emailOptions, deps);
         logger.log(`Email sent successfully to ${recipient} (messageId: ${sendResult && sendResult.messageId ? sendResult.messageId : 'ok'})`);
 
-        // 6. Atomically move processed lead to sent_leads.csv
-        const moveRes = moveLead(companyNum, {
-          leadsPath,
-          sentLeadsPath,
-          extraFields: { sent_at: new Date().toISOString() }
-        });
-
-        if (!moveRes.success) {
-          logger.warn(`Warning: moveLeadToSent returned unsuccessful for ${companyNum}: ${moveRes.reason}`);
+        // A redirected test message does not count as delivery to the lead.
+        if (testEmail) {
+          logger.log(`Test email sent; leaving lead ${companyNum} pending.`);
         } else {
-          logger.log(`Moved lead ${companyNum} to sent_leads.csv`);
+          // 6. Atomically move processed lead to sent_leads.csv
+          const moveRes = moveLead(companyNum, {
+            leadsPath,
+            sentLeadsPath,
+            extraFields: { sent_at: new Date().toISOString() }
+          });
+
+          if (!moveRes.success) {
+            logger.warn(`Warning: moveLeadToSent returned unsuccessful for ${companyNum}: ${moveRes.reason}`);
+          } else {
+            logger.log(`Moved lead ${companyNum} to sent_leads.csv`);
+          }
         }
 
         sentCount++;
@@ -306,7 +311,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   }
 
   // Log summary: total, processed, sent, failed, remaining
-  const remaining = total - (dryRun ? 0 : sentCount);
+  const remaining = total - (dryRun || testEmail ? 0 : sentCount);
   logger.log('\n========================================');
   logger.log('       OUTREACH PIPELINE SUMMARY        ');
   logger.log('========================================');
