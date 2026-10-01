@@ -10,11 +10,6 @@ name: Outreach Automation
         required: false
         type: boolean
         default: false
-      test_email:
-        description: 'Redirect this manual run to a test inbox (leave blank for normal delivery)'
-        required: false
-        type: string
-        default: 'ni982240@gmail.com'
 
 concurrency:
   group: outreach-pipeline
@@ -35,15 +30,15 @@ jobs:
       ENRICH_BATCH_SIZE: '50'
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
-      SMTP_HOST: ${{ secrets.SMTP_HOST }}
-      SMTP_PORT: ${{ secrets.SMTP_PORT }}
-      SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
-      SMTP_USER: ${{ secrets.SMTP_USER }}
-      SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      SMTP_HOST: ${{ github.event_name == 'workflow_dispatch' && 'smtp.ethereal.email' || secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ github.event_name == 'workflow_dispatch' && '587' || secrets.SMTP_PORT }}
+      SMTP_SECURE: ${{ github.event_name == 'workflow_dispatch' && 'false' || secrets.SMTP_SECURE }}
+      SMTP_USER: ${{ github.event_name == 'workflow_dispatch' && secrets.TEST_SMTP_USER || secrets.SMTP_USER }}
+      SMTP_PASS: ${{ github.event_name == 'workflow_dispatch' && secrets.TEST_SMTP_PASS || secrets.SMTP_PASS }}
+      EMAIL_FROM: ${{ github.event_name == 'workflow_dispatch' && secrets.TEST_SMTP_USER || secrets.EMAIL_FROM }}
       OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
-      TEST_EMAIL: ${{ inputs.test_email || '' }}
+      TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && 'preview@ethereal.email' || '' }}
       DAYS_BACK: "3"
 
     steps:
@@ -63,6 +58,17 @@ jobs:
         
       - name: Install Puppeteer Browsers
         run: npx puppeteer browsers install chrome
+
+      - name: Validate Ethereal test SMTP credentials
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          TEST_SMTP_USER: ${{ secrets.TEST_SMTP_USER }}
+          TEST_SMTP_PASS: ${{ secrets.TEST_SMTP_PASS }}
+        run: |
+          if [ -z "$TEST_SMTP_USER" ] || [ -z "$TEST_SMTP_PASS" ]; then
+            echo "::error::Set TEST_SMTP_USER and TEST_SMTP_PASS to the Ethereal account credentials."
+            exit 1
+          fi
 
       - name: Auto-Replenish Leads (if empty)
         run: |

@@ -148,6 +148,13 @@ test('buildPrompt constructs tailored prompt with anti-boilerplate constraints',
   assert.ok(prompt.includes('Portfolio: https://nahid-yf63.onrender.com/'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
+  assert.ok(prompt.includes('This is unsolicited outreach'));
+  assert.match(prompt, /do not claim you visited or reviewed a website/i);
+  assert.ok(prompt.includes('without asserting the company needs it'));
+  assert.ok(prompt.includes('Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees'));
+  assert.ok(prompt.includes('Do not offer a free preview'));
+  assert.ok(prompt.includes('Use a neutral, accurate subject line'));
+  assert.ok(prompt.includes('provide a brief, clear way to decline further contact'));
 });
 
 test('buildPrompt throws if company_name is missing or blank', () => {
@@ -237,8 +244,9 @@ test('cleanEmailContent appends personal signature by default and honors include
 
 test('cleanEmailContent handles null or empty input with robust fallback', () => {
   const cleaned = cleanEmailContent('', { companyName: 'Delta Ltd' });
-  assert.equal(cleaned.subject, 'Web design & automation for Delta Ltd');
+  assert.equal(cleaned.subject, 'Introduction from Nahid');
   assert.ok(cleaned.body.includes('Delta Ltd'));
+  assert.ok(cleaned.body.includes('If you would prefer no further messages, let me know'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
   assert.ok(cleaned.body.includes('WhatsApp: +880 1615-753465'));
 });

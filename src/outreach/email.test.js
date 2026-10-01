@@ -371,6 +371,23 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
   assert.ok(parsed.html.includes('https://wa.me/8801615753465'));
 });
 
+test('sendEmail returns an Ethereal preview URL when the SMTP response includes its message ID', async () => {
+  const transporter = {
+    sendMail: async () => ({
+      messageId: 'ethereal-message-id',
+      response: '250 Accepted [STATUS=SUCCESS MSGID=ethereal-message-id]'
+    })
+  };
+
+  const result = await sendEmail({
+    to: 'preview@ethereal.email',
+    subject: 'Test message',
+    text: 'This is an Ethereal preview test.'
+  }, { transporter });
+
+  assert.equal(result.previewUrl, 'https://ethereal.email/message/ethereal-message-id');
+});
+
 test('sendEmail honors EMAIL_FROM from options.env when from is not in mailOptions', async () => {
   const transporter = createJsonTransporter();
   const mailOptions = {

@@ -137,8 +137,8 @@ function buildPrompt(company = {}, options = {}) {
   const greeting = directorName ? `Hi ${directorName},` : `Hi ${companyName} team,`;
 
   return [
-    'You are an expert B2B copywriter writing on behalf of a web designer and business automation specialist.',
-    'Write a short, friendly, personalized B2B cold email pitching Web Design & Business Automation services to a newly registered UK company.',
+    'Write a concise, truthful first-contact business email from a web designer and business automation specialist.',
+    'This is unsolicited outreach. Be transparent about that and do not imply prior contact, familiarity, or consent.',
     '',
     'Target Company Details:',
     `- Company Name: ${companyName}`,
@@ -148,16 +148,16 @@ function buildPrompt(company = {}, options = {}) {
     `- Recommended Greeting: ${greeting}`,
     '',
     'Rules:',
-    '1. Length: Short, concise, between 70 and 110 words.',
-    `2. Opening: Warmly congratulate them on registering ${companyName}.`,
-    (company.sources || '').includes('existing_website') 
-      ? `3. Value Proposition: Since they already have a basic website, pitch a "website redesign and business automation upgrade" to help them modernize and scale their ${industry} business. ${['retail and e-commerce', 'technology and digital services'].includes(industry) ? 'Also mention that you can build custom Mobile Apps for their specific needs.' : ''}`
-      : `3. Value Proposition: Pitch a brand new modern website and business automation. You MUST include a sentence explicitly stating that you have a "strategy to grow your business online" tailored for a ${industry} business. ${['retail and e-commerce', 'technology and digital services'].includes(industry) ? 'Also explicitly mention that you build custom Mobile Apps.' : ''}`,
-    '4. Tone: Friendly, casual, helpful, peer-to-peer. Never sound like a spammy agency.',
-    '5. Call to Action: Low pressure (e.g. asking if they would like a quick 5-min chat or to see a free preview).',
-    `6. Sign-off: Must end with:\n${signature}`,
-    '7. Format: Return ONLY valid JSON with keys "subject" and "body".',
-    '8. Anti-Boilerplate: Do NOT include markdown code fences (```json or ```). Do NOT include conversational preambles ("Here is your draft:"). Do NOT use bracket placeholders like [Your Name] or [Your Phone].'
+    '1. Keep it plain, professional, and brief; do not pad it with flattery or a generic congratulations.',
+    '2. Use only supplied facts. Do not claim you visited or reviewed a website, or describe its quality, unless verified observations are explicitly supplied.',
+    '3. State what service you offer without asserting the company needs it or claiming it will increase sales, leads, savings, or growth.',
+    '4. Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees, or unverified claims. Do not offer a free preview or imply a special offer.',
+    '5. Do not invent personal research, a specific business problem, familiarity, or a reason the recipient should act now.',
+    '6. Make clear this is an initial enquiry. Ask at most one neutral question and provide a brief, clear way to decline further contact.',
+    '7. Use a neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
+    `8. Sign-off: Must end with:\n${signature}`,
+    '9. Format: Return ONLY valid JSON with keys "subject" and "body".',
+    '10. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
   ].filter(Boolean).join('\n');
 }
 
@@ -168,8 +168,8 @@ function cleanEmailContent(rawText, options = {}) {
   const signature = includeSignature ? buildSignature(options) : `Best regards,\n${senderName}`;
 
   if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
-    const subject = `Web design & automation for ${companyName}`;
-    const body = `Hi,\n\nCongratulations on recently registering ${companyName}!\n\nWe help new UK businesses build modern, mobile-friendly websites and automate customer inquiries so you can focus on winning clients.\n\nWould you be open to a quick 5-minute chat this week?\n\n${signature}`;
+    const subject = `Introduction from ${senderName}`;
+    const body = `Hi ${companyName} team,\n\nI am contacting you for the first time to introduce my website design and business automation services. If this is relevant, you can reply to this email. If you would prefer no further messages, let me know and I will not contact you again.\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 

@@ -295,6 +295,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       return {
         success: true,
         messageId: info.messageId,
+        previewUrl: nodemailer.getTestMessageUrl(info) || undefined,
         to: normalizedTo,
         from: payload.from,
         subject,

@@ -55,9 +55,6 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.ok(inputs.dry_run, 'workflow_dispatch must declare dry_run input');
     assert.strictEqual(inputs.dry_run.type, 'boolean');
     assert.strictEqual(inputs.dry_run.default, false);
-    assert.ok(inputs.test_email, 'workflow_dispatch must declare test_email input');
-    assert.strictEqual(inputs.test_email.type, 'string');
-    assert.strictEqual(inputs.test_email.default, 'ni982240@gmail.com');
   });
 
   await t.test('configures top-level permissions: contents write and pull-requests write', () => {
@@ -75,15 +72,20 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(outreachJob['runs-on'], 'ubuntu-latest', 'runner must be ubuntu-latest');
 
     const env = outreachJob.env || {};
+    const steps = outreachJob.steps || [];
     assert.strictEqual(env.GH_TOKEN, '${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}');
     assert.strictEqual(env.GEMINI_API_KEY, '${{ secrets.GEMINI_API_KEY }}');
-    assert.strictEqual(env.SMTP_HOST, '${{ secrets.SMTP_HOST }}');
-    assert.strictEqual(env.SMTP_PORT, '${{ secrets.SMTP_PORT }}');
-    assert.strictEqual(env.SMTP_SECURE, '${{ secrets.SMTP_SECURE }}');
-    assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
-    assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
-    assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
-    assert.strictEqual(env.TEST_EMAIL, "${{ inputs.test_email || '' }}");
+    assert.strictEqual(env.SMTP_HOST, "${{ github.event_name == 'workflow_dispatch' && 'smtp.ethereal.email' || secrets.SMTP_HOST }}");
+    assert.strictEqual(env.SMTP_PORT, "${{ github.event_name == 'workflow_dispatch' && '587' || secrets.SMTP_PORT }}");
+    assert.strictEqual(env.SMTP_SECURE, "${{ github.event_name == 'workflow_dispatch' && 'false' || secrets.SMTP_SECURE }}");
+    assert.strictEqual(env.SMTP_USER, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_USER || secrets.SMTP_USER }}');
+    assert.strictEqual(env.SMTP_PASS, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_PASS || secrets.SMTP_PASS }}');
+    assert.strictEqual(env.EMAIL_FROM, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_USER || secrets.EMAIL_FROM }}');
+    assert.strictEqual(env.TEST_EMAIL, "${{ github.event_name == 'workflow_dispatch' && 'preview@ethereal.email' || '' }}");
+    assert.ok(
+      steps.some((step) => step.name === 'Validate Ethereal test SMTP credentials'),
+      'manual test runs must validate the Ethereal test SMTP credentials'
+    );
     assert.ok(
       env.OUTREACH_DRY_RUN.includes('inputs.dry_run'),
       'OUTREACH_DRY_RUN must map inputs.dry_run'

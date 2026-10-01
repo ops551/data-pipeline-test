@@ -271,6 +271,9 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         };
         const sendResult = await send(mailOptions, emailOptions, deps);
         logger.log(`Email sent successfully to ${recipient} (messageId: ${sendResult && sendResult.messageId ? sendResult.messageId : 'ok'})`);
+        if (sendResult && sendResult.previewUrl) {
+          logger.log(`Ethereal preview: ${sendResult.previewUrl}`);
+        }
 
         // A redirected test message does not count as delivery to the lead.
         if (testEmail) {
