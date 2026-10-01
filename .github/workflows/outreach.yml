@@ -14,7 +14,7 @@ name: Outreach Automation
         description: 'Redirect this manual run to a test inbox (leave blank for normal delivery)'
         required: false
         type: string
-        default: 'nahidhosan027@gmail.com'
+        default: 'ni982240@gmail.com'
 
 concurrency:
   group: outreach-pipeline
