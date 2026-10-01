@@ -1,54 +1,4 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17445490,TOPPS FRIED CHICKEN LIMITED,2026-09-08,active,ltd,56103,"47 High Street, Lye, Stourbridge, DY9 8LQ, England",no
-17445492,MAGGIEMOOMOO LTD,2026-09-08,active,private-limited-guarant-nsc,56302,"26 Castle Road, Scarborough, YO11 1XA, England",no
-17445499,MACHINE RESEARCH WORKS LTD,2026-09-08,active,ltd,62012;63120,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17445489,KNOT & MERCHANT LIMITED,2026-09-08,active,ltd,46470,"28a Stoke Poges Lane, Slough, Berkshire, SL1 3PQ, England",no
-17445484,SOVERT FILMS LTD,2026-09-08,active,ltd,59111,"131 Finsbury Pavement, London, EC2A 1NT, England",no
-17445571,WMK TRANSPORT BIRMINGHAM LTD,2026-09-08,active,ltd,49410,"149 Spon Lane, West Bromwich, Birmingham, West Midlands, B70 6AS, England",no
-17445720,1618 LABS LTD,2026-09-08,active,ltd,70229;71129;72190;73200,"1618 Labs 82a James Carter Road, Mildenhall, IP28 7DE, United Kingdom",no
-17445703,CHAR & BARREL SANDRIDGE LTD,2026-09-08,active,ltd,56101;56302,"69 The Galleria, Comet Way, Hatfield, AL10 0XY, England",no
-17445710,DCT888 LTD,2026-09-08,active,ltd,56103,"11 Lower Green, Poulton-Le-Fylde, Blackpool, FY6 7JL, England",no
-17445863,THE PERFUME PULSE LTD,2026-09-08,active,ltd,58290,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17445864,GLOBAL SCIENTIFIC PUBLISHING LTD,2026-09-08,active,ltd,62090,"20 Wenlock Road, London, N1 7GU, England",yes
-17445874,MULTI VEHICLE SERVICES LTD,2026-09-08,active,ltd,77110,"32 Bradley Road, Luton, LU4 8SL, United Kingdom",no
-17445877,O. A TRADINGS & TRANSPORT LTD,2026-09-08,active,ltd,49320,"30 Vanguard Close, Croydon, CR0 3RE, United Kingdom",no
-17445867,TECHSHOPPLYMOUTH LTD,2026-09-08,active,ltd,95110;95210,"26 Manor Street, Plymouth, PL1 1TW, England",no
-17445866,HAYDALE DISPERSIONS LIMITED,2026-09-08,active,ltd,20590,"Unit 1 Clos Fferws, Capel Hendre, Ammanford, SA18 3BL, Wales",no
-17445883,HOVE LAZY LTD,2026-09-08,active,ltd,56101,"106 Western Road, Hove, BN3 1FA, England",no
-17445882,VENTARIOM UK LIMITED,2026-09-08,active,ltd,70229,"43 Westwood Park Drive, Leek, ST13 8NH, United Kingdom",no
-17445860,KHC 888 LIMITED,2026-09-08,active,ltd,56103,"33 Birmingham New Road, Wolverhampton, WV4 6BL, England",no
-17446130,MILKWISE LTD,2026-09-08,active,ltd,10519,"167-169 Great Portland Street London, London, London, W1W 5PF, United Kingdom",no
-17446127,DAMLABS STUDIO LTD,2026-09-08,active,ltd,58290;62011;62012,"124 City Road, London, EC1V 2NX, England",no
-17446131,HNRPROJECTS LTD,2026-09-08,active,ltd,71122,"10 Cefn Coed Road, Caerdydd, CF23 6AQ, United Kingdom",no
-17446125,PERFORMANCE PRISM LTD,2026-09-08,active,ltd,85510;85590;85600,"5 Berkhamsted Avenue, Wembley, HA9 6DU, England",no
-17446138,BELLAVATORS LTD,2026-09-08,active,ltd,71129,"Flat 28, Madison House, Bessemer Road, Welwyn Garden City, AL7 1GQ, United Kingdom",no
-17446134,CALDREN PROJECTS LTD,2026-09-08,active,ltd,70229;71129;74902,"Flat 49 Kempton House, Heritage Place, Brentford, TW8 0RN, England",no
-17446142,HONEYSCOTCH CAKES LIMITED,2026-09-08,active,ltd,10710;47240,"27 Fennel Drive, Houghton Le Spring, DH4 6SL, United Kingdom",no
-17446123,ONE AND DONE FOOD LTD,2026-09-08,active,ltd,56102,"10 Caddow Road, Norwich, NR5 9PQ, England",no
-17446273,ACORN SPRINGS (BROOKHOLME CROFT) LTD,2026-09-08,active,ltd,87300,"C/O Kimbolton Lodge Limited Office 123 The Charter Building, Charter Place, Uxbridge, UB8 1JG, United Kingdom",no
-17446272,BEST SERVICES & MAINTAINING LIMITED,2026-09-08,active,ltd,33150;93130,"6 Bath Street, Barrow-In-Furness, LA14 1LZ, England",no
-17446262,RARE CANDY TCG LTD,2026-09-08,active,ltd,47650,"53 Rivergreen, Nottingham, NG11 8FU, England",no
-17446259,KRE18 LTD,2026-09-08,active,ltd,70229;79120,"5 Park Road, Ruthin, LL15 1NB, Wales",no
-17446260,BAYA & BELL LIMITED,2026-09-08,active,ltd,56102;85590;93130,"138 Highgate, Cleethorpes, DN35 8PB, England",no
-17446264,BUSINESS RESCUE LTD,2026-09-08,active,ltd,70229,"5 Butlers Way, Great Yeldham, Halstead, CO9 4QL, England",no
-17446265,DB CLEANING SOLUTIONS LTD,2026-09-08,active,ltd,81210;81229,"5a Mulberry Parade, West Drayton, UB7 9AE, United Kingdom",no
-17446275,MORLEYS SHOEBURY LTD,2026-09-08,active,ltd,56101,"17 A Cromer Road, Southend-On-Sea, SS1 2DU, England",no
-17446268,MISHMISH COVER LIMITED,2026-09-08,active,private-limited-guarant-nsc,94990,"220 Brimsdown Avenue, Enfield, EN3 5HX, England",no
-SC901961,THE COMMERCIAL QUARTER CONSULTING LTD,2026-09-08,active,ltd,73110,"3 Chisholm Avenue, Dunblane, FK15 0BP, Scotland",no
-17446467,GDS BUILDERS LTD,2026-09-08,active,ltd,41202,"43 Botwell Lane, Hayes, Middlesex, UB3 2AD, England",no
-17446471,THE AI CENTRE GROUP LTD,2026-09-08,active,ltd,70229,"170 Whittingham Drive, Ramsbottom, Bury, BL0 9NY, England",no
-17446456,GH SYDENHAM LIMITED,2026-09-08,active,ltd,56103,"8.02 The Southside Building 31 Hurst Street, Birmingham, B5 4BD, United Kingdom",no
-17446458,SENTINEL INVICTA LTD,2026-09-08,active,ltd,62012,"261 Bolton Road, Bury, BL8 2NZ, England",no
-17446452,CENTRE FOR STUDENT TRAINING LTD,2026-09-08,active,ltd,96090,"Suite 10 Boundary House Business Centre, Boston Road, London, W7 2QE, United Kingdom",no
-17446455,RAM ASSRAY LOGISTICS LTD,2026-09-08,active,ltd,53201,"149 Spon Lane, West Bromwich, Birmingham, West Midlands, B70 6AS, England",no
-17446464,NORTHANDFORK LIMITED,2026-09-08,active,ltd,56290,"48 Burnhopeside Avenue, Lanchester, Durham, DH7 0NF, England",no
-17446461,STERLING LIBRA LOGISTICS LTD,2026-09-08,active,ltd,62012,"261 Bolton Road, Bury, BL8 2NZ, England",no
-17446717,EC CLADDING LTD,2026-09-08,active,ltd,41201,"99 Orchard Road, South Ockendon, RM15 6HJ, England",no
-17446718,SUPPER FRYZEE LTD,2026-09-08,active,ltd,56102,"199a Whitechapel Road, London, E1 1DE, England",no
-17446702,RIDGEWAY SECURITY CONSULTING LTD,2026-09-08,active,ltd,62020;62090;70229,"12 Blythe House Wishford Row, Swindon, SN1 7EN, England",no
-17446727,RAWLEY CONSULTING LIMITED,2026-09-08,active,ltd,62020,"5 Orchard Gardens, Teignmouth, TQ14 8DP, England",no
-17446731,TAKESDEAL LTD,2026-09-08,active,ltd,47910,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17446724,INSKIPP LTD,2026-09-08,active,ltd,70229,"20 Wenlock Road, London, N1 7GU, England",yes
 17446737,SHACKLETONS CARS AND VANS LTD,2026-09-08,active,ltd,45400,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
 17446740,THE HUNGRY ANGUS LTD,2026-09-08,active,ltd,47290;56103,"92a Balham High Road, London, Greater London, SW12 9AG, England",no
 17446821,INVERO GROUP TECHNOLOGIES LTD,2026-09-08,active,ltd,62012;62020,"4 Garston Close, Reading, RG30 3JR, United Kingdom",no
@@ -9189,3 +9139,4 @@ NI744170,MAV MANAGEMENT GROUP LTD,2026-09-30,active,ltd,70229,"14 Stockbridge Pa
 17492763,REAL QUALITY FIRST LTD,2026-10-01,active,ltd,70229,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
 17492777,LIGHTHOUSE CHURCH NORTH LTD,2026-10-01,active,private-limited-guarant-nsc,94910,"6 Pollen Close, Sale, M33 3LS, England",no
 17492765,MAKE MY PLATE LTD,2026-10-01,active,ltd,47910,"128 Nechells Place, Birmingham, B7 5AB, United Kingdom",no
+17492781,RISIN MART LIMITED,2026-10-01,active,ltd,47520;47910,"17 Beechdene Road, Liverpool, L4 2SU, England",no
