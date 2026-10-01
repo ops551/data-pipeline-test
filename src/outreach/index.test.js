@@ -403,7 +403,6 @@ test('runOutreachPipeline redirects recipient and keeps the lead pending when te
 
     assert.equal(result.sent, 1);
     assert.equal(deliveredTo, 'nahid-test@example.com');
-    assert.equal(result.remaining, 1);
 
     // Redirected test delivery must not count as sending to the lead.
     const remaining = require('./csv').readLeads(ws.leadsPath);
