@@ -264,7 +264,9 @@ test('close cleanly shuts down browser and rejects further calls', async () => {
   await assert.rejects(() => scraper.search('test'), /Scraper is closed/);
 });
 
-test('live search queries DuckDuckGo endpoint and returns html and links', async () => {
+test('live search queries DuckDuckGo endpoint and returns html and links', {
+  skip: process.env.RUN_LIVE_SCRAPER_TESTS !== 'true'
+}, async () => {
   const scraper = await createScraper();
   try {
     const res = await scraper.search('Companies House UK');
