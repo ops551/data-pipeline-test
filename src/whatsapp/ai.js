@@ -68,7 +68,7 @@ Write the message now:
     // Strip out links just in case AI ignores the rule
     text = text.replace(/https?:\/\/[^\s]+/g, '');
     return text.trim();
-  } catch (error) { catch (error) {
+  } catch (error){
     console.error('⚠️  AI API failed (using backup message instead):', error.message);
     // Silent fallback to avoid crashing the bot
     
