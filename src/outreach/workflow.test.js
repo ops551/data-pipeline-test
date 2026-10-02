@@ -75,17 +75,18 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     const steps = outreachJob.steps || [];
     assert.strictEqual(env.GH_TOKEN, '${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}');
     assert.strictEqual(env.GEMINI_API_KEY, '${{ secrets.GEMINI_API_KEY }}');
-    assert.strictEqual(env.SMTP_HOST, "${{ github.event_name == 'workflow_dispatch' && 'smtp.ethereal.email' || secrets.SMTP_HOST }}");
-    assert.strictEqual(env.SMTP_PORT, "${{ github.event_name == 'workflow_dispatch' && '587' || secrets.SMTP_PORT }}");
-    assert.strictEqual(env.SMTP_SECURE, "${{ github.event_name == 'workflow_dispatch' && 'false' || secrets.SMTP_SECURE }}");
-    assert.strictEqual(env.SMTP_USER, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_USER || secrets.SMTP_USER }}');
-    assert.strictEqual(env.SMTP_PASS, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_PASS || secrets.SMTP_PASS }}');
-    assert.strictEqual(env.EMAIL_FROM, '${{ github.event_name == \'workflow_dispatch\' && secrets.TEST_SMTP_USER || secrets.EMAIL_FROM }}');
-    assert.strictEqual(env.TEST_EMAIL, "${{ github.event_name == 'workflow_dispatch' && 'preview@ethereal.email' || '' }}");
+    assert.strictEqual(env.SMTP_HOST, '${{ secrets.SMTP_HOST }}');
+    assert.strictEqual(env.SMTP_PORT, '${{ secrets.SMTP_PORT }}');
+    assert.strictEqual(env.SMTP_SECURE, '${{ secrets.SMTP_SECURE }}');
+    assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
+    assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
+    assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
+    assert.strictEqual(env.TEST_EMAIL, "${{ github.event_name == 'workflow_dispatch' && secrets.SMTP_USER || '' }}");
     assert.ok(
-      steps.some((step) => step.name === 'Validate Ethereal test SMTP credentials'),
-      'manual test runs must validate the Ethereal test SMTP credentials'
+      steps.some((step) => step.name === 'Validate SMTP credentials'),
+      'manual test runs must validate the configured SMTP credentials'
     );
+    assert.ok(!rawYaml.includes('TEST_SMTP_'), 'workflow must not require unconfigured TEST_SMTP secrets');
     assert.ok(
       env.OUTREACH_DRY_RUN.includes('inputs.dry_run'),
       'OUTREACH_DRY_RUN must map inputs.dry_run'
