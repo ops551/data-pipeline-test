@@ -148,13 +148,14 @@ test('buildPrompt constructs tailored prompt with anti-boilerplate constraints',
   assert.ok(prompt.includes('Portfolio: https://nahid-yf63.onrender.com/'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
-  assert.ok(prompt.includes('This is unsolicited outreach'));
+  assert.ok(prompt.includes('Be honest that this is a first contact'));
   assert.match(prompt, /do not claim you visited or reviewed a website/i);
   assert.ok(prompt.includes('without asserting the company needs it'));
   assert.ok(prompt.includes('Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees'));
   assert.ok(prompt.includes('Do not offer a free preview'));
-  assert.ok(prompt.includes('Use a neutral, accurate subject line'));
-  assert.ok(prompt.includes('provide a brief, clear way to decline further contact'));
+  assert.ok(prompt.includes('short, neutral, accurate subject line'));
+  assert.ok(prompt.includes('include a brief way to opt out'));
+  assert.ok(prompt.includes('"unsolicited", "cold email", "my name is", "open to", "quick chat"'));
 });
 
 test('buildPrompt throws if company_name is missing or blank', () => {

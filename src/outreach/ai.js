@@ -137,8 +137,8 @@ function buildPrompt(company = {}, options = {}) {
   const greeting = directorName ? `Hi ${directorName},` : `Hi ${companyName} team,`;
 
   return [
-    'Write a concise, truthful first-contact business email from a web designer and business automation specialist.',
-    'This is unsolicited outreach. Be transparent about that and do not imply prior contact, familiarity, or consent.',
+    'Write a concise, natural first-contact business email from a web designer and business automation specialist.',
+    'Be honest that this is a first contact; never imply prior contact, familiarity, consent, or personal research that was not supplied.',
     '',
     'Target Company Details:',
     `- Company Name: ${companyName}`,
@@ -148,16 +148,17 @@ function buildPrompt(company = {}, options = {}) {
     `- Recommended Greeting: ${greeting}`,
     '',
     'Rules:',
-    '1. Keep it plain, professional, and brief; do not pad it with flattery or a generic congratulations.',
+    '1. Keep it plain, professional, and under 90 words before the signature. Do not pad it with flattery or a generic congratulations.',
     '2. Use only supplied facts. Do not claim you visited or reviewed a website, or describe its quality, unless verified observations are explicitly supplied.',
     '3. State what service you offer without asserting the company needs it or claiming it will increase sales, leads, savings, or growth.',
     '4. Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees, or unverified claims. Do not offer a free preview or imply a special offer.',
     '5. Do not invent personal research, a specific business problem, familiarity, or a reason the recipient should act now.',
-    '6. Make clear this is an initial enquiry. Ask at most one neutral question and provide a brief, clear way to decline further contact.',
-    '7. Use a neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
-    `8. Sign-off: Must end with:\n${signature}`,
-    '9. Format: Return ONLY valid JSON with keys "subject" and "body".',
-    '10. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
+    '6. Use natural, direct language. Do not use cold-email clichés or the phrases "unsolicited", "cold email", "my name is", "open to", "quick chat", or "free consultation".',
+    '7. Make clear this is a first-time enquiry without calling it unsolicited. Ask at most one simple, low-pressure question and include a brief way to opt out.',
+    '8. Use a short, neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
+    `9. Sign-off: Must end with:\n${signature}`,
+    '10. Format: Return ONLY valid JSON with keys "subject" and "body".',
+    '11. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
   ].filter(Boolean).join('\n');
 }
 
