@@ -38,7 +38,7 @@ jobs:
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
-      TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && secrets.SMTP_USER || '' }}
+      TEST_EMAIL: nahid625-YUYM@srv1.mail-tester.com
       DAYS_BACK: "3"
 
     steps:
