@@ -81,7 +81,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
     assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
-    assert.strictEqual(env.TEST_EMAIL, 'nahid625-YUYM@srv1.mail-tester.com');
+    assert.strictEqual(env.TEST_EMAIL, 'nahidhosan027@gmail.com');
     assert.ok(
       steps.some((step) => step.name === 'Validate SMTP credentials'),
       'manual test runs must validate the configured SMTP credentials'

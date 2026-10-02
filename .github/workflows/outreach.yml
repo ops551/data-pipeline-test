@@ -39,7 +39,7 @@ jobs:
       OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
       TEST_EMAIL: nahidhosan027@gmail.com
-      DAYS_BACK: "3"
+      DAYS_BACK: "10"
 
     steps:
       - name: Checkout repository
