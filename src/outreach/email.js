@@ -3,6 +3,9 @@ const nodemailer = require('nodemailer');
 const { buildSignature, DEFAULT_SIGNATURE } = require('./ai');
 const { isValidEmailAddress } = require('../emailAddress');
 
+const OUTBOUND_FROM_ADDRESS = 'partners@mail.usasocialhubofficial.com';
+const REPLY_TO_ADDRESS = 'partners@usasocialhubofficial.com';
+const OWN_EMAIL_DOMAIN = 'usasocialhubofficial.com';
 const DEFAULT_SMTP_PORT = 587;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -26,6 +29,14 @@ function parsePort(value, fallback = DEFAULT_SMTP_PORT) {
     throw new Error(`SMTP_PORT must be a valid port number between 1 and 65535, got "${value}"`);
   }
   return n;
+}
+
+function validateFixedAddress(value, expected, settingName) {
+  if (value === undefined || value === null || value === '') return;
+  const configuredAddress = String(value).match(/<([^<>]+)>/)?.[1] || String(value).trim();
+  if (configuredAddress.toLowerCase() !== expected) {
+    throw new Error(`${settingName} must use ${expected}.`);
+  }
 }
 
 function loadSmtpConfig(env = process.env, overrides = {}) {
@@ -59,21 +70,11 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     secure = port === 465;
   }
 
-  const senderName = (
-    overrides.senderName ||
-    overrides.name ||
-    env.SENDER_NAME ||
-    DEFAULT_SIGNATURE.name
-  ).trim();
-
-  const from = (
-    overrides.from ||
-    env.EMAIL_FROM ||
-    env.SMTP_FROM ||
-    (user ? `${senderName} <${user}>` : '')
-  ).trim();
-
-  const replyTo = (overrides.replyTo || env.SMTP_REPLY_TO || '').trim();
+  validateFixedAddress(overrides.from, OUTBOUND_FROM_ADDRESS, 'From');
+  validateFixedAddress(env.EMAIL_FROM, OUTBOUND_FROM_ADDRESS, 'EMAIL_FROM');
+  validateFixedAddress(env.SMTP_FROM, OUTBOUND_FROM_ADDRESS, 'SMTP_FROM');
+  validateFixedAddress(overrides.replyTo, REPLY_TO_ADDRESS, 'Reply-To');
+  validateFixedAddress(env.SMTP_REPLY_TO, REPLY_TO_ADDRESS, 'SMTP_REPLY_TO');
 
   if (!isMock) {
     if (!host) {
@@ -82,9 +83,6 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     if (user && !pass) {
       throw new Error('SMTP_PASS is required when SMTP_USER is set.');
     }
-    if (!from && !user) {
-      throw new Error('EMAIL_FROM or SMTP_FROM or SMTP_USER is required to identify the sender.');
-    }
   }
 
   return {
@@ -92,8 +90,8 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     port,
     secure,
     auth: (user || pass) ? { user, pass } : undefined,
-    from,
-    replyTo: replyTo || undefined,
+    from: OUTBOUND_FROM_ADDRESS,
+    replyTo: REPLY_TO_ADDRESS,
     isMock
   };
 }
@@ -163,6 +161,10 @@ function normalizeRecipients(to) {
     if (!isValidEmailAddress(email)) {
       throw new Error(`Invalid recipient email address: "${email}"`);
     }
+    const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
+    if (domain === OWN_EMAIL_DOMAIN || domain.endsWith(`.${OWN_EMAIL_DOMAIN}`)) {
+      throw new Error(`Recipient must be an external address, not an address on ${OWN_EMAIL_DOMAIN}: "${email}"`);
+    }
   }
 
   return list.join(', ');
@@ -219,7 +221,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
   const combined = { ...mailOptions, ...secondaryOptions };
   const allDeps = { ...deps, ...(combined.deps || {}) };
 
-  const to = combined.to;
+  const to = mailOptions.to;
   const normalizedTo = normalizeRecipients(to);
 
   const subject = (combined.subject || '').trim();
@@ -245,33 +247,17 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
     process.env.SMTP_MOCK === '1'
   );
 
-  let from = combined.from;
-  let replyTo = combined.replyTo;
-  if (!from) {
-    const config = loadSmtpConfig(
-      combined.env || process.env,
-      { mock: isMockOrInjected, ...(combined.smtp || combined) }
-    );
-    from = config.from || (config.auth && config.auth.user ? config.auth.user : undefined);
-    replyTo = replyTo || config.replyTo;
-  }
-
-  if (!from && !isMockOrInjected) {
-    throw new Error('Sender (from) address is required. Set EMAIL_FROM or SMTP_FROM or pass from in options.');
-  }
-
-  // Fallback sender for mock or injected transporters if unspecified
-  if (!from) {
-    const senderName = (combined.senderName || process.env.SENDER_NAME || DEFAULT_SIGNATURE.name).trim();
-    from = `${senderName} <nahid@example.com>`;
-  }
+  const config = loadSmtpConfig(
+    combined.env || process.env,
+    { mock: isMockOrInjected, ...(combined.smtp || combined) }
+  );
 
   const payload = {
-    from,
+    from: config.from,
     to: normalizedTo,
     subject,
     text,
-    replyTo: replyTo || undefined
+    replyTo: config.replyTo
   };
 
   const maxRetries = typeof combined.maxRetries === 'number' ? combined.maxRetries : DEFAULT_MAX_RETRIES;

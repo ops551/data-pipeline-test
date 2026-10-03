@@ -16,8 +16,6 @@ const {
   sendEmail
 } = require('./email');
 
-const { DEFAULT_SIGNATURE } = require('./ai');
-
 // Helper to create an offline jsonTransporter for real Nodemailer MIME parsing
 function createJsonTransporter() {
   return nodemailer.createTransport({ jsonTransport: true });
@@ -33,8 +31,8 @@ test('loadSmtpConfig parses complete config and sets defaults', () => {
     SMTP_PORT: '587',
     SMTP_USER: 'nahid@example.com',
     SMTP_PASS: 'secret_app_password',
-    SMTP_FROM: 'Nahid Outreach <nahid@example.com>',
-    SMTP_REPLY_TO: 'replies@example.com'
+    EMAIL_FROM: 'partners@mail.usasocialhubofficial.com',
+    SMTP_REPLY_TO: 'partners@usasocialhubofficial.com'
   };
 
   const config = loadSmtpConfig(env);
@@ -42,55 +40,24 @@ test('loadSmtpConfig parses complete config and sets defaults', () => {
   assert.equal(config.port, 587);
   assert.equal(config.secure, false);
   assert.deepEqual(config.auth, { user: 'nahid@example.com', pass: 'secret_app_password' });
-  assert.equal(config.from, 'Nahid Outreach <nahid@example.com>');
-  assert.equal(config.replyTo, 'replies@example.com');
+  assert.equal(config.from, 'partners@mail.usasocialhubofficial.com');
+  assert.equal(config.replyTo, 'partners@usasocialhubofficial.com');
   assert.equal(config.isMock, false);
 });
 
-test('loadSmtpConfig honors EMAIL_FROM when SMTP_FROM is absent', () => {
-  const env = {
-    SMTP_HOST: 'smtp.gmail.com',
-    SMTP_PORT: '587',
-    SMTP_USER: 'nahidhosan027@gmail.com',
-    SMTP_PASS: 'secret_app_password',
-    EMAIL_FROM: 'Business Strategist <nahidhosan027@gmail.com>'
-  };
-
-  const config = loadSmtpConfig(env);
-  assert.equal(config.from, 'Business Strategist <nahidhosan027@gmail.com>');
-});
-
-test('loadSmtpConfig respects sender precedence order: overrides.from > EMAIL_FROM > SMTP_FROM > user fallback', () => {
-  const baseEnv = {
-    SMTP_HOST: 'smtp.example.com',
-    SMTP_USER: 'user@example.com',
-    SMTP_PASS: 'secret',
-    SMTP_FROM: 'From SmtpFrom <smtpfrom@example.com>',
-    EMAIL_FROM: 'From EmailFrom <emailfrom@example.com>'
-  };
-
-  // 1. overrides.from takes precedence over everything
-  const configWithOverride = loadSmtpConfig(baseEnv, { from: 'From Override <override@example.com>' });
-  assert.equal(configWithOverride.from, 'From Override <override@example.com>');
-
-  // 2. EMAIL_FROM takes precedence over SMTP_FROM and user fallback
-  const configWithEmailFrom = loadSmtpConfig(baseEnv);
-  assert.equal(configWithEmailFrom.from, 'From EmailFrom <emailfrom@example.com>');
-
-  // 3. SMTP_FROM takes precedence over user fallback when EMAIL_FROM is omitted
-  const envWithoutEmailFrom = { ...baseEnv };
-  delete envWithoutEmailFrom.EMAIL_FROM;
-  const configWithSmtpFrom = loadSmtpConfig(envWithoutEmailFrom);
-  assert.equal(configWithSmtpFrom.from, 'From SmtpFrom <smtpfrom@example.com>');
-
-  // 4. Default user fallback when overrides, EMAIL_FROM, and SMTP_FROM are omitted
-  const envUserOnly = {
-    SMTP_HOST: 'smtp.example.com',
-    SMTP_USER: 'user@example.com',
-    SMTP_PASS: 'secret'
-  };
-  const configUserOnly = loadSmtpConfig(envUserOnly);
-  assert.equal(configUserOnly.from, `${DEFAULT_SIGNATURE.name} <user@example.com>`);
+test('loadSmtpConfig rejects an unapproved sender and Reply-To', () => {
+  assert.throws(
+    () => loadSmtpConfig({ SMTP_HOST: 'smtp.example.com', EMAIL_FROM: 'sender@example.com' }),
+    /EMAIL_FROM must use partners@mail\.usasocialhubofficial\.com/
+  );
+  assert.throws(
+    () => loadSmtpConfig({ SMTP_HOST: 'smtp.example.com', SMTP_REPLY_TO: 'reply@example.com' }),
+    /SMTP_REPLY_TO must use partners@usasocialhubofficial\.com/
+  );
+  assert.throws(
+    () => loadSmtpConfig({ SMTP_HOST: 'smtp.example.com' }, { from: 'sender@example.com' }),
+    /From must use partners@mail\.usasocialhubofficial\.com/
+  );
 });
 
 test('loadSmtpConfig defaults port to 587 and secure to false when omitted', () => {
@@ -103,7 +70,7 @@ test('loadSmtpConfig defaults port to 587 and secure to false when omitted', () 
   const config = loadSmtpConfig(env);
   assert.equal(config.port, 587);
   assert.equal(config.secure, false);
-  assert.equal(config.from, `${DEFAULT_SIGNATURE.name} <user@example.com>`);
+  assert.equal(config.from, 'partners@mail.usasocialhubofficial.com');
 });
 
 test('loadSmtpConfig automatically infers secure true for port 465', () => {
@@ -172,18 +139,17 @@ test('loadSmtpConfig throws on missing SMTP_PASS when SMTP_USER is set', () => {
 });
 
 test('loadSmtpConfig allows unauthenticated relay if both user and pass omitted', () => {
-  const config = loadSmtpConfig({ SMTP_HOST: 'localhost', SMTP_PORT: '1025', SMTP_FROM: 'test@local.dev' });
+  const config = loadSmtpConfig({ SMTP_HOST: 'localhost', SMTP_PORT: '1025' });
   assert.equal(config.host, 'localhost');
   assert.equal(config.port, 1025);
   assert.equal(config.auth, undefined);
-  assert.equal(config.from, 'test@local.dev');
+  assert.equal(config.from, 'partners@mail.usasocialhubofficial.com');
 });
 
-test('loadSmtpConfig throws on missing sender identity when neither from nor user exists', () => {
-  assert.throws(
-    () => loadSmtpConfig({ SMTP_HOST: 'localhost', SMTP_PORT: '1025' }),
-    /EMAIL_FROM or SMTP_FROM or SMTP_USER is required/
-  );
+test('loadSmtpConfig uses the fixed sender and reply address without sender overrides', () => {
+  const config = loadSmtpConfig({ SMTP_HOST: 'localhost', SMTP_PORT: '1025' });
+  assert.equal(config.from, 'partners@mail.usasocialhubofficial.com');
+  assert.equal(config.replyTo, 'partners@usasocialhubofficial.com');
 });
 
 test('loadSmtpConfig throws on invalid SMTP_PORT', () => {
@@ -242,6 +208,21 @@ test('normalizeRecipients throws on invalid email address syntax', () => {
   assert.throws(() => normalizeRecipients('user@'), /Invalid recipient email address/);
   assert.throws(() => normalizeRecipients('@domain.com'), /Invalid recipient email address/);
   assert.throws(() => normalizeRecipients('leaflet@1.9.0.4'), /Invalid recipient email address/);
+});
+
+test('normalizeRecipients rejects recipients on the organization domain', () => {
+  assert.throws(
+    () => normalizeRecipients('partners@mail.usasocialhubofficial.com'),
+    /Recipient must be an external address/
+  );
+  assert.throws(
+    () => normalizeRecipients('alerts@usasocialhubofficial.com'),
+    /Recipient must be an external address/
+  );
+  assert.throws(
+    () => normalizeRecipients('user@sub.usasocialhubofficial.com'),
+    /Recipient must be an external address/
+  );
 });
 
 // -----------------------------------------------------------------------------
@@ -340,7 +321,7 @@ test('verifyConnection checks client.verify or defaults to true', async () => {
 test('sendEmail sends offline email via jsonTransport and returns structured result', async () => {
   const transporter = createJsonTransporter();
   const mailOptions = {
-    from: 'Outreach Team <founder-pitch@newbusiness.co.uk>',
+    from: 'partners@mail.usasocialhubofficial.com',
     to: 'founder@newbusiness.co.uk',
     subject: 'Web design for your new UK company',
     text: 'Hi there,\n\nWe saw you recently registered your company. Congrats!'
@@ -350,7 +331,7 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
 
   assert.equal(result.success, true);
   assert.ok(result.messageId);
-  assert.equal(result.from, 'Outreach Team <founder-pitch@newbusiness.co.uk>');
+  assert.equal(result.from, 'partners@mail.usasocialhubofficial.com');
   assert.equal(result.to, 'founder@newbusiness.co.uk');
   assert.equal(result.subject, 'Web design for your new UK company');
   assert.ok(result.accepted.includes('founder@newbusiness.co.uk'));
@@ -358,9 +339,9 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
   // Parse raw JSON captured by Nodemailer's jsonTransport
   assert.ok(result.info && result.info.message);
   const parsed = JSON.parse(result.info.message);
-  assert.equal(parsed.from.address, 'founder-pitch@newbusiness.co.uk');
-  assert.equal(parsed.from.name, 'Outreach Team');
+  assert.equal(parsed.from.address, 'partners@mail.usasocialhubofficial.com');
   assert.equal(parsed.to[0].address, 'founder@newbusiness.co.uk');
+  assert.equal(parsed.replyTo[0].address, 'partners@usasocialhubofficial.com');
   assert.equal(parsed.subject, 'Web design for your new UK company');
   assert.doesNotMatch(parsed.text, /WhatsApp|\+880\s*1615[- ]?753465/i);
   assert.doesNotMatch(parsed.text, /https?:\/\/|www\./i);
@@ -399,7 +380,7 @@ test('sendEmail returns an Ethereal preview URL when the SMTP response includes 
   assert.equal(result.previewUrl, 'https://ethereal.email/message/ethereal-message-id');
 });
 
-test('sendEmail honors EMAIL_FROM from options.env when from is not in mailOptions', async () => {
+test('sendEmail always uses the fixed From and Reply-To addresses', async () => {
   const transporter = createJsonTransporter();
   const mailOptions = {
     to: 'founder@newbusiness.co.uk',
@@ -409,23 +390,54 @@ test('sendEmail honors EMAIL_FROM from options.env when from is not in mailOptio
 
   const result = await sendEmail(mailOptions, {
     transporter,
-    env: { EMAIL_FROM: 'Automation Bot <bot@example.com>' }
+    env: {
+      EMAIL_FROM: 'partners@mail.usasocialhubofficial.com',
+      SMTP_REPLY_TO: 'partners@usasocialhubofficial.com'
+    }
   });
 
-  assert.equal(result.from, 'Automation Bot <bot@example.com>');
+  assert.equal(result.from, 'partners@mail.usasocialhubofficial.com');
   const parsed = JSON.parse(result.info.message);
-  assert.equal(parsed.from.address, 'bot@example.com');
-  assert.equal(parsed.from.name, 'Automation Bot');
+  assert.equal(parsed.from.address, 'partners@mail.usasocialhubofficial.com');
+  assert.equal(parsed.replyTo[0].address, 'partners@usasocialhubofficial.com');
 });
 
-test('sendEmail throws error when sender identity is missing in non-mock environment', async () => {
+test('sendEmail rejects an attempted From or Reply-To override', async () => {
   await assert.rejects(
-    () => sendEmail(
-      { to: 'lead@example.com', subject: 'Missing Sender', text: 'Hello' },
-      { host: 'smtp.example.com', env: {} }
-    ),
-    /EMAIL_FROM or SMTP_FROM or SMTP_USER is required/
+    () => sendEmail({
+      from: 'sender@example.com',
+      to: 'lead@example.com',
+      subject: 'Wrong sender',
+      text: 'Hello'
+    }, { transporter: createJsonTransporter(), env: {} }),
+    /From must use partners@mail\.usasocialhubofficial\.com/
   );
+  await assert.rejects(
+    () => sendEmail({
+      replyTo: 'reply@example.com',
+      to: 'lead@example.com',
+      subject: 'Wrong reply address',
+      text: 'Hello'
+    }, { transporter: createJsonTransporter(), env: {} }),
+    /Reply-To must use partners@usasocialhubofficial\.com/
+  );
+});
+
+test('sendEmail uses only the recipient from the primary mail options', async () => {
+  const transporter = createJsonTransporter();
+  const result = await sendEmail({
+    to: 'client@example.com',
+    subject: 'Recipient routing',
+    text: 'Hello'
+  }, {
+    to: 'partners@mail.usasocialhubofficial.com',
+    transporter,
+    env: {}
+  });
+
+  assert.equal(result.to, 'client@example.com');
+  const parsed = JSON.parse(result.info.message);
+  assert.deepEqual(parsed.to.map(({ address }) => address), ['client@example.com']);
 });
 
 test('sendEmail handles semicolon-delimited multiple recipients', async () => {

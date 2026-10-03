@@ -519,6 +519,42 @@ test('runOutreachPipeline redirects recipient and keeps the lead pending when te
   }
 });
 
+test('runOutreachPipeline never sends to an address on the organization domain', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [{
+      ...sampleLeadsData[0],
+      emails: 'partners@mail.usasocialhubofficial.com'
+    }], LEADS_COLUMNS);
+
+    let sendCalled = false;
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        delay: 0,
+        mock: true,
+        logger: silentLogger
+      },
+      {
+        generateEmail: async () => ({ subject: 'Test', body: `Test\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: async () => {
+          sendCalled = true;
+          return { success: true };
+        }
+      }
+    );
+
+    assert.equal(sendCalled, false);
+    assert.equal(result.sent, 0);
+    assert.equal(result.failed, 1);
+    assert.match(result.errors[0].error, /Recipient must be an external address/);
+    assert.equal(require('./csv').readLeads(ws.leadsPath).length, 1);
+  } finally {
+    ws.cleanup();
+  }
+});
+
 test('runOutreachPipeline handles empty leads file gracefully', async () => {
   const ws = createWorkspace();
   try {

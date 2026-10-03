@@ -15,7 +15,8 @@ const {
 } = require('./ai');
 const {
   sendEmail: defaultSendEmail,
-  verifyConnection: defaultVerifyConnection
+  verifyConnection: defaultVerifyConnection,
+  normalizeRecipient
 } = require('./email');
 
 const DEFAULT_SIGNATURE_STRING = [
@@ -243,10 +244,11 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       const subject = emailContent.subject || `Web Design & Business Automation for ${companyName}`;
 
       // 4. Determine destination recipient
-      const recipient = testEmail || (lead.emails ? lead.emails.split(';')[0].trim() : null);
-      if (!recipient || !recipient.trim()) {
+      const rawRecipient = testEmail || (lead.emails ? lead.emails.split(';')[0].trim() : null);
+      if (!rawRecipient || !rawRecipient.trim()) {
         throw new Error(`No email address available for ${companyName} (${companyNum})`);
       }
+      const recipient = normalizeRecipient(rawRecipient);
 
       // 5. Send or dry-run
       if (dryRun) {
@@ -298,28 +300,29 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         } else {
           const blockedSubject = leadErr.blockedContent.subject || '';
           const blockedBody = leadErr.blockedContent.body || '';
-          const alertOptions = {
-            to: spamAlertEmail,
-            subject: 'Spam Block Alert: Outreach Email Aborted',
-            text: [
-              'A generated outreach email was blocked and was not sent to the lead.',
-              '',
-              `Company: ${companyName} (${companyNum})`,
-              `Error: ${leadErr.message}`,
-              '',
-              '--- Blocked Content ---',
-              `Subject: ${blockedSubject}`,
-              '',
-              blockedBody
-            ].join('\n')
-          };
-
           try {
+            const alertRecipient = normalizeRecipient(spamAlertEmail);
+            const alertOptions = {
+              to: alertRecipient,
+              subject: 'Spam Block Alert: Outreach Email Aborted',
+              text: [
+                'A generated outreach email was blocked and was not sent to the lead.',
+                '',
+                `Company: ${companyName} (${companyNum})`,
+                `Error: ${leadErr.message}`,
+                '',
+                '--- Blocked Content ---',
+                `Subject: ${blockedSubject}`,
+                '',
+                blockedBody
+              ].join('\n')
+            };
+
             await send(alertOptions, {
               mock,
               ...(options.emailOptions || {})
             }, deps);
-            logger.log(`Spam block alert sent for ${companyName} to ${spamAlertEmail}.`);
+            logger.log(`Spam block alert sent for ${companyName} to ${alertRecipient}.`);
           } catch (alertErr) {
             logger.error(`Could not send spam block alert for ${companyName}:`, alertErr.message);
           }
