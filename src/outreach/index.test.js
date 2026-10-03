@@ -8,7 +8,6 @@ const {
   runOutreachPipeline,
   parseCliArgs,
   printHelp,
-  REQUIRED_SIGNATURE_ITEMS,
   DEFAULT_SIGNATURE_STRING
 } = require('./index');
 const { writeCSVAtomic, LEADS_COLUMNS, SENT_LEADS_COLUMNS } = require('./csv');
@@ -574,8 +573,8 @@ test('runOutreachPipeline enforces mandatory personal signature even if AI outpu
     );
 
     assert.equal(result.sent, 1);
-    assert.ok(sentBody.includes('+880 1615-753465'), 'Body must include WhatsApp number');
-    assert.ok(sentBody.includes('https://github.com/Nahid625'), 'Body must include GitHub link');
+    assert.doesNotMatch(sentBody, /WhatsApp|\+880\s*1615[- ]?753465/i);
+    assert.doesNotMatch(sentBody, /https?:\/\/|www\./i, 'Body must not contain external links');
     assert.ok(sentBody.includes('Best regards'), 'Body must include sign-off');
   } finally {
     ws.cleanup();

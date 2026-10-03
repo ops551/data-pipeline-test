@@ -6,6 +6,19 @@ const { isValidEmailAddress } = require('../emailAddress');
 const DEFAULT_SMTP_PORT = 587;
 const DEFAULT_MAX_RETRIES = 3;
 
+function stripExternalLinks(content) {
+  return String(content || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/\bhttps?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi, '')
+    .replace(/(?:WhatsApp|WhatsApp number):?[^\r\n]*/gi, '')
+    .replace(/\+880\s*1615[- ]?753465/gi, '')
+    .replace(/(?:GitHub|Portfolio):[ \t]*(?=\n|$)/gi, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
 function parsePort(value, fallback = DEFAULT_SMTP_PORT) {
   if (value === undefined || value === null || value === '') return fallback;
   const n = Number(value);
@@ -159,26 +172,17 @@ const normalizeRecipient = normalizeRecipients;
 
 function ensureSignature(content, options = {}) {
   if (options.includeSignature === false) {
-    return (content || '').trim();
+    return stripExternalLinks(content);
   }
 
-  const text = (content || '').trim();
-  const whatsappNum = (
-    options.senderWhatsapp ||
-    options.whatsapp ||
-    process.env.SENDER_WHATSAPP ||
-    DEFAULT_SIGNATURE.whatsapp
+  const text = stripExternalLinks(content);
+  const senderName = (
+    options.senderName ||
+    options.name ||
+    process.env.SENDER_NAME ||
+    DEFAULT_SIGNATURE.name
   ).trim();
-
-  const githubUrl = (
-    options.senderGithub ||
-    options.github ||
-    process.env.SENDER_GITHUB ||
-    DEFAULT_SIGNATURE.github
-  ).trim();
-
-  // Deduplication: prevent adding signature again if already present
-  if (text.includes(whatsappNum) && text.includes(githubUrl)) {
+  if (text.toLowerCase().includes(`best regards,\n${senderName}`.toLowerCase())) {
     return text;
   }
 
@@ -190,27 +194,13 @@ function ensureSignature(content, options = {}) {
 function formatHtmlContent(text, options = {}) {
   if (!text && !options.html) return '';
 
-  const raw = ensureSignature(text, options);
+  const raw = stripExternalLinks(ensureSignature(text, options));
   const escapeHtml = (str) =>
     str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-  const whatsappNum = (
-    options.senderWhatsapp ||
-    options.whatsapp ||
-    process.env.SENDER_WHATSAPP ||
-    DEFAULT_SIGNATURE.whatsapp
-  ).trim();
-  const waDigits = whatsappNum.replace(/\D/g, '') || '8801615753465';
-
-  const paragraphs = raw.split(/\r?\n\r?\n/).map(p => {
-    let escaped = escapeHtml(p.trim()).replace(/\r?\n/g, '<br>');
-    // Auto-link URLs
-    escaped = escaped.replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" style="color: #2563eb; text-decoration: underline;">$1</a>');
-    // Auto-link WhatsApp
-    const waPattern = new RegExp(`WhatsApp:\\s*(${whatsappNum.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
-    escaped = escaped.replace(waPattern, `WhatsApp: <a href="https://wa.me/${waDigits}" style="color: #16a34a; font-weight: bold; text-decoration: none;">$1</a>`);
-    return `<p style="margin: 0 0 16px 0; line-height: 1.6;">${escaped}</p>`;
-  });
+  const paragraphs = raw.split(/\r?\n\r?\n/).map(p =>
+    `<p style="margin: 0 0 16px 0; line-height: 1.6;">${escapeHtml(p.trim()).replace(/\r?\n/g, '<br>')}</p>`
+  );
 
   return `
 <!DOCTYPE html>
@@ -237,13 +227,12 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
     throw new Error('Email subject is required');
   }
 
-  const rawContent = combined.text || combined.body || '';
-  if (!rawContent && !combined.html) {
-    throw new Error('Email content (text or html) is required');
+  const rawContent = stripExternalLinks(combined.text || combined.body || '');
+  if (!rawContent) {
+    throw new Error('Email text content is required');
   }
 
-  const text = rawContent ? ensureSignature(rawContent, combined) : undefined;
-  const html = combined.html || (rawContent ? formatHtmlContent(rawContent, combined) : undefined);
+  const text = ensureSignature(rawContent, combined);
 
   const transporter = combined.transporter || allDeps.transporter || createTransporter(combined, allDeps);
 
@@ -282,7 +271,6 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
     to: normalizedTo,
     subject,
     text,
-    html,
     replyTo: replyTo || undefined
   };
 

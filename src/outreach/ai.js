@@ -10,17 +10,11 @@ const DEFAULT_SIGNATURE = Object.freeze({
   name: 'Nahid',
   title: 'Web Design & Business Automation',
   service: 'Web Design & Business Automation',
-  whatsapp: '+880 1615-753465',
-  github: 'https://github.com/Nahid625',
-  portfolio: 'https://nahid-yf63.onrender.com/',
   toString() {
     return [
       'Best regards,',
       this.name,
-      this.title,
-      `WhatsApp: ${this.whatsapp}`,
-      `GitHub: ${this.github}`,
-      `Portfolio: ${this.portfolio}`
+      this.title
     ].join('\n');
   },
   includes(sub) {
@@ -39,24 +33,9 @@ function buildSignature(options = {}) {
     : (options.service !== undefined ? options.service
     : (process.env.SENDER_TITLE || process.env.SENDER_SERVICE || DEFAULT_SIGNATURE.title))));
 
-  const whatsapp = options.senderWhatsapp !== undefined ? options.senderWhatsapp
-    : (options.whatsapp !== undefined ? options.whatsapp
-    : (process.env.SENDER_WHATSAPP || DEFAULT_SIGNATURE.whatsapp));
-
-  const github = options.senderGithub !== undefined ? options.senderGithub
-    : (options.github !== undefined ? options.github
-    : (process.env.SENDER_GITHUB || DEFAULT_SIGNATURE.github));
-
-  const portfolio = options.senderPortfolio !== undefined ? options.senderPortfolio
-    : (options.portfolio !== undefined ? options.portfolio
-    : (process.env.SENDER_PORTFOLIO || DEFAULT_SIGNATURE.portfolio));
-
   const lines = ['Best regards,'];
   if (name && String(name).trim()) lines.push(String(name).trim());
   if (title && String(title).trim()) lines.push(String(title).trim());
-  if (whatsapp && String(whatsapp).trim()) lines.push(`WhatsApp: ${String(whatsapp).trim()}`);
-  if (github && String(github).trim()) lines.push(`GitHub: ${String(github).trim()}`);
-  if (portfolio && String(portfolio).trim()) lines.push(`Portfolio: ${String(portfolio).trim()}`);
 
   return lines.join('\n');
 }
@@ -148,17 +127,20 @@ function buildPrompt(company = {}, options = {}) {
     `- Recommended Greeting: ${greeting}`,
     '',
     'Rules:',
-    '1. Keep it plain, professional, and under 90 words before the signature. Do not pad it with flattery or a generic congratulations.',
-    '2. Use only supplied facts. Do not claim you visited or reviewed a website, or describe its quality, unless verified observations are explicitly supplied.',
-    '3. State what service you offer without asserting the company needs it or claiming it will increase sales, leads, savings, or growth.',
-    '4. Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees, or unverified claims. Do not offer a free preview or imply a special offer.',
-    '5. Do not invent personal research, a specific business problem, familiarity, or a reason the recipient should act now.',
-    '6. Use natural, direct language. Do not use cold-email clichés or the phrases "unsolicited", "cold email", "my name is", "open to", "quick chat", or "free consultation".',
-    '7. Make clear this is a first-time enquiry without calling it unsolicited. Ask at most one simple, low-pressure question and include a brief way to opt out.',
-    '8. Use a short, neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
-    `9. Sign-off: Must end with:\n${signature}`,
-    '10. Format: Return ONLY valid JSON with keys "subject" and "body".',
-    '11. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
+    '1. Follow this simple flow in this order: greeting; one short personal context sentence; explain the website and automation service; ask one question about their digital systems; offer a brief discussion and a polite opt-out; sign off.',
+    `2. Address the recipient as "${greeting}". Keep the message plain, professional, and under 100 words before the signature.`,
+    `3. Use a natural context sentence such as "I came across ${companyName} and wanted to reach out briefly." Only say you looked at or reviewed a website if verified website observations are supplied.`,
+    `4. Describe the offer in this style: "I help businesses in your sector set up clean websites and automated workflows to reduce time spent on manual tasks." Adapt "your sector" to the supplied industry when natural.`,
+    '5. Ask one simple question similar to: "Are you currently looking for any support or improvements with your digital systems?"',
+    '6. Close in a low-pressure way: invite them to briefly discuss if interested, and say you will not contact them again if they prefer no further messages.',
+    '7. Use only supplied facts. Do not invent personal research, website visits, a specific business problem, familiarity, or claims about results. State your service without claiming the company needs it or promising results.',
+    '8. Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees, generic congratulations, or cold-email clichés. Do not offer a free preview or imply a special offer. Use natural, direct language and avoid "unsolicited", "cold email", "my name is", "open to", "quick chat", and "free consultation".',
+    '9. Make clear this is a first-time enquiry without calling it unsolicited. Ask at most one simple, low-pressure question and include a brief way to opt out.',
+    '10. Use a short, neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
+    '11. Write plain text only. Do not include HTML, external URLs, hyperlinks, phone numbers, or WhatsApp contact details.',
+    `12. Sign-off: Must end with:\n${signature}`,
+    '13. Format: Return ONLY valid JSON with keys "subject" and "body".',
+    '14. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
   ].filter(Boolean).join('\n');
 }
 
@@ -169,8 +151,8 @@ function cleanEmailContent(rawText, options = {}) {
   const signature = includeSignature ? buildSignature(options) : `Best regards,\n${senderName}`;
 
   if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
-    const subject = `Introduction from ${senderName}`;
-    const body = `Hi ${companyName} team,\n\nI am contacting you for the first time to introduce my website design and business automation services. If this is relevant, you can reply to this email. If you would prefer no further messages, let me know and I will not contact you again.\n\n${signature}`;
+    const subject = `A quick question for ${companyName}`;
+    const body = `Hi ${companyName} team,\n\nI came across ${companyName} and wanted to reach out briefly. I help businesses set up clean websites and automated workflows to reduce time spent on manual tasks.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 

@@ -18,18 +18,10 @@ const {
   verifyConnection: defaultVerifyConnection
 } = require('./email');
 
-const REQUIRED_SIGNATURE_ITEMS = [
-  '+880 1615-753465',
-  'https://github.com/Nahid625'
-];
-
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
   'Nahid',
-  'Web Design & Business Automation',
-  'WhatsApp: +880 1615-753465',
-  'GitHub: https://github.com/Nahid625',
-  'Portfolio: https://github.com/Nahid625'
+  'Web Design & Business Automation'
 ].join('\n');
 
 function parseCliArgs(argv = process.argv.slice(2)) {
@@ -238,7 +230,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
 
       // 3. Ensure mandatory personal signature is present
       let body = emailContent.body || emailContent.text || '';
-      const hasMandatorySignature = REQUIRED_SIGNATURE_ITEMS.every(item => body.includes(item));
+      const hasMandatorySignature = body.includes('Best regards,') && body.includes('Nahid');
       if (!hasMandatorySignature) {
         const sig = typeof deps.buildSignature === 'function'
           ? deps.buildSignature()
@@ -359,6 +351,5 @@ module.exports = {
   runOutreachPipeline,
   parseCliArgs,
   printHelp,
-  REQUIRED_SIGNATURE_ITEMS,
   DEFAULT_SIGNATURE_STRING
 };

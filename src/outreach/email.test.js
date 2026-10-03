@@ -254,9 +254,8 @@ test('ensureSignature appends mandatory personal signature when missing', () => 
 
   assert.ok(signed.includes('Best regards,'));
   assert.ok(signed.includes('Nahid'));
-  assert.ok(signed.includes('WhatsApp: +880 1615-753465'));
-  assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
-  assert.ok(signed.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.doesNotMatch(signed, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.doesNotMatch(signed, /https?:\/\/|www\./i);
 });
 
 test('ensureSignature deduplicates and prevents repeating signature if already present', () => {
@@ -274,12 +273,10 @@ test('ensureSignature deduplicates and prevents repeating signature if already p
   ].join('\n');
 
   const result = ensureSignature(existing);
-  const waMatches = result.match(/\+880 1615-753465/g);
-  const ghMatches = result.match(/https:\/\/github\.com\/Nahid625/g);
-
-  assert.equal(waMatches.length, 1);
-  assert.equal(ghMatches.length, 1); // 1 for GitHub (Portfolio has different URL now)
-  assert.equal(result.trim(), existing.trim());
+  assert.doesNotMatch(result, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.doesNotMatch(result, /https?:\/\/|www\./i);
+  assert.doesNotMatch(result, /GitHub:|Portfolio:/i);
+  assert.equal(result.includes('Best regards,\nNahid'), true);
 });
 
 test('ensureSignature respects includeSignature false', () => {
@@ -287,16 +284,14 @@ test('ensureSignature respects includeSignature false', () => {
   assert.equal(ensureSignature(text, { includeSignature: false }), text);
 });
 
-test('formatHtmlContent generates clean HTML with clickable WhatsApp and URLs', () => {
-  const text = 'Hi,\n\nCongrats on your new venture!';
+test('formatHtmlContent removes external URLs and does not create links', () => {
+  const text = 'Hi,\n\nCongrats on your new venture! Visit https://example.com';
   const html = formatHtmlContent(text);
 
   assert.ok(html.includes('<!DOCTYPE html>'));
   assert.ok(html.includes('<p style="margin: 0 0 16px 0; line-height: 1.6;">Hi,</p>'));
-  // Clickable WhatsApp link with international digits
-  assert.ok(html.includes('href="https://wa.me/8801615753465"'));
-  // Clickable GitHub and Portfolio links
-  assert.ok(html.includes('href="https://github.com/Nahid625"'));
+  assert.doesNotMatch(html, /https?:\/\/|www\.|href=/i);
+  assert.doesNotMatch(html, /WhatsApp|\+880\s*1615[- ]?753465/i);
   // Check alias formatEmailHtml
   assert.equal(formatEmailHtml(text), html);
 });
@@ -367,9 +362,24 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
   assert.equal(parsed.from.name, 'Outreach Team');
   assert.equal(parsed.to[0].address, 'founder@newbusiness.co.uk');
   assert.equal(parsed.subject, 'Web design for your new UK company');
-  assert.ok(parsed.text.includes('+880 1615-753465'));
-  assert.ok(parsed.text.includes('https://github.com/Nahid625'));
-  assert.ok(parsed.html.includes('https://wa.me/8801615753465'));
+  assert.doesNotMatch(parsed.text, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.doesNotMatch(parsed.text, /https?:\/\/|www\./i);
+  assert.equal(parsed.html, undefined, 'outreach mail must be sent as plain text only');
+});
+
+test('sendEmail strips contact links and sends plain text only', async () => {
+  const transporter = createJsonTransporter();
+  const result = await sendEmail({
+    to: 'lead@example.co.uk',
+    subject: 'Link-free message',
+    text: 'Contact us on WhatsApp: +880 1615-753465 or visit https://example.com and www.example.org',
+    html: '<p>Visit <a href="https://example.com">our site</a></p>'
+  }, { transporter });
+
+  const parsed = JSON.parse(result.info.message);
+  assert.doesNotMatch(parsed.text, /https?:\/\/|www\./i);
+  assert.doesNotMatch(parsed.text, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.equal(parsed.html, undefined);
 });
 
 test('sendEmail returns an Ethereal preview URL when the SMTP response includes its message ID', async () => {
@@ -436,7 +446,7 @@ test('sendEmail handles semicolon-delimited multiple recipients', async () => {
   assert.ok(toAddresses.includes('contact@second.co.uk'));
 });
 
-test('sendEmail respects explicit HTML content without overwriting', async () => {
+test('sendEmail ignores HTML and sends plain text only', async () => {
   const transporter = createJsonTransporter();
   const customHtml = '<h1>Custom Header</h1><p>Special offer.</p>';
 
@@ -448,7 +458,8 @@ test('sendEmail respects explicit HTML content without overwriting', async () =>
   }, { transporter });
 
   const parsed = JSON.parse(result.info.message);
-  assert.equal(parsed.html, customHtml);
+  assert.equal(parsed.html, undefined);
+  assert.equal(parsed.text.includes('Special offer.'), true);
 });
 
 test('sendEmail throws error when recipient (to) is missing', async () => {
@@ -471,7 +482,7 @@ test('sendEmail throws error when both text and html content are missing', async
   const transporter = createJsonTransporter();
   await assert.rejects(
     () => sendEmail({ to: 'lead@example.com', subject: 'Test' }, { transporter }),
-    /Email content \(text or html\) is required/
+    /Email text content is required/
   );
 });
 
