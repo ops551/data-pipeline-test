@@ -116,7 +116,7 @@ test('buildSignature supports sender options without adding contact details', ()
   }
 });
 
-test('buildPrompt constructs tailored prompt with anti-boilerplate constraints', () => {
+test('buildPrompt includes tailored company details and the current concise prompt rules', () => {
   const prompt = buildPrompt({
     company_name: 'Apex Cleaners Ltd',
     sic_codes: '81210',
@@ -129,23 +129,16 @@ test('buildPrompt constructs tailored prompt with anti-boilerplate constraints',
   assert.ok(prompt.includes('Location: Manchester'));
   assert.ok(prompt.includes('Hi Mark,'));
   assert.ok(prompt.includes('Best regards,\nNahid'));
-  assert.ok(prompt.includes('I came across Apex Cleaners Ltd and wanted to reach out briefly.'));
-  assert.ok(prompt.includes('clean websites and automated workflows to reduce time spent on manual tasks'));
-  assert.ok(prompt.includes('Are you currently looking for any support or improvements with your digital systems?'));
-  assert.ok(prompt.includes('say you will not contact them again if they prefer no further messages'));
-  assert.ok(prompt.includes('phone numbers, or WhatsApp contact details'));
-  assert.ok(prompt.includes('external URLs, hyperlinks, phone numbers, or WhatsApp contact details'));
-  assert.doesNotMatch(prompt, /https?:\/\/|www\./i);
+  assert.ok(prompt.includes('I was looking at your online presence at Apex Cleaners Ltd and wanted to reach out briefly.'));
+  assert.ok(prompt.includes('upgrade websites and set up automated workflows'));
+  assert.ok(prompt.includes('routine client communications or scheduling manually'));
+  assert.ok(prompt.includes('currently exploring any updates to their website'));
+  assert.ok(prompt.includes('If you prefer no further messages, I completely understand and will not contact you again.'));
+  assert.ok(prompt.includes('Keep it under 100 words before the signature.'));
+  assert.ok(prompt.includes('Make the wording slightly unique for this specific company name and industry'));
+  assert.ok(prompt.includes('Do not use any spam-trigger words like free, guaranteed, buy now, cheap, urgent, no obligation, or won\'t.'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
-  assert.ok(prompt.includes('Be honest that this is a first contact'));
-  assert.match(prompt, /only say you looked at or reviewed a website if verified/i);
-  assert.ok(prompt.includes('without claiming the company needs it'));
-  assert.ok(prompt.includes('Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees'));
-  assert.ok(prompt.includes('Do not offer a free preview'));
-  assert.ok(prompt.includes('short, neutral, accurate subject line'));
-  assert.ok(prompt.includes('include a brief way to opt out'));
-  assert.ok(prompt.includes('"unsolicited", "cold email", "my name is", "open to", "quick chat"'));
 });
 
 test('buildPrompt throws if company_name is missing or blank', () => {
