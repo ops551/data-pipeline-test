@@ -1,8 +1,6 @@
 name: Outreach Automation
 
 'on':
-  schedule:
-    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -60,7 +58,7 @@ jobs:
         run: npx puppeteer browsers install chrome
 
       - name: Validate SMTP credentials
-        if: github.event_name == 'workflow_dispatch'
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run != true
         env:
           SMTP_HOST: ${{ secrets.SMTP_HOST }}
           SMTP_USER: ${{ secrets.SMTP_USER }}
@@ -72,6 +70,7 @@ jobs:
           fi
 
       - name: Auto-Replenish Leads (if empty)
+        if: github.event_name != 'workflow_dispatch' || inputs.dry_run != true
         run: |
           LEADS_COUNT=$(node -e "const fs=require('fs'); try { const d=fs.readFileSync('leads.csv','utf8').split('\n').filter(l=>l.includes(',lead,') && l.includes('@')).length; console.log(d); } catch(e){console.log(0)}")
           echo "Current pending leads: $LEADS_COUNT"

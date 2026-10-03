@@ -1,3 +1,5 @@
+const { isValidEmailAddress } = require('../emailAddress');
+
 const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]{2,})/gi;
 const PHONE_REGEX = /(?:(?:\+44\s?|0)7\d{3}\s?\d{6}|(?:\+44\s?|0)7\d{4}\s?\d{5})/g;
 
@@ -13,6 +15,7 @@ function extractEmails(text) {
   });
 
   const valid = cleanedMatches.filter(e => {
+    if (!isValidEmailAddress(e)) return false;
     
     // Check if username is a long hex hash (typical for Sentry/tracking keys)
     const username = e.split('@')[0];

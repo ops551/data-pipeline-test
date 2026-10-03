@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const { parseCSV, writeCSV } = require('../enrich/csvParser');
 const { LEADS_COLUMNS } = require('../enrich/leads');
+const { isValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'leads.csv');
 const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
@@ -76,7 +77,13 @@ function getPendingLeads(options = {}) {
       return Boolean(customFilter(lead));
     }
     if (channel === 'email') {
-      return lead.status === 'lead' && Boolean(lead.emails && lead.emails.trim().length > 0);
+      const emails = String(lead.emails || '')
+        .split(/[;,]/)
+        .map(email => email.trim())
+        .filter(Boolean);
+      return lead.status === 'lead' &&
+        emails.length > 0 &&
+        emails.every(isValidEmailAddress);
     }
     if (channel === 'whatsapp') {
       return lead.status === 'lead' && lead.whatsapp_candidate === 'yes';

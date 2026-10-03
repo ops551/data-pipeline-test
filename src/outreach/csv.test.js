@@ -137,6 +137,19 @@ test('getPendingLeads filters leads for email channel (status=lead and non-empty
   assert.deepEqual(pending.map(p => p.company_number), ['12345678', '34567890']);
 });
 
+test('getPendingLeads excludes malformed email recipients', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+  const malformedLead = {
+    ...sampleLeads[0],
+    company_number: '56789012',
+    emails: 'leaflet@1.9.0.4'
+  };
+  seedLeadsFile(leadsPath, [malformedLead]);
+
+  const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
+  assert.deepEqual(pending, []);
+});
+
 test('getPendingLeads excludes leads that are already in sent_leads.csv', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   seedLeadsFile(leadsPath);

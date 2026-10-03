@@ -39,15 +39,11 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(parsed.name, 'Outreach Automation');
   });
 
-  await t.test('configures triggers: daily cron schedule and manual workflow_dispatch', () => {
+  await t.test('configures manual workflow_dispatch without an automatic schedule', () => {
     const triggers = parsed.on || parsed[true];
     assert.ok(triggers, 'Triggers section must be defined');
 
-    // Assert cron schedule: daily at 09:00 UTC ('0 9 * * *')
-    assert.ok(triggers.schedule, 'schedule trigger must be configured');
-    assert.ok(Array.isArray(triggers.schedule), 'schedule must be an array');
-    const cronObj = triggers.schedule.find((s) => s.cron === '*/10 * * * *');
-    assert.ok(cronObj, "cron schedule must include '*/10 * * * *'");
+    assert.equal(triggers.schedule, undefined, 'outreach must not run on a cron schedule');
 
     // Assert manual workflow_dispatch with optional dry_run input
     assert.ok(triggers.workflow_dispatch, 'workflow_dispatch trigger must be configured');
@@ -85,6 +81,17 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.ok(
       steps.some((step) => step.name === 'Validate SMTP credentials'),
       'manual test runs must validate the configured SMTP credentials'
+    );
+    const smtpValidation = steps.find((step) => step.name === 'Validate SMTP credentials');
+    assert.ok(
+      smtpValidation.if.includes('inputs.dry_run != true'),
+      'SMTP credentials must not be required for manual dry runs'
+    );
+    const autoReplenish = steps.find((step) => step.name === 'Auto-Replenish Leads (if empty)');
+    assert.ok(autoReplenish, 'auto-replenish step must be present');
+    assert.ok(
+      autoReplenish.if.includes('inputs.dry_run != true'),
+      'manual dry runs must skip auto-replenishment to avoid CSV changes'
     );
     assert.ok(!rawYaml.includes('TEST_SMTP_'), 'workflow must not require unconfigured TEST_SMTP secrets');
     assert.ok(

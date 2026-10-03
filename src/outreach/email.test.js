@@ -241,6 +241,7 @@ test('normalizeRecipients throws on invalid email address syntax', () => {
   assert.throws(() => normalizeRecipients('not-an-email'), /Invalid recipient email address/);
   assert.throws(() => normalizeRecipients('user@'), /Invalid recipient email address/);
   assert.throws(() => normalizeRecipients('@domain.com'), /Invalid recipient email address/);
+  assert.throws(() => normalizeRecipients('leaflet@1.9.0.4'), /Invalid recipient email address/);
 });
 
 // -----------------------------------------------------------------------------

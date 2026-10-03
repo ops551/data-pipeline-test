@@ -1,6 +1,7 @@
 require('dotenv').config({ quiet: true });
 const nodemailer = require('nodemailer');
 const { buildSignature, DEFAULT_SIGNATURE } = require('./ai');
+const { isValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_SMTP_PORT = 587;
 const DEFAULT_MAX_RETRIES = 3;
@@ -145,9 +146,8 @@ function normalizeRecipients(to) {
     throw new Error('Recipient (to) contains no valid email address');
   }
 
-  // Validate each email roughly has an @ symbol and a domain
   for (const email of list) {
-    if (!email.includes('@') || email.startsWith('@') || email.endsWith('@')) {
+    if (!isValidEmailAddress(email)) {
       throw new Error(`Invalid recipient email address: "${email}"`);
     }
   }
