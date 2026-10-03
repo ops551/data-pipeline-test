@@ -331,6 +331,112 @@ test('runOutreachPipeline isolates per-lead AI failure and continues with subseq
   }
 });
 
+test('runOutreachPipeline alerts on blocked generated content without sending it to the lead', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
+
+    const blockedError = new Error('Generated email contains forbidden content.');
+    blockedError.blockedContent = {
+      subject: 'Blocked subject',
+      body: 'Blocked email body'
+    };
+    const sentCalls = [];
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        spamAlertEmail: 'alerts@example.com',
+        delay: 0,
+        mock: true,
+        logger: silentLogger
+      },
+      {
+        generateEmail: async () => { throw blockedError; },
+        sendEmail: async (mailOptions) => {
+          sentCalls.push(mailOptions);
+          return { success: true };
+        }
+      }
+    );
+
+    assert.equal(result.failed, 1);
+    assert.equal(result.sent, 0);
+    assert.equal(result.errors[0].error, blockedError.message);
+    assert.equal(sentCalls.length, 1);
+    assert.equal(sentCalls[0].to, 'alerts@example.com');
+    assert.match(sentCalls[0].text, /Company: Apex Studio Ltd \(11111111\)/);
+    assert.match(sentCalls[0].text, /Subject: Blocked subject/);
+    assert.match(sentCalls[0].text, /Blocked email body/);
+    assert.equal(require('./csv').readLeads(ws.leadsPath).length, 1);
+    assert.equal(fs.existsSync(ws.sentLeadsPath), false);
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('runOutreachPipeline preserves the blocked-content error if alert delivery fails', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
+
+    const blockedError = new Error('Generated email contains forbidden content.');
+    blockedError.blockedContent = { subject: 'Blocked subject', body: 'Blocked email body' };
+    const logger = { ...silentLogger, error: () => {} };
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        spamAlertEmail: 'alerts@example.com',
+        delay: 0,
+        mock: true,
+        logger
+      },
+      {
+        generateEmail: async () => { throw blockedError; },
+        sendEmail: async () => { throw new Error('SMTP unavailable'); }
+      }
+    );
+
+    assert.equal(result.failed, 1);
+    assert.equal(result.sent, 0);
+    assert.equal(result.errors[0].error, blockedError.message);
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('runOutreachPipeline does not send blocked-content alerts in dry-run mode', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
+
+    const blockedError = new Error('Generated email contains forbidden content.');
+    blockedError.blockedContent = { subject: 'Blocked subject', body: 'Blocked email body' };
+    let sendCalled = false;
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        spamAlertEmail: 'alerts@example.com',
+        dryRun: true,
+        delay: 0,
+        logger: silentLogger
+      },
+      {
+        generateEmail: async () => { throw blockedError; },
+        sendEmail: async () => { sendCalled = true; }
+      }
+    );
+
+    assert.equal(result.failed, 1);
+    assert.equal(result.sent, 0);
+    assert.equal(sendCalled, false);
+  } finally {
+    ws.cleanup();
+  }
+});
+
 test('runOutreachPipeline isolates per-lead SMTP failure and leaves failed lead in leads.csv', async () => {
   const ws = createWorkspace();
   try {

@@ -1,168 +1,229 @@
-require('dotenv').config({ quiet: true });
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+require("dotenv").config({ quiet: true });
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const DEFAULT_MODEL = 'gemini-1.5-flash';
-const FALLBACK_MODELS = ['gemini-3.5-flash-lite', 'gemini-flash-latest'];
-const DEFAULT_SENDER_NAME = 'Nahid';
+const DEFAULT_MODEL = "gemini-1.5-flash";
+const FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-flash-latest"];
+const DEFAULT_SENDER_NAME = "Nahid";
 const DEFAULT_MAX_RETRIES = 3;
 
 const DEFAULT_SIGNATURE = Object.freeze({
-  name: 'Nahid',
-  title: 'Web Design & Business Automation',
-  service: 'Web Design & Business Automation',
+  name: "Nahid",
+  title: "Web Design & Business Automation",
+  service: "Web Design & Business Automation",
   toString() {
-    return [
-      'Best regards,',
-      this.name,
-      this.title
-    ].join('\n');
+    return ["Best regards,", this.name, this.title].join("\n");
   },
   includes(sub) {
     return this.toString().includes(sub);
-  }
+  },
 });
 
 function buildSignature(options = {}) {
-  const name = options.senderName !== undefined ? options.senderName
-    : (options.name !== undefined ? options.name
-    : (process.env.SENDER_NAME || DEFAULT_SIGNATURE.name));
+  const name =
+    options.senderName !== undefined
+      ? options.senderName
+      : options.name !== undefined
+        ? options.name
+        : process.env.SENDER_NAME || DEFAULT_SIGNATURE.name;
 
-  const title = options.senderTitle !== undefined ? options.senderTitle
-    : (options.senderService !== undefined ? options.senderService
-    : (options.title !== undefined ? options.title
-    : (options.service !== undefined ? options.service
-    : (process.env.SENDER_TITLE || process.env.SENDER_SERVICE || DEFAULT_SIGNATURE.title))));
+  const title =
+    options.senderTitle !== undefined
+      ? options.senderTitle
+      : options.senderService !== undefined
+        ? options.senderService
+        : options.title !== undefined
+          ? options.title
+          : options.service !== undefined
+            ? options.service
+            : process.env.SENDER_TITLE ||
+              process.env.SENDER_SERVICE ||
+              DEFAULT_SIGNATURE.title;
 
-  const lines = ['Best regards,'];
+  const lines = ["Best regards,"];
   if (name && String(name).trim()) lines.push(String(name).trim());
   if (title && String(title).trim()) lines.push(String(title).trim());
 
-  return lines.join('\n');
+  return lines.join("\n");
 }
 
-const TITLES = new Set(['MR', 'MRS', 'MS', 'MISS', 'DR', 'PROF', 'SIR', 'LORD', 'LADY']);
+const TITLES = new Set([
+  "MR",
+  "MRS",
+  "MS",
+  "MISS",
+  "DR",
+  "PROF",
+  "SIR",
+  "LORD",
+  "LADY",
+]);
 
 function extractFirstName(rawName) {
-  if (!rawName || typeof rawName !== 'string') return '';
+  if (!rawName || typeof rawName !== "string") return "";
   const trimmed = rawName.trim();
-  if (!trimmed) return '';
+  if (!trimmed) return "";
 
   let namePart = trimmed;
-  if (trimmed.includes(',')) {
-    const parts = trimmed.split(',');
-    namePart = (parts[1] || '').trim();
+  if (trimmed.includes(",")) {
+    const parts = trimmed.split(",");
+    namePart = (parts[1] || "").trim();
   }
 
   const tokens = namePart.split(/\s+/).filter(Boolean);
   for (const token of tokens) {
-    const cleanToken = token.replace(/[^a-zA-Z]/g, '').toUpperCase();
+    const cleanToken = token.replace(/[^a-zA-Z]/g, "").toUpperCase();
     if (cleanToken && !TITLES.has(cleanToken)) {
       return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
     }
   }
 
-  return '';
+  return "";
 }
 
 function mapSicToIndustry(sicCodes) {
-  if (!sicCodes) return 'small business';
-  const raw = Array.isArray(sicCodes) ? sicCodes.join(';') : String(sicCodes);
+  if (!sicCodes) return "small business";
+  const raw = Array.isArray(sicCodes) ? sicCodes.join(";") : String(sicCodes);
   if (!/^\d/.test(raw.trim()) && /[a-zA-Z]/.test(raw)) {
     return raw.trim();
   }
 
-  const codes = raw.split(';').map(c => c.trim()).filter(Boolean);
+  const codes = raw
+    .split(";")
+    .map((c) => c.trim())
+    .filter(Boolean);
   for (const code of codes) {
     const prefix2 = code.slice(0, 2);
     const prefix3 = code.slice(0, 3);
 
-    if (prefix3 === '812') return 'commercial and domestic cleaning';
-    if (prefix2 === '56' || (code >= '47210' && code <= '47290')) return 'hospitality and food service';
-    if (prefix2 === '41' || prefix2 === '42' || prefix2 === '43' || code === '45200') return 'construction and trades';
-    if (prefix3 === '960') return 'beauty and wellness';
-    if (prefix3 === '931') return 'health and fitness';
-    if (prefix3 === '742') return 'photography and creative services';
-    if (code === '85590') return 'education and tutoring';
-    if (prefix2 === '47') return 'retail and e-commerce';
-    if (prefix2 === '55') return 'accommodation and hospitality';
-    if (prefix2 === '62' || prefix2 === '63') return 'technology and digital services';
-    if (prefix2 === '69' || prefix2 === '70') return 'professional services';
+    if (prefix3 === "812") return "commercial and domestic cleaning";
+    if (prefix2 === "56" || (code >= "47210" && code <= "47290"))
+      return "hospitality and food service";
+    if (
+      prefix2 === "41" ||
+      prefix2 === "42" ||
+      prefix2 === "43" ||
+      code === "45200"
+    )
+      return "construction and trades";
+    if (prefix3 === "960") return "beauty and wellness";
+    if (prefix3 === "931") return "health and fitness";
+    if (prefix3 === "742") return "photography and creative services";
+    if (code === "85590") return "education and tutoring";
+    if (prefix2 === "47") return "retail and e-commerce";
+    if (prefix2 === "55") return "accommodation and hospitality";
+    if (prefix2 === "62" || prefix2 === "63")
+      return "technology and digital services";
+    if (prefix2 === "69" || prefix2 === "70") return "professional services";
   }
 
-  return 'small business';
+  return "small business";
 }
 
 function resolveApiKey(options = {}) {
-  const key = (options.apiKey || process.env.GEMINI_API_KEY || process.env.GEMINI || '').trim();
-  if (!key || key === 'your_gemini_api_key_here' || key === 'your_key_here') {
-    throw new Error('GEMINI_API_KEY is missing. Set it in .env or pass apiKey in options.');
+  const key = (
+    options.apiKey ||
+    process.env.GEMINI_API_KEY ||
+    process.env.GEMINI ||
+    ""
+  ).trim();
+  if (!key || key === "your_gemini_api_key_here" || key === "your_key_here") {
+    throw new Error(
+      "GEMINI_API_KEY is missing. Set it in .env or pass apiKey in options.",
+    );
   }
   return key;
 }
 
 function buildPrompt(company = {}, options = {}) {
-  const companyName = (company.company_name || '').trim();
+  const companyName = (company.company_name || "").trim();
   if (!companyName) {
-    throw new Error('company_name is required to generate outreach email');
+    throw new Error("company_name is required to generate outreach email");
   }
 
-  const industry = (company.industry || mapSicToIndustry(company.sic_codes)).trim();
-  const locality = (company.locality || company.registered_office_address || '').trim();
-  const directorName = extractFirstName(company.active_directors || company.contact_name || company.director_name || '');
-  const senderName = (options.senderName || process.env.SENDER_NAME || DEFAULT_SENDER_NAME).trim();
-  const signature = options.includeSignature === false
-    ? `Best regards,\n${senderName}`
-    : buildSignature(options);
-  const greeting = directorName ? `Hi ${directorName},` : `Hi ${companyName} team,`;
+  const industry = (
+    company.industry || mapSicToIndustry(company.sic_codes)
+  ).trim();
+  const locality = (
+    company.locality ||
+    company.registered_office_address ||
+    ""
+  ).trim();
+  const directorName = extractFirstName(
+    company.active_directors ||
+      company.contact_name ||
+      company.director_name ||
+      "",
+  );
+  const senderName = (
+    options.senderName ||
+    process.env.SENDER_NAME ||
+    DEFAULT_SENDER_NAME
+  ).trim();
+  const signature =
+    options.includeSignature === false
+      ? `Best regards,\n${senderName}`
+      : buildSignature(options);
+  const greeting = directorName
+    ? `Hi ${directorName},`
+    : `Hi ${companyName} team,`;
 
   return [
-    'Write a concise, natural first-contact business email from a web designer and business automation specialist.',
-    'Be honest that this is a first contact; never imply prior contact, familiarity, consent, or personal research that was not supplied.',
-    '',
-    'Target Company Details:',
+    "Write a concise, natural first-contact business email from a web designer and business automation specialist.",
+    "Be honest that this is a first contact; never imply prior contact, familiarity, consent, or personal research that was not supplied.",
+    "",
+    "Target Company Details:",
     `- Company Name: ${companyName}`,
     `- Industry: ${industry}`,
     locality ? `- Location: ${locality}` : null,
     directorName ? `- Director / Contact: ${directorName}` : null,
     `- Recommended Greeting: ${greeting}`,
-    '',
-    'Rules:',
-    '1. Follow this simple flow in this order: greeting; one short personal context sentence; explain the website and automation service; ask one question about their digital systems; offer a brief discussion and a polite opt-out; sign off.',
+    "",
+    "Rules:",
+    "1. Follow this simple flow in this order: greeting; one short personal context sentence; explain the website and automation service; ask one question about their digital systems; offer a brief discussion and a polite opt-out; sign off.",
     `2. Address the recipient as "${greeting}". Keep the message plain, professional, and under 100 words before the signature.`,
     `3. Use a natural context sentence such as "I came across ${companyName} and wanted to reach out briefly." Only say you looked at or reviewed a website if verified website observations are supplied.`,
     `4. Describe the offer in this style: "I help businesses in your sector set up clean websites and automated workflows to reduce time spent on manual tasks." Adapt "your sector" to the supplied industry when natural.`,
     '5. Ask one simple question similar to: "Are you currently looking for any support or improvements with your digital systems?"',
-    '6. Close in a low-pressure way: invite them to briefly discuss if interested, and say you will not contact them again if they prefer no further messages.',
-    '7. Use only supplied facts. Do not invent personal research, website visits, a specific business problem, familiarity, or claims about results. State your service without claiming the company needs it or promising results.',
+    "6. Close in a low-pressure way: invite them to briefly discuss if interested, and say you will not contact them again if they prefer no further messages.",
+    "7. Use only supplied facts. Do not invent personal research, website visits, a specific business problem, familiarity, or claims about results. State your service without claiming the company needs it or promising results.",
     '8. Do not use urgency, scarcity, pressure, exaggerated benefits, guarantees, generic congratulations, or cold-email clichés. Do not offer a free preview or imply a special offer. Use natural, direct language and avoid "unsolicited", "cold email", "my name is", "open to", "quick chat", and "free consultation".',
-    '9. Make clear this is a first-time enquiry without calling it unsolicited. Ask at most one simple, low-pressure question and include a brief way to opt out.',
-    '10. Use a short, neutral, accurate subject line; do not use clickbait or imply a prior conversation.',
-    '11. Write plain text only. Do not include HTML, external URLs, hyperlinks, phone numbers, or WhatsApp contact details.',
+    "9. Make clear this is a first-time enquiry without calling it unsolicited. Ask at most one simple, low-pressure question and include a brief way to opt out.",
+    "10. Use a short, neutral, accurate subject line; do not use clickbait or imply a prior conversation.",
+    "11. Write plain text only. Do not include HTML, external URLs, hyperlinks, phone numbers, or WhatsApp contact details.",
     `12. Sign-off: Must end with:\n${signature}`,
     '13. Format: Return ONLY valid JSON with keys "subject" and "body".',
-    '14. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].'
-  ].filter(Boolean).join('\n');
+    "14. Do NOT include markdown code fences, conversational preambles, or bracket placeholders like [Your Name].",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 function cleanEmailContent(rawText, options = {}) {
-  const senderName = (options.senderName || options.name || process.env.SENDER_NAME || DEFAULT_SIGNATURE.name).trim();
-  const companyName = (options.companyName || 'your business').trim();
+  const senderName = (
+    options.senderName ||
+    options.name ||
+    process.env.SENDER_NAME ||
+    DEFAULT_SIGNATURE.name
+  ).trim();
+  const companyName = (options.companyName || "your business").trim();
   const includeSignature = options.includeSignature !== false;
-  const signature = includeSignature ? buildSignature(options) : `Best regards,\n${senderName}`;
+  const signature = includeSignature
+    ? buildSignature(options)
+    : `Best regards,\n${senderName}`;
 
-  if (!rawText || typeof rawText !== 'string' || !rawText.trim()) {
+  if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
     const subject = `A quick question for ${companyName}`;
     const body = `Hi ${companyName} team,\n\nI came across ${companyName} and wanted to reach out briefly. I help businesses set up clean websites and automated workflows to reduce time spent on manual tasks.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 
   let cleaned = rawText
-    .replace(/^```(?:json|markdown)?\s*/gi, '')
-    .replace(/\s*```$/g, '')
+    .replace(/^```(?:json|markdown)?\s*/gi, "")
+    .replace(/\s*```$/g, "")
     .trim();
 
-  let subject = '';
-  let body = '';
+  let subject = "";
+  let body = "";
 
   const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
   if (jsonMatch) {
@@ -173,13 +234,15 @@ function cleanEmailContent(rawText, options = {}) {
         body = String(parsed.body).trim();
       }
     } catch {
-      const subjMatch = jsonMatch[0].match(/"subject"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i);
+      const subjMatch = jsonMatch[0].match(
+        /"subject"\s*:\s*"([^"\\]*(?:\\.[^"\\]*)*)"/i,
+      );
       const bodyMatch = jsonMatch[0].match(/"body"\s*:\s*"((?:[^"\\]|\\.)*)"/i);
       if (subjMatch) {
         subject = subjMatch[1].replace(/\\"/g, '"').trim();
       }
       if (bodyMatch) {
-        body = bodyMatch[1].replace(/\\"/g, '"').replace(/\\n/g, '\n').trim();
+        body = bodyMatch[1].replace(/\\"/g, '"').replace(/\\n/g, "\n").trim();
       }
     }
   }
@@ -190,14 +253,18 @@ function cleanEmailContent(rawText, options = {}) {
     for (const line of lines) {
       const trimmed = line.trim();
       if (!subject && /^subject\s*:\s*/i.test(trimmed)) {
-        subject = trimmed.replace(/^subject\s*:\s*/i, '').trim();
-      } else if (/^(?:here\s+(?:is|are|'s)|certainly|sure|below\s+is|email\s+draft|draft\s*:)/i.test(trimmed)) {
+        subject = trimmed.replace(/^subject\s*:\s*/i, "").trim();
+      } else if (
+        /^(?:here\s+(?:is|are|'s)|certainly|sure|below\s+is|email\s+draft|draft\s*:)/i.test(
+          trimmed,
+        )
+      ) {
         continue;
       } else {
         bodyLines.push(line);
       }
     }
-    body = bodyLines.join('\n').trim();
+    body = bodyLines.join("\n").trim();
   }
 
   if (!subject) {
@@ -205,66 +272,126 @@ function cleanEmailContent(rawText, options = {}) {
   }
 
   subject = subject
-    .replace(/^subject\s*:\s*/i, '')
-    .replace(/^["']|["']$/g, '')
+    .replace(/^subject\s*:\s*/i, "")
+    .replace(/^["']|["']$/g, "")
     .trim();
 
   body = body
-    .replace(/^(?:(?:here\s+(?:is|are|'s)\s+(?:a\s+|the\s+)?(?:draft|cold\s+email|email|personalized\s+email)[^:\n]*:?\s*)|(?:certainly|sure|of\s+course)[,!.]?\s*(?:here\s+is[^:\n]*:?\s*)?|(?:dear|hi)\s+nahid[^:\n]*:?\s*)+/gi, '')
+    .replace(
+      /^(?:(?:here\s+(?:is|are|'s)\s+(?:a\s+|the\s+)?(?:draft|cold\s+email|email|personalized\s+email)[^:\n]*:?\s*)|(?:certainly|sure|of\s+course)[,!.]?\s*(?:here\s+is[^:\n]*:?\s*)?|(?:dear|hi)\s+nahid[^:\n]*:?\s*)+/gi,
+      "",
+    )
     .trim();
 
   body = body
-    .replace(/\[(?:your\s+name|sender\s+name|my\s+name)\]/gi, senderName)
-    .replace(/\[[^\]]+\]/g, '')
-    .replace(/[ \t]+/g, ' ')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(
+      /\[(?:your\s+name\vert{}sender\s+name\vert{}my\s+name)\]/gi,
+      senderName,
+    )
+    .replace(/\[[^\]]+\]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
     .trim();
 
-  const signoffRegex = /(?:\r?\n)+(?:best regards|kind regards|warm regards|with regards|regards|cheers|sincerely|yours sincerely|thanks and best regards|(?:thanks|thank you))\b,?\s*(?:\r?\n[\s\S]*)?$/i;
-  body = body.replace(signoffRegex, '');
+  const signoffRegex =
+    /(?:\r?\n)+(?:best regards|kind regards|warm regards|with regards|regards|cheers|sincerely|yours sincerely|thanks and best regards|(?:thanks|thank you))\b,?\s*(?:\r?\n[\s\S]*)?$/i;
+  body = body.replace(signoffRegex, "");
   if (senderName) {
-    const escapedSender = senderName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    body = body.replace(new RegExp(`(?:\\r?\\n)+${escapedSender}\\s*$`, 'i'), '');
+    const escapedSender = senderName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    body = body.replace(
+      new RegExp(`(?:\\r?\\n)+${escapedSender}\\s*$`, "i"),
+      "",
+    );
   }
 
   body = `${body.trim()}\n\n${signature}`;
+
+  // --- SPAM CHECKER LOGIC ADDED HERE ---
+  // --- SPAM WORDS BLOCKING LOGIC ---
+  const spamWords = [
+    "free",
+    "guaranteed",
+    "buy now",
+    "cheap",
+    "urgent",
+    "no obligation",
+    "won't",
+  ];
+  const combinedText = `${subject} ${body}`.toLowerCase();
+
+  const foundSpamWord = spamWords.find((word) =>
+    combinedText.includes(word.toLowerCase()),
+  );
+
+  if (foundSpamWord) {
+    const securityError = new Error(
+      `❌ Security Block: Generated email contains forbidden spam word "${foundSpamWord}".`,
+    );
+    // Error object-er sathe blocked body ar subject attach kore dilam
+    securityError.blockedContent = { subject, body };
+    throw securityError;
+  }
+  // -------------------------------------
+  // -------------------------------------
 
   const text = `Subject: ${subject}\n\n${body}`;
   return { subject, body, text };
 }
 
 async function generateEmail(company, options = {}) {
-  if (!company || typeof company !== 'object' || !company.company_name || !company.company_name.trim()) {
-    throw new Error('company_name is required to generate outreach email');
+  if (
+    !company ||
+    typeof company !== "object" ||
+    !company.company_name ||
+    !company.company_name.trim()
+  ) {
+    throw new Error("company_name is required to generate outreach email");
   }
 
   const prompt = buildPrompt(company, options);
-  const maxRetries = typeof options.maxRetries === 'number' ? options.maxRetries : DEFAULT_MAX_RETRIES;
-  const sleepFn = options.sleepFn || ((ms) => new Promise(resolve => setTimeout(resolve, ms)));
+  const maxRetries =
+    typeof options.maxRetries === "number"
+      ? options.maxRetries
+      : DEFAULT_MAX_RETRIES;
+  const sleepFn =
+    options.sleepFn ||
+    ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   if (options.model) {
     for (let attempt = 1; ; attempt++) {
       try {
         const result = await options.model.generateContent(prompt);
-        let rawText = '';
+        let rawText = "";
         if (result && result.response) {
-          if (typeof result.response.text === 'function') {
+          if (typeof result.response.text === "function") {
             rawText = result.response.text();
-          } else if (typeof result.response.text === 'string') {
+          } else if (typeof result.response.text === "string") {
             rawText = result.response.text;
           }
         }
         return cleanEmailContent(rawText, {
           ...options,
-          companyName: company.company_name
+          companyName: company.company_name,
         });
       } catch (err) {
-        const isRateLimit = err.status === 429 || /429|RESOURCE_EXHAUSTED/i.test(err.message || '');
-        const isServerError = typeof err.status === 'number' && err.status >= 500 && err.status < 600;
-        const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(err.message || '');
+        const isRateLimit =
+          err.status === 429 ||
+          /429|RESOURCE_EXHAUSTED/i.test(err.message || "");
+        const isServerError =
+          typeof err.status === "number" &&
+          err.status >= 500 &&
+          err.status < 600;
+        const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(
+          err.message || "",
+        );
 
-        if ((isRateLimit || isServerError || isNetwork) && attempt <= maxRetries) {
-          const waitMs = isRateLimit ? 1000 * Math.pow(2, attempt) : 500 * attempt;
+        if (
+          (isRateLimit || isServerError || isNetwork) &&
+          attempt <= maxRetries
+        ) {
+          const waitMs = isRateLimit
+            ? 1000 * Math.pow(2, attempt)
+            : 500 * attempt;
           await sleepFn(waitMs);
           continue;
         }
@@ -275,9 +402,13 @@ async function generateEmail(company, options = {}) {
 
   const apiKey = resolveApiKey(options);
   const aiClient = options.genAI || new GoogleGenerativeAI(apiKey);
-  const configuredModelName = options.modelName || process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const configuredModelName =
+    options.modelName || process.env.GEMINI_MODEL || DEFAULT_MODEL;
 
-  const candidateModels = [configuredModelName, ...FALLBACK_MODELS.filter(m => m !== configuredModelName)];
+  const candidateModels = [
+    configuredModelName,
+    ...FALLBACK_MODELS.filter((m) => m !== configuredModelName),
+  ];
 
   for (let mIndex = 0; mIndex < candidateModels.length; mIndex++) {
     const currentModelName = candidateModels[mIndex];
@@ -285,38 +416,54 @@ async function generateEmail(company, options = {}) {
       model: currentModelName,
       generationConfig: {
         temperature: 0.7,
-        maxOutputTokens: 1000
-      }
+        maxOutputTokens: 1000,
+      },
     });
 
     for (let attempt = 1; ; attempt++) {
       try {
         const result = await generativeModel.generateContent(prompt);
-        let rawText = '';
+        let rawText = "";
         if (result && result.response) {
-          if (typeof result.response.text === 'function') {
+          if (typeof result.response.text === "function") {
             rawText = result.response.text();
-          } else if (typeof result.response.text === 'string') {
+          } else if (typeof result.response.text === "string") {
             rawText = result.response.text;
           }
         }
         return cleanEmailContent(rawText, {
           ...options,
-          companyName: company.company_name
+          companyName: company.company_name,
         });
       } catch (err) {
         // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model
-        const isModelUnsupported = err.status === 404 && /not found|no longer available|is not supported/i.test(err.message || '');
+        const isModelUnsupported =
+          err.status === 404 &&
+          /not found|no longer available|is not supported/i.test(
+            err.message || "",
+          );
         if (isModelUnsupported && mIndex < candidateModels.length - 1) {
           break;
         }
 
-        const isRateLimit = err.status === 429 || /429|RESOURCE_EXHAUSTED/i.test(err.message || '');
-        const isServerError = typeof err.status === 'number' && err.status >= 500 && err.status < 600;
-        const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(err.message || '');
+        const isRateLimit =
+          err.status === 429 ||
+          /429|RESOURCE_EXHAUSTED/i.test(err.message || "");
+        const isServerError =
+          typeof err.status === "number" &&
+          err.status >= 500 &&
+          err.status < 600;
+        const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(
+          err.message || "",
+        );
 
-        if ((isRateLimit || isServerError || isNetwork) && attempt <= maxRetries) {
-          const waitMs = isRateLimit ? 1000 * Math.pow(2, attempt) : 500 * attempt;
+        if (
+          (isRateLimit || isServerError || isNetwork) &&
+          attempt <= maxRetries
+        ) {
+          const waitMs = isRateLimit
+            ? 1000 * Math.pow(2, attempt)
+            : 500 * attempt;
           await sleepFn(waitMs);
           continue;
         }
@@ -337,5 +484,5 @@ module.exports = {
   mapSicToIndustry,
   buildPrompt,
   cleanEmailContent,
-  generateEmail
+  generateEmail,
 };

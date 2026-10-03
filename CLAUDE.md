@@ -1,44 +1,44 @@
-Create a CLAUDE.md file for this project.
+# Project guide
 
-Project purpose:
-This project is ONLY for collecting recently incorporated UK companies from the official Companies House API and exporting the data to CSV.
+## Purpose and scope
 
-Core workflow:
-Companies House API → Fetch recent companies → Handle pagination → Remove duplicates → Export companies.csv
+This Node.js project collects recently incorporated UK companies using only the
+official Companies House API and exports them to `companies.csv`. Keep new work
+focused on this workflow; do not add AI research, lead scoring, contact
+discovery, scraping, email outreach, or messaging features.
 
-Rules for this project:
+## Core workflow
 
-1. Use only the official Companies House API for company discovery.
-2. Never hardcode API keys.
-3. API credentials must come from .env:
-   COMPANIES_HOUSE_API_KEY
-4. Never commit .env or secrets to Git.
-5. Keep the project focused only on Companies House company collection.
-6. Do NOT add:
-   - AI research
-   - Lead scoring
-7. For Phase 2 (Contact Discovery), Web scraping (via Puppeteer/Playwright) IS ALLOWED to bypass free API limits when searching Google/DuckDuckGo and Social Media pages.
-8. Use Node.js.
-9. Keep the code simple, modular, readable, and beginner-friendly.
-10. Use configurable date ranges and result limits.
-11. Handle pagination correctly.
-12. Prevent duplicate companies using company_number.
-13. Handle API errors and rate limits gracefully.
-14. Export collected companies to companies.csv.
-15. Keep the CSV fields based on useful data actually returned by Companies House.
-16. Do not invent API fields or endpoints.
-17. Before changing the Companies House integration, verify the current official API documentation.
-18. When modifying the project, preserve the existing folder structure unless there is a clear technical reason to change it.
-19. Prefer small, focused changes instead of unnecessary rewrites.
-20. When I ask for a code change, explain what files need to change before making unrelated changes.
+`src/index.js` loads configuration, reads existing company numbers, invokes the
+collector, and appends new rows to `companies.csv`.
 
-Development behavior:
+- `src/config.js` loads `COMPANIES_HOUSE_API_KEY` and date/result settings from
+  the environment.
+- `src/companiesHouse.js` calls the official Companies House API and handles
+  authentication, retries, and rate limits.
+- `src/collect.js` paginates search results and deduplicates by
+  `company_number`.
+- `src/csv.js` maps returned API data to CSV fields and reads/writes the output.
+- `src/*.test.js` contains the Node.js test-runner tests for these modules.
 
-- First inspect the existing project structure and code.
-- Reuse existing utilities when appropriate.
-- Do not create duplicate functionality.
-- Keep secrets out of source code.
-- Keep the implementation production-safe but simple.
-- If something is unclear, inspect the existing code/configuration before making assumptions.
+## Working rules
 
-The CLAUDE.md should be concise but detailed enough that Claude Code understands the project's purpose, architecture, rules, and current scope.
+- Use Node.js 18 or newer and preserve the existing folder structure.
+- Keep changes small, modular, readable, and beginner-friendly; reuse existing
+  helpers and tests.
+- Read API fields and endpoints from the official documentation before
+  changing the Companies House integration:
+  https://developer.company-information.service.gov.uk/
+- Do not invent API fields or endpoints. Build CSV columns only from useful
+  data actually returned by the API.
+- Keep the date range and maximum result count configurable. Handle pagination,
+  duplicates, API errors, and rate limits explicitly.
+- Never hardcode credentials. Read the API key from
+  `COMPANIES_HOUSE_API_KEY` in `.env`; never commit `.env` or other secrets.
+- Inspect the existing code and configuration before changing behavior. When a
+  request is unclear, clarify scope before implementing unrelated changes.
+
+## Commands
+
+- `npm start` collects companies and writes `companies.csv`.
+- `npm test` runs the tests with Node.js's built-in test runner.

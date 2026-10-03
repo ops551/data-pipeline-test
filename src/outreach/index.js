@@ -96,6 +96,7 @@ Environment Variables:
   OUTREACH_DRY_RUN           Enable dry-run mode (1 or true)
   OUTREACH_DELAY             Default delay in ms
   TEST_EMAIL                 Default test email redirect
+  SPAM_ALERT_EMAIL           Address for generated-email block alerts
   SMTP_MOCK                  Enable nodemailer mock transport (1 or true)
   LEADS_PATH                 Default path to leads.csv
   SENT_LEADS_PATH            Default path to sent_leads.csv
@@ -119,6 +120,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     : Boolean(process.env.SMTP_MOCK === 'true' || process.env.SMTP_MOCK === '1' || process.env.OUTREACH_MOCK === 'true');
 
   const testEmail = options.testEmail || process.env.TEST_EMAIL || null;
+  const spamAlertEmail = options.spamAlertEmail || process.env.SPAM_ALERT_EMAIL || null;
 
   const limit = (options.limit !== undefined && options.limit !== null)
     ? parseInt(options.limit, 10)
@@ -288,6 +290,42 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         sentCount++;
       }
     } catch (leadErr) {
+      if (leadErr.blockedContent) {
+        if (dryRun) {
+          logger.warn(`[DRY-RUN] Spam block alert for ${companyName} was not sent.`);
+        } else if (!spamAlertEmail) {
+          logger.warn(`Spam block alert not sent for ${companyName}: set SPAM_ALERT_EMAIL to receive alerts.`);
+        } else {
+          const blockedSubject = leadErr.blockedContent.subject || '';
+          const blockedBody = leadErr.blockedContent.body || '';
+          const alertOptions = {
+            to: spamAlertEmail,
+            subject: 'Spam Block Alert: Outreach Email Aborted',
+            text: [
+              'A generated outreach email was blocked and was not sent to the lead.',
+              '',
+              `Company: ${companyName} (${companyNum})`,
+              `Error: ${leadErr.message}`,
+              '',
+              '--- Blocked Content ---',
+              `Subject: ${blockedSubject}`,
+              '',
+              blockedBody
+            ].join('\n')
+          };
+
+          try {
+            await send(alertOptions, {
+              mock,
+              ...(options.emailOptions || {})
+            }, deps);
+            logger.log(`Spam block alert sent for ${companyName} to ${spamAlertEmail}.`);
+          } catch (alertErr) {
+            logger.error(`Could not send spam block alert for ${companyName}:`, alertErr.message);
+          }
+        }
+      }
+
       // Fault isolation: DO NOT move to sent_leads.csv (leave in leads.csv for retry)
       failedCount++;
       errors.push({

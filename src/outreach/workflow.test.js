@@ -77,6 +77,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
     assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
+    assert.strictEqual(env.SPAM_ALERT_EMAIL, '${{ secrets.SPAM_ALERT_EMAIL }}');
     assert.strictEqual(env.TEST_EMAIL, 'nahidhosan027@gmail.com');
     assert.ok(
       steps.some((step) => step.name === 'Validate SMTP credentials'),
