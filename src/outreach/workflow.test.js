@@ -67,8 +67,9 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(inputs.dry_run.default, false);
     assert.ok(inputs.test_email, 'workflow_dispatch must declare a test_email input');
     assert.strictEqual(inputs.test_email.type, 'string');
-    assert.strictEqual(inputs.test_email.required, true);
-    assert.strictEqual(inputs.test_email.default, 'nahidhosan027@gmail.com');
+    assert.strictEqual(inputs.test_email.required, false);
+    assert.strictEqual(inputs.test_email.default, '');
+    assert.match(inputs.test_email.description, /leave blank to contact the company/);
   });
 
   await t.test('configures top-level permissions: contents write and pull-requests write', () => {

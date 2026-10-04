@@ -20,10 +20,10 @@ name: Outreach Automation
         type: boolean
         default: false
       test_email:
-        description: 'Redirect this manual run to a test email address'
-        required: true
+        description: 'Optional: redirect this manual run to a test email address; leave blank to contact the company'
+        required: false
         type: string
-        default: 'nahidhosan027@gmail.com'
+        default: ''
 
 concurrency:
   group: outreach-pipeline
