@@ -124,6 +124,18 @@ function appendSentLeads(arg1, arg2) {
   }));
 
   const needsHeader = !fs.existsSync(sentLeadsPath) || fs.statSync(sentLeadsPath).size === 0;
+  if (!needsHeader) {
+    const header = fs.readFileSync(sentLeadsPath, 'utf8').split(/\r?\n/, 1)[0];
+    if (header !== SENT_LEADS_COLUMNS.join(',')) {
+      const existingSentLeads = parseCSV(sentLeadsPath);
+      writeCSVAtomic(
+        sentLeadsPath,
+        [...existingSentLeads, ...records],
+        SENT_LEADS_COLUMNS
+      );
+      return records.length;
+    }
+  }
 
   if (needsHeader) {
     writeCSVAtomic(sentLeadsPath, records, SENT_LEADS_COLUMNS);

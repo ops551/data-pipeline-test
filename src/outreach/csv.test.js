@@ -77,6 +77,33 @@ test('SENT_LEADS_COLUMNS includes all LEADS_COLUMNS plus sent_at', () => {
   assert.deepEqual(SENT_LEADS_COLUMNS, [...LEADS_COLUMNS, 'sent_at']);
 });
 
+test('appendSentLeads migrates existing sent rows to include website context columns', () => {
+  const { sentLeadsPath } = createTempWorkspace();
+  const oldColumns = SENT_LEADS_COLUMNS.filter(
+    (column) => column !== 'website_url' && column !== 'website_context'
+  );
+  const oldRow = sampleLeads[0];
+  fs.writeFileSync(
+    sentLeadsPath,
+    `${oldColumns.join(',')}\n${oldColumns.map((column) => oldRow[column] || (column === 'sent_at' ? '2026-09-01' : '')).join(',')}\n`,
+    'utf8'
+  );
+
+  appendSentLead(sentLeadsPath, {
+    ...sampleLeads[1],
+    website_url: 'https://beta.co.uk',
+    website_context: 'Page title: Beta Services',
+    sent_at: '2026-09-02'
+  });
+
+  const sentRows = require('../enrich/csvParser').parseCSV(sentLeadsPath);
+  assert.equal(sentRows.length, 2);
+  assert.equal(sentRows[0].company_name, oldRow.company_name);
+  assert.equal(sentRows[0].sent_at, '2026-09-01');
+  assert.equal(sentRows[1].website_url, 'https://beta.co.uk');
+  assert.equal(sentRows[1].website_context, 'Page title: Beta Services');
+});
+
 test('readLeads returns empty array when file does not exist', () => {
   const { leadsPath } = createTempWorkspace();
   const leads = readLeads(leadsPath);

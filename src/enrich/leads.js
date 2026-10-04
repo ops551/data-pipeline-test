@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { writeCSV } = require('./csvParser');
+const { parseCSV, writeCSV } = require('./csvParser');
 const { normalisePhone, isMobile } = require('./phone');
 
 const LEADS_COLUMNS = [
@@ -11,10 +11,12 @@ const LEADS_COLUMNS = [
   'phones',
   'whatsapp_candidate',
   'status',
-  'sources'
+  'sources',
+  'website_url',
+  'website_context'
 ];
 
-function formatLead(company, extractedData, sources) {
+function formatLead(company, extractedData, sources, website = {}) {
   const emails = extractedData.emails || [];
   let rawPhones = extractedData.phones || [];
   
@@ -37,13 +39,15 @@ function formatLead(company, extractedData, sources) {
     phones: normalisedPhones.join('; '),
     whatsapp_candidate,
     status,
-    sources: (sources || []).join('; ')
+    sources: (sources || []).join('; '),
+    website_url: website.url || '',
+    website_context: website.context || ''
   };
 }
 
 function appendLead(leadsPath, leadObj) {
   const needsHeader = !fs.existsSync(leadsPath) || fs.statSync(leadsPath).size === 0;
-  const { formatField } = require('../csv'); // reuse if possible or inline
+  const { formatField } = require('../csv');
   
   function formatCsvField(value) {
     const text = String(value ?? '').replace(/\r?\n/g, ' ');
@@ -52,8 +56,25 @@ function appendLead(leadsPath, leadObj) {
   }
   
   const lines = [LEADS_COLUMNS.map(col => formatCsvField(leadObj[col])).join(',')];
-  if (needsHeader) lines.unshift(LEADS_COLUMNS.join(','));
-  
+  if (!needsHeader) {
+    const header = fs.readFileSync(leadsPath, 'utf8').split(/\r?\n/, 1)[0];
+    if (header !== LEADS_COLUMNS.join(',')) {
+      const existingLeads = parseCSV(leadsPath);
+      const tempPath = path.join(
+        path.dirname(leadsPath),
+        `.${path.basename(leadsPath)}.tmp.${Date.now()}_${process.pid}`
+      );
+      try {
+        writeCSV(tempPath, [...existingLeads, leadObj], LEADS_COLUMNS);
+        fs.renameSync(tempPath, leadsPath);
+      } finally {
+        if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath);
+      }
+      return;
+    }
+  } else {
+    lines.unshift(LEADS_COLUMNS.join(','));
+  }
   fs.appendFileSync(leadsPath, lines.join('\n') + '\n');
 }
 

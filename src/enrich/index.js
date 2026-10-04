@@ -4,7 +4,7 @@ const { filterCandidates } = require('./filter');
 const { parseCSV } = require('./csvParser');
 const { getDirectorsForCompany } = require('./officers');
 const { createScraper } = require('./scraper');
-const { searchCompany } = require('./search');
+const { searchCompany, extractWebsiteContext } = require('./search');
 const { extractContactDetails } = require('./extract');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 
@@ -52,8 +52,27 @@ async function runEnrichment() {
       // Search & Social
       console.log('  Searching for website and social profiles...');
       const searchRes = await searchCompany(scraper, company);
+      let website = { url: searchRes.websiteUrl || '', context: '' };
       if (searchRes.has_website) {
         sources.push('existing_website');
+        console.log(`  Inspecting company homepage: ${website.url}`);
+        const page = await scraper.fetchHtml(website.url, {
+          throwOnError: false,
+          timeout: 20000
+        });
+        if (page.error) {
+          console.warn(`  Could not inspect company homepage: ${page.error}`);
+        } else if (page.statusCode < 200 || page.statusCode >= 400) {
+          console.warn(`  Company homepage returned HTTP ${page.statusCode}.`);
+        } else {
+          website = {
+            url: page.finalUrl || website.url,
+            context: extractWebsiteContext(page.html)
+          };
+          if (!website.context) {
+            console.warn('  Company homepage returned no readable page content.');
+          }
+        }
       }
       
       let extractedData = { emails: [], phones: [] };
@@ -86,7 +105,7 @@ async function runEnrichment() {
       }
 
       // Format and append lead
-      const leadObj = formatLead(company, extractedData, sources);
+      const leadObj = formatLead(company, extractedData, sources, website);
       if (leadObj.status !== 'no_contact') {
         appendLead(leadsFile, leadObj);
       }
