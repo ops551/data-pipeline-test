@@ -1,6 +1,17 @@
 name: Outreach Automation
 
 'on':
+  schedule:
+    - cron: '13 0 * * *'
+    - cron: '37 2 * * *'
+    - cron: '1 5 * * *'
+    - cron: '25 7 * * *'
+    - cron: '49 9 * * *'
+    - cron: '13 12 * * *'
+    - cron: '37 14 * * *'
+    - cron: '1 17 * * *'
+    - cron: '25 19 * * *'
+    - cron: '49 21 * * *'
   workflow_dispatch:
     inputs:
       dry_run:
@@ -8,6 +19,11 @@ name: Outreach Automation
         required: false
         type: boolean
         default: false
+      test_email:
+        description: 'Redirect this manual run to a test email address'
+        required: true
+        type: string
+        default: 'nahidhosan027@gmail.com'
 
 concurrency:
   group: outreach-pipeline
@@ -36,7 +52,7 @@ jobs:
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
       OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
-      TEST_EMAIL: nahidhosan027@gmail.com
+      TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}
       DAYS_BACK: "10"
 
     steps:

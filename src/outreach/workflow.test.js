@@ -39,18 +39,36 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(parsed.name, 'Outreach Automation');
   });
 
-  await t.test('configures manual workflow_dispatch without an automatic schedule', () => {
+  await t.test('configures ten evenly spaced daily schedules and manual dispatch', () => {
     const triggers = parsed.on || parsed[true];
     assert.ok(triggers, 'Triggers section must be defined');
 
-    assert.equal(triggers.schedule, undefined, 'outreach must not run on a cron schedule');
+    assert.ok(Array.isArray(triggers.schedule), 'daily cron schedules must be configured');
+    assert.equal(triggers.schedule.length, 10, 'outreach must have ten daily runs');
+    const runMinutes = triggers.schedule.map(({ cron }) => {
+      const match = cron.match(/^(\d+) (\d+) \* \* \*$/);
+      assert.ok(match, `unexpected daily cron expression: ${cron}`);
+      return Number(match[2]) * 60 + Number(match[1]);
+    }).sort((a, b) => a - b);
+    const intervals = runMinutes.map((minute, index) => {
+      const nextMinute = runMinutes[(index + 1) % runMinutes.length];
+      return (nextMinute - minute + 24 * 60) % (24 * 60);
+    });
+    assert.ok(
+      intervals.every((interval) => interval === 144),
+      'daily runs must be spaced 144 minutes apart'
+    );
 
-    // Assert manual workflow_dispatch with optional dry_run input
+    // Assert manual workflow_dispatch with dry_run and configurable test recipient
     assert.ok(triggers.workflow_dispatch, 'workflow_dispatch trigger must be configured');
     const inputs = triggers.workflow_dispatch.inputs || {};
     assert.ok(inputs.dry_run, 'workflow_dispatch must declare dry_run input');
     assert.strictEqual(inputs.dry_run.type, 'boolean');
     assert.strictEqual(inputs.dry_run.default, false);
+    assert.ok(inputs.test_email, 'workflow_dispatch must declare a test_email input');
+    assert.strictEqual(inputs.test_email.type, 'string');
+    assert.strictEqual(inputs.test_email.required, true);
+    assert.strictEqual(inputs.test_email.default, 'nahidhosan027@gmail.com');
   });
 
   await t.test('configures top-level permissions: contents write and pull-requests write', () => {
@@ -78,7 +96,11 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
     assert.strictEqual(env.EMAIL_FROM, undefined, 'sender identity is fixed in the email module');
     assert.strictEqual(env.SPAM_ALERT_EMAIL, '${{ secrets.SPAM_ALERT_EMAIL }}');
-    assert.strictEqual(env.TEST_EMAIL, 'nahidhosan027@gmail.com');
+    assert.strictEqual(
+      env.TEST_EMAIL,
+      "${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}"
+    );
+    assert.strictEqual(env.OUTREACH_LIMIT, '1', 'each run must send at most one email');
     assert.ok(
       steps.some((step) => step.name === 'Validate SMTP credentials'),
       'manual test runs must validate the configured SMTP credentials'
