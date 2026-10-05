@@ -20,6 +20,7 @@ const FORBIDDEN_SPAM_WORDS = Object.freeze([
   "great",
   "regarding",
   "save",
+  "quote",
 ]);
 
 const DEFAULT_SIGNATURE = Object.freeze({
