@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const {
   DEFAULT_MODEL,
   DEFAULT_SENDER_NAME,
+  FORBIDDEN_SPAM_WORDS,
   DEFAULT_SIGNATURE,
   buildSignature,
   resolveApiKey,
@@ -135,9 +136,35 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('If you prefer no further messages, I completely understand and will not contact you again.'));
   assert.ok(prompt.includes('Keep it under 100 words before the signature.'));
   assert.ok(prompt.includes('Make the wording slightly unique for this specific company name and industry'));
-  assert.ok(prompt.includes('Do not use any spam-trigger words like free, guaranteed, buy now, cheap, urgent, no obligation, or won\'t.'));
+  assert.ok(prompt.includes(`Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(', ')}.`));
+  assert.ok(prompt.includes('Do not use any forbidden word or phrase anywhere in the subject or body'));
+  assert.ok(prompt.includes('replace it with a natural, unblocked synonym that keeps the same meaning and tone'));
+  assert.ok(prompt.includes('do not remove a useful idea just to avoid a word'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
+});
+
+test('cleanEmailContent blocks words from the shared forbidden-word list', () => {
+  const forbiddenWord = FORBIDDEN_SPAM_WORDS[0];
+  const raw = JSON.stringify({
+    subject: `A note about ${forbiddenWord}`,
+    body: 'Hi Sarah,\n\nI wanted to get in touch.'
+  });
+
+  assert.throws(
+    () => cleanEmailContent(raw),
+    new RegExp(`forbidden spam word "${forbiddenWord}"`, 'i')
+  );
+});
+
+test('buildPrompt instructs the email to abbreviate a trailing Limited suffix', () => {
+  const prompt = buildPrompt({
+    company_name: 'THEO FAASSEN TRANSPORT (UK) LIMITED'
+  });
+
+  assert.ok(prompt.includes('Company Name to Use in the Email: THEO FAASSEN TRANSPORT (UK) Ltd'));
+  assert.ok(prompt.includes('Hi THEO FAASSEN TRANSPORT (UK) Ltd team,'));
+  assert.ok(prompt.includes('do not expand or alter its legal suffix'));
 });
 
 test('buildPrompt uses inspected website evidence for a positive, non-overlapping offer', () => {
@@ -152,7 +179,7 @@ test('buildPrompt uses inspected website evidence for a positive, non-overlappin
   assert.ok(prompt.includes('Page title: Building Services'));
   assert.ok(prompt.includes('Briefly say you reviewed the supplied homepage'));
   assert.ok(prompt.includes('exactly one 10-20 word positive sentence'));
-  assert.ok(prompt.includes('offering to update their website and add a relevant automation'));
+  assert.ok(prompt.includes('suggesting a website update and relevant automation'));
   assert.ok(prompt.includes('Do not identify or imply any flaw, missing feature, or problem'));
   assert.ok(prompt.includes('currently exploring any updates to their website'));
   assert.ok(prompt.includes('do not invent company facts'));
@@ -222,6 +249,18 @@ test('cleanEmailContent parses JSON with markdown fences and strips placeholders
   assert.equal(cleaned.text, `Subject: ${cleaned.subject}\n\n${cleaned.body}`);
 });
 
+test('cleanEmailContent abbreviates the registered Limited suffix in generated output', () => {
+  const companyName = 'THEO FAASSEN TRANSPORT (UK) LIMITED';
+  const cleaned = cleanEmailContent(JSON.stringify({
+    subject: `${companyName} digital services`,
+    body: `Hi ${companyName} team,\n\nI reviewed the information you shared.`
+  }), { companyName });
+
+  assert.ok(cleaned.subject.includes('THEO FAASSEN TRANSPORT (UK) Ltd'));
+  assert.ok(cleaned.body.includes('Hi THEO FAASSEN TRANSPORT (UK) Ltd team,'));
+  assert.doesNotMatch(`${cleaned.subject}\n${cleaned.body}`, /THEO FAASSEN TRANSPORT \(UK\) LIMITED/i);
+});
+
 test('cleanEmailContent handles fallback text parsing without JSON', () => {
   const raw = [
     'Certainly! Here is your personalized email:',
@@ -253,7 +292,7 @@ test('cleanEmailContent handles fallback text parsing without JSON', () => {
 
 test('cleanEmailContent appends personal signature by default and honors includeSignature false', () => {
   const raw = JSON.stringify({
-    subject: 'Partnership opportunity',
+    subject: 'A quick partnership question',
     body: 'Hi Sarah,\n\nWe love your work.\n\nBest regards,\nNahid'
   });
 
