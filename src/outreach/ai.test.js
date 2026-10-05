@@ -356,7 +356,7 @@ test('generateEmail generates clean email using injected genAI mock', async () =
             response: {
               text: () => JSON.stringify({
                 subject: 'High-converting site for Zenith Ltd',
-                body: 'Hi Sarah,\n\nCongrats on Zenith Ltd!\n\nWe build websites with instant quotes.\n\nBest regards,\nNahid'
+                body: 'Hi Sarah,\n\nCongrats on Zenith Ltd!\n\nWe build websites with automated booking.\n\nBest regards,\nNahid'
               })
             }
           };
