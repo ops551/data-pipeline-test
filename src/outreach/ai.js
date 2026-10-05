@@ -331,6 +331,7 @@ function cleanEmailContent(rawText, options = {}) {
     "urgent",
     "no obligation",
     "won't",
+    "LIMITED"
   ];
   const combinedText = `${subject} ${body}`.toLowerCase();
 
