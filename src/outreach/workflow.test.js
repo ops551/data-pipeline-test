@@ -117,6 +117,15 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
       autoReplenish.if.includes('inputs.dry_run != true'),
       'manual dry runs must skip auto-replenishment to avoid CSV changes'
     );
+    assert.ok(
+      autoReplenish.run.includes("require('./src/outreach/csv')") &&
+        autoReplenish.run.includes("getPendingLeads({ channel: 'email' }).length"),
+      'auto-replenishment must count the same eligible leads as outreach'
+    );
+    assert.ok(
+      !autoReplenish.run.includes("filter(l=>l.includes(',lead,')"),
+      'auto-replenishment must not use a rough CSV line count'
+    );
     assert.ok(!rawYaml.includes('TEST_SMTP_'), 'workflow must not require unconfigured TEST_SMTP secrets');
     assert.ok(
       env.OUTREACH_DRY_RUN.includes('inputs.dry_run'),
