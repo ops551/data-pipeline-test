@@ -6,7 +6,6 @@ const { isValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'leads.csv');
 const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
-const DEFAULT_EMAIL_SUPPRESSIONS_PATH = path.join(process.cwd(), 'email_suppressions.csv');
 
 const SENT_LEADS_COLUMNS = [
   ...LEADS_COLUMNS,
@@ -73,27 +72,6 @@ function readSentRecipients(filePath = DEFAULT_SENT_LEADS_PATH) {
   return recipients;
 }
 
-function readEmailSuppressions(filePath = DEFAULT_EMAIL_SUPPRESSIONS_PATH) {
-  const emails = new Set();
-  const domains = new Set();
-  if (!fs.existsSync(filePath)) return { emails, domains };
-
-  for (const row of parseCSV(filePath)) {
-    if (row.email) emails.add(String(row.email).trim().toLowerCase());
-    if (row.domain) domains.add(String(row.domain).trim().toLowerCase().replace(/^@/, ''));
-  }
-  return { emails, domains };
-}
-
-function isEmailSuppressed(email, suppressions) {
-  const normalizedEmail = String(email).trim().toLowerCase();
-  const domain = normalizedEmail.slice(normalizedEmail.lastIndexOf('@') + 1);
-  return suppressions.emails.has(normalizedEmail) ||
-    [...suppressions.domains].some(suppressedDomain =>
-      domain === suppressedDomain || domain.endsWith(`.${suppressedDomain}`)
-    );
-}
-
 function getPendingLeads(options = {}) {
   const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
   const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
@@ -106,9 +84,6 @@ function getPendingLeads(options = {}) {
   if (leads.length === 0) return [];
 
   const sentNumbers = excludeSent ? readSentCompanyNumbers(sentLeadsPath) : new Set();
-  const suppressions = channel === 'email'
-    ? readEmailSuppressions(options.emailSuppressionsPath || DEFAULT_EMAIL_SUPPRESSIONS_PATH)
-    : { emails: new Set(), domains: new Set() };
   const reservedRecipients = excludeSent && channel === 'email'
     ? readSentRecipients(sentLeadsPath)
     : new Set();
@@ -130,7 +105,6 @@ function getPendingLeads(options = {}) {
       if (emails.length === 0) return true;
       const availableEmails = emails.filter(email =>
         isValidEmailAddress(email) &&
-        !isEmailSuppressed(email, suppressions) &&
         !reservedRecipients.has(email.toLowerCase())
       );
       if (availableEmails.length === 0) return false;
@@ -145,7 +119,6 @@ function getPendingLeads(options = {}) {
       }
 
       const availableEmails = emails.filter(email =>
-        !isEmailSuppressed(email, suppressions) &&
         !reservedRecipients.has(email.toLowerCase())
       );
       if (availableEmails.length === 0) return false;
@@ -334,14 +307,12 @@ function moveLeadToSent(companyNumber, options = {}) {
 module.exports = {
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
-  DEFAULT_EMAIL_SUPPRESSIONS_PATH,
   LEADS_COLUMNS,
   SENT_LEADS_COLUMNS,
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,
   readSentRecipients,
-  readEmailSuppressions,
   appendSentLead,
   appendSentLeads,
   removeLead,

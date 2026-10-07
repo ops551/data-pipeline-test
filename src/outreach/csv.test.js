@@ -24,8 +24,7 @@ function createTempWorkspace() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'outreach-test-'));
   const leadsPath = path.join(dir, 'leads.csv');
   const sentLeadsPath = path.join(dir, 'sent_leads.csv');
-  const emailSuppressionsPath = path.join(dir, 'email_suppressions.csv');
-  return { dir, leadsPath, sentLeadsPath, emailSuppressionsPath };
+  return { dir, leadsPath, sentLeadsPath };
 }
 
 const sampleLeads = [
@@ -206,29 +205,6 @@ test('getPendingLeads excludes recipients already sent for a different company',
 
   const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
   assert.deepEqual(pending.map(lead => lead.company_number), ['34567890']);
-});
-
-test('getPendingLeads excludes suppressed domains and uses a safe alternate address', () => {
-  const { leadsPath, sentLeadsPath, emailSuppressionsPath } = createTempWorkspace();
-  seedLeadsFile(leadsPath, [
-    { ...sampleLeads[0], emails: 'ukteammail@findawealthmanager.com' },
-    { ...sampleLeads[1], emails: 'lara@mail.findawealthmanager.com; contact@beta.co.uk' }
-  ]);
-  fs.writeFileSync(
-    emailSuppressionsPath,
-    'email,domain,reason,suppressed_at\n,findawealthmanager.com,No further contact,2026-10-07T15:06:18.340Z\n',
-    'utf8'
-  );
-
-  const pending = getPendingLeads({
-    leadsPath,
-    sentLeadsPath,
-    emailSuppressionsPath,
-    channel: 'email',
-    excludeSent: false
-  });
-  assert.deepEqual(pending.map(lead => lead.company_number), ['23456789']);
-  assert.equal(pending[0].emails, 'contact@beta.co.uk');
 });
 
 test('getPendingLeads selects a shared recipient for only one company per run', () => {

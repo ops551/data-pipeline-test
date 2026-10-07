@@ -18,7 +18,6 @@ Recent-uk-Companys/
 To keep `leads.csv` lightweight (as it will eventually have hundreds of thousands of rows):
 - When an email or WhatsApp is successfully sent, the row will be **moved** from `leads.csv` to a new archive file called `sent_leads.csv`.
 - The email archive records the actual recipient in `sent_to`; email outreach skips recipient addresses already sent to, even when they appear under another company.
-- `email_suppressions.csv` stores opted-out email addresses and domains; suppressed contacts are never selected for email outreach.
 - `leads.csv` will only contain fresh, unsent leads.
 
 ## Step 2: Email Automation (`src/outreach/email.js`)
