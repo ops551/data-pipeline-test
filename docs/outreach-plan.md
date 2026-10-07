@@ -17,6 +17,7 @@ Recent-uk-Companys/
 ## Step 1: Modifying CSV Workflow
 To keep `leads.csv` lightweight (as it will eventually have hundreds of thousands of rows):
 - When an email or WhatsApp is successfully sent, the row will be **moved** from `leads.csv` to a new archive file called `sent_leads.csv`.
+- The email archive records the actual recipient in `sent_to`; email outreach skips recipient addresses already sent to, even when they appear under another company.
 - `leads.csv` will only contain fresh, unsent leads.
 
 ## Step 2: Email Automation (`src/outreach/email.js`)
@@ -24,7 +25,7 @@ To keep `leads.csv` lightweight (as it will eventually have hundreds of thousand
 2. **AI Generation:** Call Gemini 1.5 Flash API to write a personalized cold email for the company offering Website/Automation services.
 3. **Send Email:** Use `nodemailer` with the user's private SMTP credentials to send the email.
 4. **Update CSVs:** 
-   - Add the successfully emailed company to `sent_leads.csv` (with a timestamp).
+   - Add the successfully emailed company and actual recipient to `sent_leads.csv` (with a timestamp).
    - Remove the company from `leads.csv`.
 
 ## Step 3: GitHub Actions Automation (The "Pull Shark" Hack)

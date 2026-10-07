@@ -2,6 +2,21 @@ const { isValidEmailAddress } = require('../emailAddress');
 
 const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]{2,})/gi;
 const PHONE_REGEX = /(?:(?:\+44\s?|0)7\d{3}\s?\d{6}|(?:\+44\s?|0)7\d{4}\s?\d{5})/g;
+const GENERIC_COMPANY_TERMS = new Set([
+  'advice',
+  'financial',
+  'finance',
+  'group',
+  'holdings',
+  'investment',
+  'investments',
+  'management',
+  'manager',
+  'planning',
+  'services',
+  'solutions',
+  'wealth'
+]);
 
 function extractEmails(text) {
   if (!text) return [];
@@ -88,55 +103,54 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
   if (!emails || emails.length === 0) return [];
 
   const cleanName = (companyName || '').toLowerCase().replace(/\b(ltd|limited|uk|co|inc|cic)\b/g, '').replace(/[^a-z0-9]/g, ' ').trim();
-  const words = cleanName.split(/\s+/).filter(w => w.length > 2);
+  const words = cleanName.split(/\s+/).filter(w =>
+    w.length > 3 && !GENERIC_COMPANY_TERMS.has(w)
+  );
   const joinedName = words.join('');
-  
-  const officerWords = (officersStr || '').toLowerCase().replace(/[^a-z0-9]/g, ' ').split(/\s+/).filter(w => w.length > 2);
+  const officerNames = String(officersStr || '')
+    .split(',')
+    .map(name => name.toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim().split(/\s+/))
+    .filter(name => name.length >= 2 && name.every(part => part.length > 1));
 
   const validEmails = [];
 
   const scored = emails.map(email => {
     let score = 0;
     const [user, domain] = email.split('@');
-    
+    let companyMatch = false;
+
     if (domain) {
       const domainName = domain.split('.')[0];
-      
-      if (joinedName && domainName.includes(joinedName)) score += 100;
-      
-      words.forEach(w => {
-        if (w.length > 3) {
-          if (domainName.includes(w)) score += 20;
-        } else {
-          if (domainName === w || domainName.startsWith(w) || domainName.endsWith(w)) score += 20;
-        }
-      });
-      
-      const ispDomains = ['gmail', 'yahoo', 'aol', 'hotmail', 'outlook', 'icloud', 'live'];
-      if (ispDomains.some(isp => domainName === isp)) {
-        // Do not give free points just for being gmail. It must match user/officer to get > 0.
+
+      if (joinedName && domainName.includes(joinedName)) {
+        score += 100;
+        companyMatch = true;
       }
-    }
-    
-    if (user) {
+
       words.forEach(w => {
-        if (w.length > 3) {
-          if (user.includes(w)) score += 10;
-        } else {
-          if (user === w || user.startsWith(w) || user.endsWith(w)) score += 10;
+        if (domainName.includes(w)) {
+          score += 20;
+          companyMatch = true;
         }
       });
-      officerWords.forEach(w => {
-        if (w.length > 3) {
-          if (user.includes(w)) score += 30;
-        } else {
-          if (user === w || user.startsWith(w) || user.endsWith(w)) score += 30;
+
+    }
+
+    if (user && words.length > 0) {
+      words.forEach(w => {
+        if (user.includes(w)) {
+          score += 10;
+          companyMatch = true;
         }
       });
     }
 
-    // STRICT FILTER: If score is 0, it means it doesn't match the company OR the officers. Drop it to prevent competitor spam.
-    if (score > 0) {
+    const officerMatch = Boolean(user) && officerNames.some(name =>
+      name.every(part => user.includes(part))
+    );
+    if (officerMatch) score += 30;
+
+    if (score > 0 && (companyMatch || officerMatch)) {
       validEmails.push({ email, score });
     }
   });

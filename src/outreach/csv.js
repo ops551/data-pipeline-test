@@ -9,7 +9,8 @@ const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
 
 const SENT_LEADS_COLUMNS = [
   ...LEADS_COLUMNS,
-  'sent_at'
+  'sent_at',
+  'sent_to'
 ];
 
 function formatField(value) {
@@ -56,6 +57,21 @@ function readSentCompanyNumbers(filePath = DEFAULT_SENT_LEADS_PATH) {
   return numbers;
 }
 
+function readSentRecipients(filePath = DEFAULT_SENT_LEADS_PATH) {
+  const recipients = new Set();
+  if (!fs.existsSync(filePath)) return recipients;
+  const rows = parseCSV(filePath);
+  for (const row of rows) {
+    const sentTo = row.sent_to
+      ? String(row.sent_to).split(/[;,]/)
+      : [String(row.emails || '').split(/[;,]/)[0]];
+    for (const email of sentTo) {
+      if (email.trim()) recipients.add(email.trim().toLowerCase());
+    }
+  }
+  return recipients;
+}
+
 function getPendingLeads(options = {}) {
   const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
   const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
@@ -68,22 +84,48 @@ function getPendingLeads(options = {}) {
   if (leads.length === 0) return [];
 
   const sentNumbers = excludeSent ? readSentCompanyNumbers(sentLeadsPath) : new Set();
+  const reservedRecipients = excludeSent && channel === 'email'
+    ? readSentRecipients(sentLeadsPath)
+    : new Set();
+  const eligibleEmails = new Map();
+  const parseLeadEmails = lead => String(lead.emails || '')
+    .split(/[;,]/)
+    .map(email => email.trim())
+    .filter(Boolean);
 
   let filtered = leads.filter(lead => {
     if (excludeSent && sentNumbers.has(String(lead.company_number).trim())) {
       return false;
     }
     if (customFilter) {
-      return Boolean(customFilter(lead));
+      if (!customFilter(lead)) return false;
+      if (channel !== 'email') return true;
+
+      const emails = parseLeadEmails(lead);
+      if (emails.length === 0) return true;
+      const availableEmails = emails.filter(email =>
+        isValidEmailAddress(email) &&
+        !reservedRecipients.has(email.toLowerCase())
+      );
+      if (availableEmails.length === 0) return false;
+      eligibleEmails.set(lead, availableEmails);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
+      return true;
     }
     if (channel === 'email') {
-      const emails = String(lead.emails || '')
-        .split(/[;,]/)
-        .map(email => email.trim())
-        .filter(Boolean);
-      return lead.status === 'lead' &&
-        emails.length > 0 &&
-        emails.every(isValidEmailAddress);
+      const emails = parseLeadEmails(lead);
+      if (lead.status !== 'lead' || emails.length === 0 || !emails.every(isValidEmailAddress)) {
+        return false;
+      }
+
+      const availableEmails = emails.filter(email =>
+        !reservedRecipients.has(email.toLowerCase())
+      );
+      if (availableEmails.length === 0) return false;
+
+      eligibleEmails.set(lead, availableEmails);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
+      return true;
     }
     if (channel === 'whatsapp') {
       return lead.status === 'lead' && lead.whatsapp_candidate === 'yes';
@@ -95,7 +137,14 @@ function getPendingLeads(options = {}) {
     filtered = filtered.slice(0, limit);
   }
 
-  return filtered;
+  return channel === 'email'
+    ? filtered.map(lead => ({
+        ...lead,
+        emails: eligibleEmails.has(lead)
+          ? eligibleEmails.get(lead).join('; ')
+          : lead.emails
+      }))
+    : filtered;
 }
 
 function appendSentLeads(arg1, arg2) {
@@ -263,6 +312,7 @@ module.exports = {
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,
+  readSentRecipients,
   appendSentLead,
   appendSentLeads,
   removeLead,
