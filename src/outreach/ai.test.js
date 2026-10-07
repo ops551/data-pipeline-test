@@ -157,6 +157,25 @@ test('cleanEmailContent blocks words from the shared forbidden-word list', () =>
   );
 });
 
+test('cleanEmailContent matches forbidden terms as whole words', () => {
+  const emailWithPlural = JSON.stringify({
+    subject: 'Instant quotes for Zenith Ltd',
+    body: 'Hi Sarah,\n\nWe build websites with instant quotes.'
+  });
+
+  assert.equal(cleanEmailContent(emailWithPlural).subject, 'Instant quotes for Zenith Ltd');
+
+  const emailWithForbiddenWord = JSON.stringify({
+    subject: 'An instant quote for Zenith Ltd',
+    body: 'Hi Sarah,\n\nWe build websites.'
+  });
+
+  assert.throws(
+    () => cleanEmailContent(emailWithForbiddenWord),
+    /forbidden spam word "quote"/i
+  );
+});
+
 test('buildPrompt instructs the email to abbreviate a trailing Limited suffix', () => {
   const prompt = buildPrompt({
     company_name: 'THEO FAASSEN TRANSPORT (UK) LIMITED'

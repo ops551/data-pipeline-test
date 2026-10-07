@@ -358,9 +358,15 @@ function cleanEmailContent(rawText, options = {}) {
   // --- SPAM WORDS BLOCKING LOGIC ---
   const combinedText = `${subject} ${body}`.toLowerCase();
 
-  const foundSpamWord = FORBIDDEN_SPAM_WORDS.find((word) =>
-    combinedText.includes(word.toLowerCase()),
-  );
+  const foundSpamWord = FORBIDDEN_SPAM_WORDS.find((word) => {
+    const escapedWord = word
+      .toLowerCase()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\s+/g, "\\s+");
+    return new RegExp(`(^|[^a-z0-9])${escapedWord}(?=$|[^a-z0-9])`).test(
+      combinedText,
+    );
+  });
 
   if (foundSpamWord) {
     const securityError = new Error(
