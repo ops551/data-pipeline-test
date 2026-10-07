@@ -5,7 +5,7 @@ const { parseCSV } = require('./csvParser');
 const { getDirectorsForCompany } = require('./officers');
 const { createScraper } = require('./scraper');
 const { searchCompany, extractWebsiteContext } = require('./search');
-const { extractContactDetails } = require('./extract');
+const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName } = require('./extract');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 
 async function runEnrichment() {
@@ -41,6 +41,7 @@ async function runEnrichment() {
       console.log(`\nProcessing [${index + 1}/${candidatesToProcess.length}] (Total pending: ${count}): ${company.company_name} (${company.company_number})`);
       
       let sources = [];
+      let websiteEmails = [];
       
       // Officers API
       console.log('  Fetching officers...');
@@ -69,6 +70,7 @@ async function runEnrichment() {
             url: page.finalUrl || website.url,
             context: extractWebsiteContext(page.html)
           };
+          websiteEmails = extractEmails(page.html);
           if (!website.context) {
             console.warn('  Company homepage returned no readable page content.');
           }
@@ -79,7 +81,6 @@ async function runEnrichment() {
 
       // Extract from DuckDuckGo search snippets first
       if (searchRes.searchResHtml) {
-        const { extractEmails, extractPhones } = require('./extract');
         const snippetEmails = extractEmails(searchRes.searchResHtml);
         const snippetPhones = extractPhones(searchRes.searchResHtml);
         if (snippetEmails.length > 0) extractedData.emails.push(...snippetEmails);
@@ -92,8 +93,6 @@ async function runEnrichment() {
         extractedData.emails.push(...moreData.emails);
         extractedData.phones.push(...moreData.phones);
         extractedData.emails = [...new Set(extractedData.emails)];
-        const { rankEmailsByCompanyName } = require('./extract');
-        extractedData.emails = rankEmailsByCompanyName(extractedData.emails, company.company_name, directors);
         extractedData.phones = [...new Set(extractedData.phones)].slice(0, 5);
         if (extractedData.emails.length > 0 || extractedData.phones.length > 0) {
           sources.push('web_scrape');
@@ -102,6 +101,13 @@ async function runEnrichment() {
         console.log('  Company has an official website but no social profiles found.');
       } else {
         console.log('  No website or social profiles found.');
+      }
+
+      extractedData.emails = websiteEmails.length > 0
+        ? websiteEmails
+        : rankEmailsByCompanyName(extractedData.emails, company.company_name, directors);
+      if (websiteEmails.length > 0 && !sources.includes('web_scrape')) {
+        sources.push('web_scrape');
       }
 
       // Format and append lead

@@ -153,8 +153,10 @@ test('runOutreachPipeline processes pending email leads, sends emails, and archi
     assert.equal(sentRows.length, 2);
     assert.equal(sentRows[0].company_number, '11111111');
     assert.ok(sentRows[0].sent_at);
+    assert.equal(sentRows[0].sent_to, 'contact@apex.co.uk');
     assert.equal(sentRows[1].company_number, '22222222');
     assert.ok(sentRows[1].sent_at);
+    assert.equal(sentRows[1].sent_to, 'info@beacon.co.uk');
   } finally {
     ws.cleanup();
   }

@@ -6,10 +6,12 @@ const { isValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'leads.csv');
 const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
+const DEFAULT_EMAIL_SUPPRESSIONS_PATH = path.join(process.cwd(), 'email_suppressions.csv');
 
 const SENT_LEADS_COLUMNS = [
   ...LEADS_COLUMNS,
-  'sent_at'
+  'sent_at',
+  'sent_to'
 ];
 
 function formatField(value) {
@@ -56,6 +58,42 @@ function readSentCompanyNumbers(filePath = DEFAULT_SENT_LEADS_PATH) {
   return numbers;
 }
 
+function readSentRecipients(filePath = DEFAULT_SENT_LEADS_PATH) {
+  const recipients = new Set();
+  if (!fs.existsSync(filePath)) return recipients;
+  const rows = parseCSV(filePath);
+  for (const row of rows) {
+    const sentTo = row.sent_to
+      ? String(row.sent_to).split(/[;,]/)
+      : [String(row.emails || '').split(/[;,]/)[0]];
+    for (const email of sentTo) {
+      if (email.trim()) recipients.add(email.trim().toLowerCase());
+    }
+  }
+  return recipients;
+}
+
+function readEmailSuppressions(filePath = DEFAULT_EMAIL_SUPPRESSIONS_PATH) {
+  const emails = new Set();
+  const domains = new Set();
+  if (!fs.existsSync(filePath)) return { emails, domains };
+
+  for (const row of parseCSV(filePath)) {
+    if (row.email) emails.add(String(row.email).trim().toLowerCase());
+    if (row.domain) domains.add(String(row.domain).trim().toLowerCase().replace(/^@/, ''));
+  }
+  return { emails, domains };
+}
+
+function isEmailSuppressed(email, suppressions) {
+  const normalizedEmail = String(email).trim().toLowerCase();
+  const domain = normalizedEmail.slice(normalizedEmail.lastIndexOf('@') + 1);
+  return suppressions.emails.has(normalizedEmail) ||
+    [...suppressions.domains].some(suppressedDomain =>
+      domain === suppressedDomain || domain.endsWith(`.${suppressedDomain}`)
+    );
+}
+
 function getPendingLeads(options = {}) {
   const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
   const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
@@ -68,22 +106,53 @@ function getPendingLeads(options = {}) {
   if (leads.length === 0) return [];
 
   const sentNumbers = excludeSent ? readSentCompanyNumbers(sentLeadsPath) : new Set();
+  const suppressions = channel === 'email'
+    ? readEmailSuppressions(options.emailSuppressionsPath || DEFAULT_EMAIL_SUPPRESSIONS_PATH)
+    : { emails: new Set(), domains: new Set() };
+  const reservedRecipients = excludeSent && channel === 'email'
+    ? readSentRecipients(sentLeadsPath)
+    : new Set();
+  const eligibleEmails = new Map();
+  const parseLeadEmails = lead => String(lead.emails || '')
+    .split(/[;,]/)
+    .map(email => email.trim())
+    .filter(Boolean);
 
   let filtered = leads.filter(lead => {
     if (excludeSent && sentNumbers.has(String(lead.company_number).trim())) {
       return false;
     }
     if (customFilter) {
-      return Boolean(customFilter(lead));
+      if (!customFilter(lead)) return false;
+      if (channel !== 'email') return true;
+
+      const emails = parseLeadEmails(lead);
+      if (emails.length === 0) return true;
+      const availableEmails = emails.filter(email =>
+        isValidEmailAddress(email) &&
+        !isEmailSuppressed(email, suppressions) &&
+        !reservedRecipients.has(email.toLowerCase())
+      );
+      if (availableEmails.length === 0) return false;
+      eligibleEmails.set(lead, availableEmails);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
+      return true;
     }
     if (channel === 'email') {
-      const emails = String(lead.emails || '')
-        .split(/[;,]/)
-        .map(email => email.trim())
-        .filter(Boolean);
-      return lead.status === 'lead' &&
-        emails.length > 0 &&
-        emails.every(isValidEmailAddress);
+      const emails = parseLeadEmails(lead);
+      if (lead.status !== 'lead' || emails.length === 0 || !emails.every(isValidEmailAddress)) {
+        return false;
+      }
+
+      const availableEmails = emails.filter(email =>
+        !isEmailSuppressed(email, suppressions) &&
+        !reservedRecipients.has(email.toLowerCase())
+      );
+      if (availableEmails.length === 0) return false;
+
+      eligibleEmails.set(lead, availableEmails);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
+      return true;
     }
     if (channel === 'whatsapp') {
       return lead.status === 'lead' && lead.whatsapp_candidate === 'yes';
@@ -95,7 +164,14 @@ function getPendingLeads(options = {}) {
     filtered = filtered.slice(0, limit);
   }
 
-  return filtered;
+  return channel === 'email'
+    ? filtered.map(lead => ({
+        ...lead,
+        emails: eligibleEmails.has(lead)
+          ? eligibleEmails.get(lead).join('; ')
+          : lead.emails
+      }))
+    : filtered;
 }
 
 function appendSentLeads(arg1, arg2) {
@@ -258,11 +334,14 @@ function moveLeadToSent(companyNumber, options = {}) {
 module.exports = {
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
+  DEFAULT_EMAIL_SUPPRESSIONS_PATH,
   LEADS_COLUMNS,
   SENT_LEADS_COLUMNS,
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,
+  readSentRecipients,
+  readEmailSuppressions,
   appendSentLead,
   appendSentLeads,
   removeLead,

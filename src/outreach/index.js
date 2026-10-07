@@ -279,7 +279,10 @@ async function runOutreachPipeline(options = {}, deps = {}) {
           const moveRes = moveLead(companyNum, {
             leadsPath,
             sentLeadsPath,
-            extraFields: { sent_at: new Date().toISOString() }
+            extraFields: {
+              sent_at: new Date().toISOString(),
+              sent_to: recipient
+            }
           });
 
           if (!moveRes.success) {
