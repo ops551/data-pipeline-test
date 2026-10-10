@@ -216,12 +216,6 @@ async function runEnrichment() {
            personEmail = foundExact;
            emailSource = website.url || 'search'; 
            verificationStatus = 'exact_match';
-         } else if (patternInfo.confidence > 0 && patternInfo.pattern) {
-           // BYPASS: We confidently know the pattern from their website
-           // Do NOT waste API credits or SMTP ping
-           personEmail = inferred[0];
-           emailSource = 'inferred_from_pattern';
-           verificationStatus = 'bypassed_via_pattern_match';
          } else if (!isCatchAll && !catchAllUnknown && inferred.length > 0) {
            for (const candidate of inferred) {
              const v = await verifyEmail(candidate);
