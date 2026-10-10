@@ -117,7 +117,7 @@ function inferEmails(name, domain, patternInfo) {
   return [...new Set(candidates)];
 }
 
-async function verifyEmail(email) {
+async function verifyEmailSMTP(email) {
   if (!isValidEmailAddress(email)) {
     return { status: 'invalid', reason: 'syntax' };
   }
@@ -205,11 +205,54 @@ async function verifyEmail(email) {
 async function checkCatchAll(domain) {
   if (!domain) return { isCatchAll: false, unknown: false };
   const fakeEmail = `fake_${Date.now()}_test@${domain}`;
-  const v = await verifyEmail(fakeEmail);
+  const v = await verifyEmailSMTP(fakeEmail);
   return {
     isCatchAll: v.status === 'valid_domain',
     unknown: v.status === 'unknown'
   };
+}
+
+
+async function verifyEmail(email) {
+  // Try APIs first if configured
+  const qevKey = process.env.QUICK_EMAIL_VERIFICATION_API_KEY;
+  const mevKey = process.env.MY_EMAIL_VERIFIER_API_KEY;
+  const eaKey = process.env.EMAIL_AWESOME_API_KEY;
+
+  if (qevKey || mevKey || eaKey) {
+    try {
+      if (qevKey) {
+        const res = await fetch(`https://api.quickemailverification.com/v1/verify?email=${email}&apikey=${qevKey}`);
+        if (res.status === 200) {
+          const data = await res.json();
+          return { status: data.result === 'valid' ? 'valid_domain' : 'invalid', reason: 'api_qev' };
+        }
+      }
+    } catch(e) {}
+    
+    try {
+      if (mevKey) {
+        const res = await fetch(`https://client.myemailverifier.com/verifier/validate_single/${email}/${mevKey}`);
+        if (res.status === 200) {
+          const data = await res.json();
+          return { status: (data.Status && data.Status.toLowerCase() === 'valid') ? 'valid_domain' : 'invalid', reason: 'api_mev' };
+        }
+      }
+    } catch(e) {}
+
+    try {
+      if (eaKey) {
+        const res = await fetch(`https://api.emailawesome.com/v1/verify?email=${email}&apikey=${eaKey}`);
+        if (res.status === 200) {
+          const data = await res.json();
+          return { status: (data.state === 'deliverable' || data.result === 'valid') ? 'valid_domain' : 'invalid', reason: 'api_ea' };
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Fallback to SMTP if no API keys or all APIs rate-limited/failed
+  return await verifyEmailSMTP(email);
 }
 
 module.exports = {
