@@ -36,7 +36,7 @@ permissions:
 jobs:
   outreach:
     name: Run Outreach and Auto-Merge
-    if: github.repository == 'Nahid625/Recent-uk-Companys'
+    if: github.repository == 'Nahid625/Recent-uk-Companys' || github.repository == 'ops551/data-pipeline-test'
     runs-on: ubuntu-latest
 
     env:
