@@ -154,3 +154,74 @@ Recent-uk-Companys/
 ├── package.json
 └── README.md
 ```
+
+## Phase 3 Architecture: Decision-Maker Email Discovery
+The Phase 3 pipeline extends the existing contact discovery process to target top-level decision-makers (Founder, CEO, CTO, etc.) instead of relying purely on generic company emails.
+
+Data Flow Additions:
+```
+EXISTING PIPELINE (Phase 1 & 2)
+  |
+  v
+Fetch active officers + discover relevant people
+  |
+  v
+NEW: Person-level email discovery
+  |
+  +---- Public personal email found
+  |             |
+  |             v
+  |      Save exact source URL
+  |
+  +---- No personal email found
+                |
+                v
+        Collect public emails from same company domain
+                |
+                v
+        Detect common patterns (e.g., first.last@domain)
+                |
+                v
+        Generate likely person email & evaluate signals
+                |
+                v
+        Save as inferred / unknown / invalid
+  |
+  v
+Did we find a usable personal contact?
+  |
+  +---- YES --> Save eligible person leads to leads.csv
+  |
+  +---- NO ---> Use publicly found generic company email as fallback (contact_type=company)
+  |
+  v
+EXISTING OUTREACH PIPELINE
+  |
+  v
+Use selected lead's actual recipient
+  |
+  v
+Update sent_leads.csv (Track by company_number + email. We will email ALL discovered top-level decision makers to maximize response rates.)
+```
+
+### New Interface Contracts (Phase 3)
+- `leads.csv` Schema Additions (Backward compatible):
+  - `person_name`, `job_title`, `contact_type`, `email_source_url`, `role_source_url`, `pattern_detected`, `pattern_sample_count`, `pattern_confidence`, `verification_status`, `fallback_used`
+- `src/outreach/csv.js` Tracking:
+  - Must track sent leads by composite identity (`company_number` + `email`) so sending to one person does not mark all people at the company as sent.
+
+### Decision-Maker Priority List
+When discovering and evaluating contacts for outreach, prioritize according to the following weights (P1 to P10). The highest available priority should be chosen to maximize response rates.
+
+| Priority | Role | Suggested Weight | Strategy / Relevance |
+|---|---|---|---|
+| **P1** | Founder / Co-Founder | 100 | Highest reply chance. In small startups, founders make direct tech hiring/outsourcing decisions. |
+| **P2** | CTO / Technical Co-Founder | 95 | High reply chance. Highly relevant for Backend/API/DevOps/Infrastructure pitches. |
+| **P3** | CEO / Managing Director | 90 | High-Medium reply chance. Budget/contractor authority, but might delegate tech specifics. |
+| **P4** | VP Engineering / Head of Engineering | 85 | Medium-High reply chance. Relevant if the team faces delivery backlogs or API issues. |
+| **P5** | Engineering Manager / Backend Lead | 75 | Medium reply chance. Understands technical needs, but may lack final hiring authority. |
+| **P6** | COO / Operations Head | 65 | Medium-Low reply chance. Good for business automation, repetitive workflows, integrations. |
+| **P7** | IT Director / Head of Technology | 60 | Medium-Low reply chance. Procurement processes might slow down outsourcing decisions. |
+| **P8** | Product Manager / CPO | 50 | Low-Medium reply chance. Relevant for specific product feature or delivery delay issues. |
+| **P9** | HR / Recruiter | 30 | Low reply chance. Primarily for hiring full-time employees rather than B2B services. |
+| **P10** | Generic company inbox (info@ / contact@) | 20 | Low reply chance. Often handled by support/admin teams. Used only as a fallback. |

@@ -31,11 +31,36 @@ test('formatLead formats correctly based on extracted data', (t) => {
   const noContact = formatLead(company, { emails: [], phones: [] }, []);
   assert.strictEqual(noContact.status, 'no_contact');
   assert.strictEqual(noContact.whatsapp_candidate, 'no');
+  assert.strictEqual(noContact.person_name, '');
+  assert.strictEqual(noContact.pattern_detected, '');
   
-  const emailLead = formatLead(company, { emails: ['test@test.com'], phones: ['0113 222 3333'] }, ['fb']);
+  const emailLead = formatLead(company, { 
+    emails: ['test@test.com'], 
+    phones: ['0113 222 3333'],
+    person_name: 'Alice',
+    job_title: 'Director',
+    contact_type: 'Direct',
+    email_source_url: 'https://test.com/about',
+    role_source_url: 'https://test.com/team',
+    pattern_detected: 'first.last',
+    pattern_sample_count: 5,
+    pattern_confidence: 0.9,
+    verification_status: 'valid',
+    fallback_used: false
+  }, ['fb']);
   assert.strictEqual(emailLead.status, 'lead'); // has email
   assert.strictEqual(emailLead.whatsapp_candidate, 'no'); // landline only
   assert.strictEqual(emailLead.phones, '+441132223333');
+  assert.strictEqual(emailLead.person_name, 'Alice');
+  assert.strictEqual(emailLead.job_title, 'Director');
+  assert.strictEqual(emailLead.contact_type, 'Direct');
+  assert.strictEqual(emailLead.email_source_url, 'https://test.com/about');
+  assert.strictEqual(emailLead.role_source_url, 'https://test.com/team');
+  assert.strictEqual(emailLead.pattern_detected, 'first.last');
+  assert.strictEqual(emailLead.pattern_sample_count, 5);
+  assert.strictEqual(emailLead.pattern_confidence, 0.9);
+  assert.strictEqual(emailLead.verification_status, 'valid');
+  assert.strictEqual(emailLead.fallback_used, false);
 
   const websiteLead = formatLead(
     company,
@@ -55,12 +80,13 @@ test('formatLead formats correctly based on extracted data', (t) => {
   assert.strictEqual(whatsappLead.phones, '+447123456789');
 });
 
-test('appendLead migrates existing lead rows to include website context columns', () => {
+test('appendLead migrates existing lead rows to include website context and new schema columns', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'enrich-leads-test-'));
   const leadsPath = path.join(dir, 'leads.csv');
-  const oldColumns = LEADS_COLUMNS.filter(
-    (column) => column !== 'website_url' && column !== 'website_context'
-  );
+  const oldColumns = [
+    'company_number', 'company_name', 'date_of_creation', 'emails',
+    'phones', 'whatsapp_candidate', 'status', 'sources'
+  ];
   fs.writeFileSync(
     leadsPath,
     `${oldColumns.join(',')}\n12345,Existing Ltd,2026-09-01,old@example.com,,no,lead,web_scrape\n`
@@ -76,12 +102,24 @@ test('appendLead migrates existing lead rows to include website context columns'
     status: 'lead',
     sources: 'existing_website',
     website_url: 'https://new.co.uk',
-    website_context: 'Page title: New Ltd'
+    website_context: 'Page title: New Ltd',
+    person_name: 'Bob',
+    job_title: 'Manager',
+    contact_type: '',
+    email_source_url: '',
+    role_source_url: '',
+    pattern_detected: '',
+    pattern_sample_count: '',
+    pattern_confidence: '',
+    verification_status: '',
+    fallback_used: ''
   });
 
   const leads = parseCSV(leadsPath);
   assert.equal(leads.length, 2);
   assert.equal(leads[0].emails, 'old@example.com');
+  assert.equal(leads[0].person_name, ''); // Should be empty
   assert.equal(leads[1].website_url, 'https://new.co.uk');
   assert.equal(leads[1].website_context, 'Page title: New Ltd');
+  assert.equal(leads[1].person_name, 'Bob');
 });

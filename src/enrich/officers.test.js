@@ -164,3 +164,23 @@ test('getDirectorsForCompany returns empty string for 404 company', async () => 
   const names = await getDirectorsForCompany('00000000', deps);
   assert.equal(names, '');
 });
+
+test('parseOfficerName formats CH names to First Last', () => {
+  const { parseOfficerName } = require('./officers');
+  assert.equal(parseOfficerName('SMITH, John Doe'), 'John Doe Smith');
+  assert.equal(parseOfficerName('DOE, Jane'), 'Jane Doe');
+  assert.equal(parseOfficerName('SINGLETON'), 'Singleton');
+});
+
+test('getActiveOfficers returns parsed objects', () => {
+  const { getActiveOfficers } = require('./officers');
+  const officers = [
+    { name: 'SMITH, John', officer_role: 'director' },
+    { name: 'DOE, Jane', officer_role: 'secretary', resigned_on: '2025-01-01' }
+  ];
+  const active = getActiveOfficers(officers);
+  assert.equal(active.length, 1);
+  assert.equal(active[0].name, 'John Smith');
+  assert.equal(active[0].role, 'director');
+  assert.equal(active[0].rawName, 'SMITH, John');
+});

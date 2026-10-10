@@ -13,11 +13,21 @@ const LEADS_COLUMNS = [
   'status',
   'sources',
   'website_url',
-  'website_context'
+  'website_context',
+  'person_name',
+  'job_title',
+  'contact_type',
+  'email_source_url',
+  'role_source_url',
+  'pattern_detected',
+  'pattern_sample_count',
+  'pattern_confidence',
+  'verification_status',
+  'fallback_used'
 ];
 
 function formatLead(company, extractedData, sources, website = {}) {
-  const emails = extractedData.emails || [];
+  let emails = extractedData.emails || [];
   let rawPhones = extractedData.phones || [];
   
   if (typeof rawPhones === 'string') rawPhones = [rawPhones];
@@ -41,7 +51,17 @@ function formatLead(company, extractedData, sources, website = {}) {
     status,
     sources: (sources || []).join('; '),
     website_url: website.url || '',
-    website_context: website.context || ''
+    website_context: website.context || '',
+    person_name: extractedData.person_name || '',
+    job_title: extractedData.job_title || '',
+    contact_type: extractedData.contact_type || '',
+    email_source_url: extractedData.email_source_url || '',
+    role_source_url: extractedData.role_source_url || '',
+    pattern_detected: extractedData.pattern_detected || '',
+    pattern_sample_count: typeof extractedData.pattern_sample_count !== 'undefined' ? extractedData.pattern_sample_count : '',
+    pattern_confidence: typeof extractedData.pattern_confidence !== 'undefined' ? extractedData.pattern_confidence : '',
+    verification_status: extractedData.verification_status || '',
+    fallback_used: typeof extractedData.fallback_used !== 'undefined' ? extractedData.fallback_used : ''
   };
 }
 

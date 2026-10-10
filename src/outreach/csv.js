@@ -72,6 +72,30 @@ function readSentRecipients(filePath = DEFAULT_SENT_LEADS_PATH) {
   return recipients;
 }
 
+function readSentCompanyEmails(filePath = DEFAULT_SENT_LEADS_PATH) {
+  const sentMap = new Set();
+  if (!fs.existsSync(filePath)) return sentMap;
+  const rows = parseCSV(filePath);
+  for (const row of rows) {
+    const compNum = String(row.company_number || '').trim();
+    if (!compNum) continue;
+    let hasEmail = false;
+    const sentTo = row.sent_to
+      ? String(row.sent_to).split(/[;,]/)
+      : [String(row.emails || '').split(/[;,]/)[0]];
+    for (const email of sentTo) {
+      if (email.trim()) {
+        sentMap.add(`${compNum}:${email.trim().toLowerCase()}`);
+        hasEmail = true;
+      }
+    }
+    if (!hasEmail) {
+      sentMap.add(`${compNum}:__legacy_no_email__`);
+    }
+  }
+  return sentMap;
+}
+
 function getPendingLeads(options = {}) {
   const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
   const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
@@ -84,6 +108,9 @@ function getPendingLeads(options = {}) {
   if (leads.length === 0) return [];
 
   const sentNumbers = excludeSent ? readSentCompanyNumbers(sentLeadsPath) : new Set();
+  const sentCompanyEmails = excludeSent && channel === 'email'
+    ? readSentCompanyEmails(sentLeadsPath)
+    : new Set();
   const reservedRecipients = excludeSent && channel === 'email'
     ? readSentRecipients(sentLeadsPath)
     : new Set();
@@ -94,22 +121,26 @@ function getPendingLeads(options = {}) {
     .filter(Boolean);
 
   let filtered = leads.filter(lead => {
-    if (excludeSent && sentNumbers.has(String(lead.company_number).trim())) {
+    const compNum = String(lead.company_number).trim();
+    if (excludeSent && channel !== 'email' && sentNumbers.has(compNum)) {
       return false;
     }
+    
     if (customFilter) {
       if (!customFilter(lead)) return false;
       if (channel !== 'email') return true;
 
       const emails = parseLeadEmails(lead);
       if (emails.length === 0) return true;
+      const hasLegacy = sentCompanyEmails.has(`${compNum}:__legacy_no_email__`);
       const availableEmails = emails.filter(email =>
         isValidEmailAddress(email) &&
-        !reservedRecipients.has(email.toLowerCase())
+        !hasLegacy &&
+        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`)
       );
       if (availableEmails.length === 0) return false;
       eligibleEmails.set(lead, availableEmails);
-      reservedRecipients.add(availableEmails[0].toLowerCase());
+      sentCompanyEmails.add(`${compNum}:${availableEmails[0].toLowerCase()}`);
       return true;
     }
     if (channel === 'email') {
@@ -118,13 +149,15 @@ function getPendingLeads(options = {}) {
         return false;
       }
 
+      const hasLegacy = sentCompanyEmails.has(`${compNum}:__legacy_no_email__`);
       const availableEmails = emails.filter(email =>
-        !reservedRecipients.has(email.toLowerCase())
+        !hasLegacy &&
+        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`)
       );
       if (availableEmails.length === 0) return false;
 
       eligibleEmails.set(lead, availableEmails);
-      reservedRecipients.add(availableEmails[0].toLowerCase());
+      sentCompanyEmails.add(`${compNum}:${availableEmails[0].toLowerCase()}`);
       return true;
     }
     if (channel === 'whatsapp') {
@@ -274,6 +307,18 @@ function moveLeadsToSent(companyNumbers, options = {}) {
   for (const lead of leads) {
     if (targetSet.has(String(lead.company_number).trim())) {
       matched.push({ ...lead, ...extraFields, sent_at: lead.sent_at || sentAt });
+
+      const sentToRaw = extraFields.sent_to ? String(extraFields.sent_to) : '';
+      if (sentToRaw) {
+        const sentToSet = new Set(
+          sentToRaw.split(/[;,]/).map(e => e.trim().toLowerCase()).filter(Boolean)
+        );
+        const emails = String(lead.emails || '').split(/[;,]/).map(e => e.trim()).filter(Boolean);
+        const remainingEmails = emails.filter(e => !sentToSet.has(e.toLowerCase()));
+        if (remainingEmails.length > 0) {
+          remaining.push({ ...lead, emails: remainingEmails.join('; ') });
+        }
+      }
     } else {
       remaining.push(lead);
     }

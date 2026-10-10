@@ -3,9 +3,6 @@ const nodemailer = require('nodemailer');
 const { buildSignature, DEFAULT_SIGNATURE } = require('./ai');
 const { isValidEmailAddress } = require('../emailAddress');
 
-const OUTBOUND_FROM_ADDRESS = 'partners@mail.usasocialhubofficial.com';
-const REPLY_TO_ADDRESS = 'partners@usasocialhubofficial.com';
-const OWN_EMAIL_DOMAIN = 'usasocialhubofficial.com';
 const DEFAULT_SMTP_PORT = 587;
 const DEFAULT_MAX_RETRIES = 3;
 
@@ -29,14 +26,6 @@ function parsePort(value, fallback = DEFAULT_SMTP_PORT) {
     throw new Error(`SMTP_PORT must be a valid port number between 1 and 65535, got "${value}"`);
   }
   return n;
-}
-
-function validateFixedAddress(value, expected, settingName) {
-  if (value === undefined || value === null || value === '') return;
-  const configuredAddress = String(value).match(/<([^<>]+)>/)?.[1] || String(value).trim();
-  if (configuredAddress.toLowerCase() !== expected) {
-    throw new Error(`${settingName} must use ${expected}.`);
-  }
 }
 
 function loadSmtpConfig(env = process.env, overrides = {}) {
@@ -70,12 +59,6 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     secure = port === 465;
   }
 
-  validateFixedAddress(overrides.from, OUTBOUND_FROM_ADDRESS, 'From');
-  validateFixedAddress(env.EMAIL_FROM, OUTBOUND_FROM_ADDRESS, 'EMAIL_FROM');
-  validateFixedAddress(env.SMTP_FROM, OUTBOUND_FROM_ADDRESS, 'SMTP_FROM');
-  validateFixedAddress(overrides.replyTo, REPLY_TO_ADDRESS, 'Reply-To');
-  validateFixedAddress(env.SMTP_REPLY_TO, REPLY_TO_ADDRESS, 'SMTP_REPLY_TO');
-
   if (!isMock) {
     if (!host) {
       throw new Error('SMTP_HOST is missing. Set it in .env or pass host in options.');
@@ -90,8 +73,8 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     port,
     secure,
     auth: (user || pass) ? { user, pass } : undefined,
-    from: OUTBOUND_FROM_ADDRESS,
-    replyTo: REPLY_TO_ADDRESS,
+    from: overrides.from || env.EMAIL_FROM || env.SMTP_FROM,
+    replyTo: overrides.replyTo || env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM,
     isMock
   };
 }
@@ -160,10 +143,6 @@ function normalizeRecipients(to) {
   for (const email of list) {
     if (!isValidEmailAddress(email)) {
       throw new Error(`Invalid recipient email address: "${email}"`);
-    }
-    const domain = email.slice(email.lastIndexOf('@') + 1).toLowerCase();
-    if (domain === OWN_EMAIL_DOMAIN || domain.endsWith(`.${OWN_EMAIL_DOMAIN}`)) {
-      throw new Error(`Recipient must be an external address, not an address on ${OWN_EMAIL_DOMAIN}: "${email}"`);
     }
   }
 

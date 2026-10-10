@@ -175,7 +175,8 @@ function buildPrompt(company = {}, options = {}) {
   const hasVerifiedWebsite = Boolean(websiteUrl);
   const hasInspectedWebsite = Boolean(websiteUrl && websiteContext);
   const directorName = extractFirstName(
-    company.active_directors ||
+    company.person_name ||
+      company.active_directors ||
       company.contact_name ||
       company.director_name ||
       "",
@@ -190,8 +191,8 @@ function buildPrompt(company = {}, options = {}) {
       ? `Best regards,\n${senderName}`
       : buildSignature(options);
   const greeting = directorName
-    ? `Hi ${directorName},`
-    : `Hi ${emailCompanyName} team,`;
+    ? `Hey ${directorName},`
+    : `Hey ${emailCompanyName},`;
 
   return [
     "Write a short, natural cold outreach email from a web designer and business automation specialist.",
@@ -257,7 +258,8 @@ function cleanEmailContent(rawText, options = {}) {
 
   if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
     const subject = `A quick question for ${emailCompanyName}`;
-    const body = `Hi ${emailCompanyName} team,\n\nI came across ${emailCompanyName} and wanted to reach out briefly. I help businesses set up clean websites and automated workflows to reduce time spent on manual tasks.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
+    const greetingFallback = options.directorName ? `Hey ${options.directorName},` : `Hi ${emailCompanyName} team,`;
+    const body = `${greetingFallback}\n\nI came across ${emailCompanyName} and wanted to reach out briefly. I help businesses set up clean websites and automated workflows to reduce time spent on manual tasks.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 
@@ -330,6 +332,10 @@ function cleanEmailContent(rawText, options = {}) {
       "",
     )
     .trim();
+
+  const expectedGreeting = options.directorName ? `Hey ${options.directorName},` : `Hey ${emailCompanyName},`;
+  body = body.replace(/^(?:(?:hi|hey|dear|hello)(?:\s+[^,\n]+)?(?:team)?,?\s*\n+)+/i, "");
+  body = expectedGreeting + "\n\n" + body.trim();
 
   body = body
     .replace(
@@ -417,6 +423,13 @@ async function generateEmail(company, options = {}) {
         return cleanEmailContent(rawText, {
           ...options,
           companyName: company.company_name,
+          directorName: extractFirstName(
+            company.person_name ||
+            company.active_directors ||
+            company.contact_name ||
+            company.director_name ||
+            ""
+          )
         });
       } catch (err) {
         const isRateLimit =
@@ -479,6 +492,13 @@ async function generateEmail(company, options = {}) {
         return cleanEmailContent(rawText, {
           ...options,
           companyName: company.company_name,
+          directorName: extractFirstName(
+            company.person_name ||
+            company.active_directors ||
+            company.contact_name ||
+            company.director_name ||
+            ""
+          )
         });
       } catch (err) {
         // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model

@@ -128,7 +128,7 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('Apex Cleaners Ltd'));
   assert.ok(prompt.includes('commercial and domestic cleaning'));
   assert.ok(prompt.includes('Location: Manchester'));
-  assert.ok(prompt.includes('Hi Mark,'));
+  assert.ok(prompt.includes('Hey Mark,'));
   assert.ok(prompt.includes('Best regards,\nNahid'));
   assert.ok(prompt.includes('Say you came across Apex Cleaners Ltd and wanted to reach out'));
   assert.ok(prompt.includes('upgrade websites and set up automated workflows'));
@@ -148,7 +148,7 @@ test('cleanEmailContent blocks words from the shared forbidden-word list', () =>
   const forbiddenWord = FORBIDDEN_SPAM_WORDS[0];
   const raw = JSON.stringify({
     subject: `A note about ${forbiddenWord}`,
-    body: 'Hi Sarah,\n\nI wanted to get in touch.'
+    body: 'Hey Sarah,\n\nI wanted to get in touch.'
   });
 
   assert.throws(
@@ -160,14 +160,14 @@ test('cleanEmailContent blocks words from the shared forbidden-word list', () =>
 test('cleanEmailContent matches forbidden terms as whole words', () => {
   const emailWithPlural = JSON.stringify({
     subject: 'Instant quotes for Zenith Ltd',
-    body: 'Hi Sarah,\n\nWe build websites with instant quotes.'
+    body: 'Hey Sarah,\n\nWe build websites with instant quotes.'
   });
 
   assert.equal(cleanEmailContent(emailWithPlural).subject, 'Instant quotes for Zenith Ltd');
 
   const emailWithForbiddenWord = JSON.stringify({
     subject: 'An instant quote for Zenith Ltd',
-    body: 'Hi Sarah,\n\nWe build websites.'
+    body: 'Hey Sarah,\n\nWe build websites.'
   });
 
   assert.throws(
@@ -182,7 +182,7 @@ test('buildPrompt instructs the email to abbreviate a trailing Limited suffix', 
   });
 
   assert.ok(prompt.includes('Company Name to Use in the Email: THEO FAASSEN TRANSPORT (UK) Ltd'));
-  assert.ok(prompt.includes('Hi THEO FAASSEN TRANSPORT (UK) Ltd team,'));
+  assert.ok(prompt.includes('Hey THEO FAASSEN TRANSPORT (UK) Ltd,'));
   assert.ok(prompt.includes('do not expand or alter its legal suffix'));
 });
 
@@ -247,7 +247,7 @@ test('cleanEmailContent parses JSON with markdown fences and strips placeholders
     '```json',
     '{',
     '  "subject": "Quick question for Apex Cleaners Ltd",',
-    '  "body": "Here is a draft:\\n\\nHi Mark,\\n\\nCongratulations on registering Apex Cleaners Ltd! We help cleaning businesses get more local clients with modern websites and automated inquiry booking.\\n\\nWould you be open to a 5-minute chat?\\n\\nBest regards,\\n[Your Name]\\n[Your Phone Number]"',
+    '  "body": "Here is a draft:\\n\\nHey Apex Cleaners Ltd,\\n\\nCongratulations on registering Apex Cleaners Ltd! We help cleaning businesses get more local clients with modern websites and automated inquiry booking.\\n\\nWould you be open to a 5-minute chat?\\n\\nBest regards,\\n[Your Name]\\n[Your Phone Number]"',
     '}',
     '```'
   ].join('\n');
@@ -258,7 +258,7 @@ test('cleanEmailContent parses JSON with markdown fences and strips placeholders
   });
 
   assert.equal(cleaned.subject, 'Quick question for Apex Cleaners Ltd');
-  assert.ok(cleaned.body.includes('Hi Mark,'));
+  assert.ok(cleaned.body.includes('Hey Apex Cleaners Ltd,'));
   assert.ok(cleaned.body.includes('Congratulations on registering Apex Cleaners Ltd!'));
   assert.ok(cleaned.body.includes('Nahid'));
   assert.equal(cleaned.body.includes('Here is a draft:'), false);
@@ -276,7 +276,7 @@ test('cleanEmailContent abbreviates the registered Limited suffix in generated o
   }), { companyName });
 
   assert.ok(cleaned.subject.includes('THEO FAASSEN TRANSPORT (UK) Ltd'));
-  assert.ok(cleaned.body.includes('Hi THEO FAASSEN TRANSPORT (UK) Ltd team,'));
+  assert.ok(cleaned.body.includes('Hey THEO FAASSEN TRANSPORT (UK) Ltd,'));
   assert.doesNotMatch(`${cleaned.subject}\n${cleaned.body}`, /THEO FAASSEN TRANSPORT \(UK\) LIMITED/i);
 });
 
@@ -286,7 +286,7 @@ test('cleanEmailContent handles fallback text parsing without JSON', () => {
     '',
     'Subject: Web design & automation for Kirbys Catering Ltd',
     '',
-    'Hi Peter,',
+    'Hey Kirbys Catering Ltd,',
     '',
     'Congratulations on incorporating Kirbys Catering Ltd!',
     'We build mobile-friendly catering websites with automated menu requests.',
@@ -303,7 +303,7 @@ test('cleanEmailContent handles fallback text parsing without JSON', () => {
   });
 
   assert.equal(cleaned.subject, 'Web design & automation for Kirbys Catering Ltd');
-  assert.ok(cleaned.body.startsWith('Hi Peter,'));
+  assert.ok(cleaned.body.startsWith('Hey Kirbys Catering Ltd,'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
   assert.equal(cleaned.body.includes('Certainly!'), false);
   assert.equal(cleaned.body.includes('[Your Name]'), false);
@@ -312,7 +312,7 @@ test('cleanEmailContent handles fallback text parsing without JSON', () => {
 test('cleanEmailContent appends personal signature by default and honors includeSignature false', () => {
   const raw = JSON.stringify({
     subject: 'A quick partnership question',
-    body: 'Hi Sarah,\n\nWe love your work.\n\nBest regards,\nNahid'
+    body: 'Hey Sarah,\n\nWe love your work.\n\nBest regards,\nNahid'
   });
 
   const withSig = cleanEmailContent(raw);
@@ -375,7 +375,7 @@ test('generateEmail generates clean email using injected genAI mock', async () =
             response: {
               text: () => JSON.stringify({
                 subject: 'High-converting site for Zenith Ltd',
-                body: 'Hi Sarah,\n\nCongrats on Zenith Ltd!\n\nWe build websites with automated booking.\n\nBest regards,\nNahid'
+                body: 'Hey Sarah,\n\nCongrats on Zenith Ltd!\n\nWe build websites with automated booking.\n\nBest regards,\nNahid'
               })
             }
           };
@@ -398,7 +398,7 @@ test('generateEmail generates clean email using injected genAI mock', async () =
   assert.ok(capturedPrompt.includes('Zenith Ltd'));
   assert.ok(capturedPrompt.includes('construction and trades'));
   assert.equal(result.subject, 'High-converting site for Zenith Ltd');
-  assert.ok(result.body.includes('Hi Sarah,'));
+  assert.ok(result.body.includes('Hey Sarah,'));
   assert.ok(result.body.includes('Best regards,\nNahid'));
   assert.doesNotMatch(result.body, /whatsapp|\+880\s*1615[- ]?753465/i);
   assert.doesNotMatch(result.body, /https?:\/\/|www\./i);

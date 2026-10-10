@@ -188,7 +188,7 @@ test('getPendingLeads excludes leads that are already in sent_leads.csv', () => 
   assert.equal(pending[0].company_number, '34567890');
 });
 
-test('getPendingLeads excludes recipients already sent for a different company', () => {
+test('getPendingLeads allows sending to the same recipient for a different company', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   const duplicateRecipientLeads = [
     { ...sampleLeads[0], emails: 'ukteammail@findawealthmanager.com' },
@@ -204,10 +204,11 @@ test('getPendingLeads excludes recipients already sent for a different company',
   }, sentLeadsPath);
 
   const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
-  assert.deepEqual(pending.map(lead => lead.company_number), ['34567890']);
+  // Since tracking is company + email, all 3 companies are pending because 98765432 is a different company
+  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678', '23456789', '34567890']);
 });
 
-test('getPendingLeads selects a shared recipient for only one company per run', () => {
+test('getPendingLeads selects a shared recipient for multiple companies in the same run', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   seedLeadsFile(leadsPath, [
     { ...sampleLeads[0], emails: 'shared@example.com' },
@@ -215,17 +216,18 @@ test('getPendingLeads selects a shared recipient for only one company per run', 
   ]);
 
   const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
-  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678']);
+  // With composite identity, both companies get the email
+  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678', '23456789']);
 });
 
-test('getPendingLeads sends an unsent alternate address when the first was already used', () => {
+test('getPendingLeads sends an unsent alternate address when the first was already used for THIS company', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   seedLeadsFile(leadsPath, [{
     ...sampleLeads[0],
     emails: 'shared@example.com; contact@alpha.co.uk'
   }]);
   appendSentLead({
-    ...sampleLeads[1],
+    ...sampleLeads[0],
     sent_to: 'shared@example.com'
   }, sentLeadsPath);
 
@@ -453,4 +455,38 @@ test('writeCSVAtomic ensures leads.csv is atomically written without lingering t
 
   const readBack = readLeads(leadsPath);
   assert.equal(readBack.length, 4);
+});
+
+test('getPendingLeads does not return leads that exist in sent_leads.csv without an email (legacy rows)', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+  seedLeadsFile(leadsPath, [{
+    ...sampleLeads[0],
+    company_number: '99999999',
+    emails: 'contact@newemail.com'
+  }]);
+  
+  // legacy row without email
+  fs.writeFileSync(sentLeadsPath, `${SENT_LEADS_COLUMNS.join(',')}\n99999999,,,,,,,,,,,\n`, 'utf8');
+
+  const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
+  assert.equal(pending.length, 0);
+});
+
+test('moveLeadsToSent handles multiple emails in extraFields.sent_to', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+  seedLeadsFile(leadsPath, [{
+    ...sampleLeads[0],
+    company_number: '12345678',
+    emails: 'a@a.com; b@b.com; c@c.com'
+  }]);
+
+  moveLeadsToSent(['12345678'], {
+    leadsPath,
+    sentLeadsPath,
+    extraFields: { sent_to: 'a@a.com;b@b.com' }
+  });
+
+  const remainingLeads = readLeads(leadsPath);
+  assert.equal(remainingLeads.length, 1);
+  assert.equal(remainingLeads[0].emails, 'c@c.com');
 });

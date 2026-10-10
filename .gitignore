@@ -1,4 +1,5 @@
 .env
 node_modules/
+.agents/teamwork
 .wwebjs_auth/
 .wwebjs_cache/
