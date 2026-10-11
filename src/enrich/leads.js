@@ -66,6 +66,9 @@ function formatLead(company, extractedData, sources, website = {}) {
 }
 
 function appendLead(leadsPath, leadObj) {
+  if (!leadObj || leadObj.status !== 'lead') {
+    return false;
+  }
   const needsHeader = !fs.existsSync(leadsPath) || fs.statSync(leadsPath).size === 0;
   const { formatField } = require('../csv');
   

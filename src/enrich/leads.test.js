@@ -123,3 +123,28 @@ test('appendLead migrates existing lead rows to include website context and new 
   assert.equal(leads[1].website_context, 'Page title: New Ltd');
   assert.equal(leads[1].person_name, 'Bob');
 });
+
+test('appendLead rejects records when status is not lead', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'enrich-leads-reject-test-'));
+  const leadsPath = path.join(dir, 'leads.csv');
+
+  const noContactRecord = {
+    company_number: '99999',
+    company_name: 'No Contact Ltd',
+    date_of_creation: '2026-09-01',
+    emails: '',
+    phones: '',
+    whatsapp_candidate: 'no',
+    status: 'no_contact',
+    sources: 'officers_api'
+  };
+
+  const result = appendLead(leadsPath, noContactRecord);
+  assert.strictEqual(result, false);
+  assert.strictEqual(fs.existsSync(leadsPath), false);
+
+  const nullResult = appendLead(leadsPath, null);
+  assert.strictEqual(nullResult, false);
+  assert.strictEqual(fs.existsSync(leadsPath), false);
+});
+
