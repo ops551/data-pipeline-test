@@ -95,7 +95,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_SECURE, '${{ secrets.SMTP_SECURE }}');
     assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
-    assert.strictEqual(env.EMAIL_FROM, undefined, 'sender identity is fixed in the email module');
+    assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}', 'EMAIL_FROM secret must be wired to outreach job');
     assert.strictEqual(env.SPAM_ALERT_EMAIL, '${{ secrets.SPAM_ALERT_EMAIL }}');
     assert.strictEqual(env.QUICK_EMAIL_VERIFICATION_API_KEY, '${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}');
     assert.strictEqual(env.SNIFFMAIL_API_KEY, '${{ secrets.SNIFFMAIL_API_KEY }}');

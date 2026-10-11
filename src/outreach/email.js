@@ -73,8 +73,8 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     port,
     secure,
     auth: (user || pass) ? { user, pass } : undefined,
-    from: overrides.from || env.EMAIL_FROM || env.SMTP_FROM,
-    replyTo: overrides.replyTo || env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM,
+    from: overrides.from || env.EMAIL_FROM || env.SMTP_FROM || user,
+    replyTo: overrides.replyTo || env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM || user,
     isMock
   };
 }
