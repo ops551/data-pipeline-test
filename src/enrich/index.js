@@ -310,7 +310,9 @@ async function runEnrichment() {
               fallback_used: 'no'
            };
            const leadObj = formatLead(company, leadData, sources, website);
-           appendLead(leadsFile, leadObj);
+           if (leadObj.status === 'lead') {
+             appendLead(leadsFile, leadObj);
+           }
         }
         console.log(`  Saved ${personLeads.length} person leads.`);
       } else {
@@ -339,8 +341,12 @@ async function runEnrichment() {
             verification_status: vStatus
          };
          const leadObj = formatLead(company, leadData, sources, website);
-         appendLead(leadsFile, leadObj);
-         console.log(`  Saved company fallback lead. Status: ${leadObj.status}`);
+         if (leadObj.status === 'lead') {
+           appendLead(leadsFile, leadObj);
+           console.log(`  Saved company fallback lead. Status: ${leadObj.status}`);
+         } else {
+           console.log(`  No contact found for ${company.company_name} (${company.company_number}). Skipped appending to leads.csv.`);
+         }
       }
       recordEnriched(enrichedFile, company.company_number);
     }
