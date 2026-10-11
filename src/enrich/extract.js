@@ -18,6 +18,22 @@ const GENERIC_COMPANY_TERMS = new Set([
   'wealth'
 ]);
 
+const PLACEHOLDER_USERNAMES = new Set([
+  'your', 'youremail', 'email', 'name', 'yourname', 'username',
+  'test', 'sample', 'example', 'placeholder', 'user',
+  'firstname', 'lastname', 'firstname.lastname', 'john.doe', 'jane.doe',
+  'admin_email', 'noreply', 'no-reply'
+]);
+
+const BLOCKED_EMAIL_DOMAINS = new Set([
+  'example.com', 'example.org', 'example.net',
+  'domain.com', 'yourdomain.com', 'email.com', 'site.com', 'website.com',
+  'youtube.com', 'youtu.be', 'google.com', 'apple.com',
+  'dictionary.com', 'thesaurus.com', 'thefreedictionary.com', 'wikipedia.org',
+  'w3.org', 'schema.org', 'wordpress.org', 'wordpress.com', 'github.com',
+  'sentry.io', 'wixpress.com', 'duckduckgo.com'
+]);
+
 function extractEmails(text) {
   if (!text) return [];
   const matches = text.match(EMAIL_REGEX) || [];
@@ -32,9 +48,13 @@ function extractEmails(text) {
   const valid = cleanedMatches.filter(e => {
     if (!isValidEmailAddress(e)) return false;
     
+    const [user, domain] = e.split('@');
+    if (!user || !domain) return false;
+    if (PLACEHOLDER_USERNAMES.has(user)) return false;
+    if (BLOCKED_EMAIL_DOMAINS.has(domain)) return false;
+
     // Check if username is a long hex hash (typical for Sentry/tracking keys)
-    const username = e.split('@')[0];
-    if (username.length >= 20 && /^[a-f0-9]+$/.test(username)) return false;
+    if (user.length >= 20 && /^[a-f0-9]+$/.test(user)) return false;
     
     // Ignore image/font files
     if (/\.(png|jpg|jpeg|gif|webp|svg|woff|woff2|ttf|eot)$/.test(e)) return false;
@@ -44,7 +64,8 @@ function extractEmails(text) {
       'sentry', 'wixpress.com', 'duckduckgo.com', 'example.com', 
       'companyinformation.co.uk', 'w3.org', 'schema.org', 
       'companieshouse.gov.uk', 'datagardener.com', 'endole.co.uk',
-      'clarity-project', 'bizdb', 'gov.uk'
+      'clarity-project', 'bizdb', 'gov.uk', 'youtube.com', 'dictionary.com',
+      'thesaurus.com', 'thefreedictionary.com', 'wikipedia.org'
     ];
     if (ignoreDomains.some(d => e.includes(d))) return false;
     
@@ -159,92 +180,115 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
   return validEmails.map(s => s.email);
 }
 
-function extractPeople(html, officers, sourceUrl = '') {
-  if (!html || !officers || officers.length === 0) return [];
+function extractPeople(html, officers = [], sourceUrl = '') {
+  if (!html) return [];
   
   const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
   const found = [];
   const textLower = text.toLowerCase();
   
-  for (const officer of officers) {
-    const nameStr = officer.name;
-    if (!nameStr) continue;
-    
-    let matchIdx = textLower.indexOf(nameStr.toLowerCase());
-    let matchLength = nameStr.length;
-    
-    if (matchIdx === -1) {
-      const nameParts = nameStr.split(' ');
-      if (nameParts.length >= 3) {
-        const first = nameParts[0];
-        const last = nameParts[nameParts.length - 1];
-        const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        const regex = new RegExp(`\\b${escapeRegExp(first)}\\b.{0,15}\\b${escapeRegExp(last)}\\b`, 'i');
-        const m = text.match(regex);
-        if (m) {
-          matchIdx = m.index;
-          matchLength = m[0].length;
+  if (Array.isArray(officers) && officers.length > 0) {
+    for (const officer of officers) {
+      const nameStr = officer.name;
+      if (!nameStr) continue;
+      
+      let matchIdx = textLower.indexOf(nameStr.toLowerCase());
+      let matchLength = nameStr.length;
+      
+      if (matchIdx === -1) {
+        const nameParts = nameStr.split(' ');
+        if (nameParts.length >= 3) {
+          const first = nameParts[0];
+          const last = nameParts[nameParts.length - 1];
+          const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const regex = new RegExp(`\\b${escapeRegExp(first)}\\b.{0,15}\\b${escapeRegExp(last)}\\b`, 'i');
+          const m = text.match(regex);
+          if (m) {
+            matchIdx = m.index;
+            matchLength = m[0].length;
+          }
         }
       }
-    }
-    
-    if (matchIdx !== -1) {
-      let start = Math.max(0, matchIdx - 50);
-      let end = Math.min(text.length, matchIdx + matchLength + 80);
       
-      const beforeStr = text.substring(start, matchIdx);
-      const lastDot = beforeStr.lastIndexOf('.');
-      if (lastDot !== -1) {
-        start += lastDot + 1;
-      }
-      
-      const afterStr = text.substring(matchIdx + matchLength, end);
-      const firstDot = afterStr.indexOf('.');
-      if (firstDot !== -1) {
-        end = matchIdx + matchLength + firstDot;
-      }
-
-      const windowStr = text.substring(start, end);
-      const namePosInWindow = matchIdx - start;
-      
-      const roleRegex = /\b(CEO|Chief Executive Officer|Founder|Co-Founder|CTO|CFO|COO|Director|Managing Director|Manager|Head|Lead|President|VP|Vice President)\b/gi;
-      
-      let bestRole = null;
-      let minDistance = Infinity;
-      
-      for (const m of windowStr.matchAll(roleRegex)) {
-        const roleStart = m.index;
-        const roleEnd = m.index + m[0].length;
-        let dist = 0;
-        if (roleEnd < namePosInWindow) {
-          dist = namePosInWindow - roleEnd;
-        } else if (roleStart > namePosInWindow + matchLength) {
-          dist = roleStart - (namePosInWindow + matchLength);
+      if (matchIdx !== -1) {
+        let start = Math.max(0, matchIdx - 50);
+        let end = Math.min(text.length, matchIdx + matchLength + 80);
+        
+        const beforeStr = text.substring(start, matchIdx);
+        const lastDot = beforeStr.lastIndexOf('.');
+        if (lastDot !== -1) {
+          start += lastDot + 1;
         }
         
-        if (dist < minDistance) {
-          minDistance = dist;
-          bestRole = m[0];
+        const afterStr = text.substring(matchIdx + matchLength, end);
+        const firstDot = afterStr.indexOf('.');
+        if (firstDot !== -1) {
+          end = matchIdx + matchLength + firstDot;
         }
+
+        const windowStr = text.substring(start, end);
+        const namePosInWindow = matchIdx - start;
+        
+        const roleRegex = /\b(CEO|Chief Executive Officer|Founder|Co-Founder|CTO|CFO|COO|Director|Managing Director|Manager|Head|Lead|President|VP|Vice President)\b/gi;
+        
+        let bestRole = null;
+        let minDistance = Infinity;
+        
+        for (const m of windowStr.matchAll(roleRegex)) {
+          const roleStart = m.index;
+          const roleEnd = m.index + m[0].length;
+          let dist = 0;
+          if (roleEnd < namePosInWindow) {
+            dist = namePosInWindow - roleEnd;
+          } else if (roleStart > namePosInWindow + matchLength) {
+            dist = roleStart - (namePosInWindow + matchLength);
+          }
+          
+          if (dist < minDistance) {
+            minDistance = dist;
+            bestRole = m[0];
+          }
+        }
+        
+        let role = officer.role;
+        if (bestRole) {
+          role = bestRole.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+          if (role.toLowerCase() === 'ceo') role = 'CEO';
+          if (role.toLowerCase() === 'cto') role = 'CTO';
+          if (role.toLowerCase() === 'cfo') role = 'CFO';
+          if (role.toLowerCase() === 'coo') role = 'COO';
+          if (role.toLowerCase() === 'vp') role = 'VP';
+        }
+        
+        found.push({
+          name: nameStr,
+          role: role,
+          source_url: sourceUrl
+        });
       }
-      
-      let role = officer.role;
-      if (bestRole) {
-        role = bestRole.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
-        if (role.toLowerCase() === 'ceo') role = 'CEO';
-        if (role.toLowerCase() === 'cto') role = 'CTO';
-        if (role.toLowerCase() === 'cfo') role = 'CFO';
-        if (role.toLowerCase() === 'coo') role = 'COO';
-        if (role.toLowerCase() === 'vp') role = 'VP';
-      }
-      
+    }
+  }
+
+  // Also extract prominent leadership named directly on team/about page
+  const foundNames = new Set(found.map(p => p.name.toLowerCase()));
+  const leadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO)/g;
+  for (const m of text.matchAll(leadershipRegex)) {
+    const candidateName = m[1].trim();
+    let candidateRole = m[2].trim();
+    if (candidateRole.toLowerCase() === 'ceo') candidateRole = 'CEO';
+    else if (candidateRole.toLowerCase() === 'cto') candidateRole = 'CTO';
+    else candidateRole = candidateRole.replace(/\b\w/g, c => c.toUpperCase());
+
+    if (!foundNames.has(candidateName.toLowerCase())) {
+      foundNames.add(candidateName.toLowerCase());
       found.push({
-        name: nameStr,
-        role: role,
+        name: candidateName,
+        role: candidateRole,
         source_url: sourceUrl
       });
     }
   }
+
   return found;
 }
 

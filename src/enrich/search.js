@@ -32,22 +32,78 @@ const SOCIAL_DOMAINS = [
   'tiktok.com'
 ];
 
+const BLOCKED_DOMAINS = new Set([
+  'youtube.com', 'youtu.be', 'vimeo.com', 'dailymotion.com',
+  'wikipedia.org', 'wikimedia.org', 'wiktionary.org', 'wikidata.org',
+  'thesaurus.com', 'dictionary.com', 'thefreedictionary.com', 'merriam-webster.com', 'collinsdictionary.com', 'cambridge.org', 'oxfordlearnersdictionaries.com',
+  'google.com', 'bing.com', 'yahoo.com', 'duckduckgo.com',
+  'facebook.com', 'instagram.com', 'linkedin.com', 'reddit.com', 'pinterest.com', 'quora.com', 'medium.com',
+  'github.com', 'gitlab.com', 'npmjs.com', 'wordpress.org', 'wordpress.com',
+  'amazon.co.uk', 'amazon.com', 'ebay.co.uk', 'ebay.com', 'etsy.com', 'aliexpress.com',
+  'coral.co.uk', 'bet365.com', 'williamhill.com', 'ladbrokes.com', 'paddypower.com', 'skybet.com',
+  'bbc.co.uk', 'theguardian.com', 'dailymail.co.uk', 'telegraph.co.uk', 'independent.co.uk', 'sky.com',
+  'blacks.co.uk', 'millets.co.uk', 'gooutdoors.co.uk', 'jd-sports.co.uk'
+]);
+
+const STOPWORDS = new Set([
+  'the', 'and', 'for', 'with', 'our', 'all', 'new', 'big', 'pro', 'one', 'top', 'best',
+  'of', 'in', 'on', 'at', 'to', 'a', 'an',
+  'ltd', 'limited', 'uk', 'co', 'inc', 'cic', 'llp', 'plc', 'corp', 'corporation',
+  'group', 'services', 'solutions', 'holdings', 'enterprises', 'enterprise', 'international'
+]);
+
+function getSld(domain) {
+  if (!domain) return '';
+  const clean = domain.toLowerCase()
+    .replace(/\.(co|org|gov|ac|ltd|net|plc)\.[a-z]{2,}$/i, '')
+    .replace(/\.[a-z]{2,10}$/i, '');
+  const parts = clean.split('.');
+  return parts[parts.length - 1] || '';
+}
+
+function isBlocked(domain) {
+  if (!domain) return true;
+  for (const b of BLOCKED_DOMAINS) {
+    if (domain === b || domain.endsWith(`.${b}`)) {
+      return true;
+    }
+  }
+  return false;
+}
 
 function isLikelyCompanyWebsite(domain, companyName) {
-  if (!companyName) return false;
-  const cleanName = companyName.toLowerCase().replace(/\b(ltd|limited|uk|co|inc|cic)\b/g, '').replace(/[^a-z0-9]/g, ' ').trim();
-  const words = cleanName.split(/\s+/).filter(w => w.length > 2);
-  const joinedName = words.join('');
-  const d = domain.split('.')[0]; // e.g. autodesign.works -> autodesign
-  
-  if (joinedName && d.includes(joinedName)) return true;
-  if (joinedName && joinedName.includes(d)) return true;
-  
-  let matchCount = 0;
-  for (const w of words) {
-    if (d.includes(w)) matchCount++;
+  if (!companyName || !domain) return false;
+  if (isBlocked(domain)) return false;
+
+  const d = getSld(domain);
+  if (!d || d.length < 3) return false;
+
+  const cleanName = companyName.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+  const allWords = cleanName.split(/\s+/).filter(Boolean);
+  const coreWords = allWords.filter(w => w.length > 2 && !STOPWORDS.has(w));
+  const joinedCore = coreWords.join('');
+  const joinedAll = allWords.filter(w => !STOPWORDS.has(w) || w.length > 3).join('');
+
+  // 1. Direct joined match (e.g. courtside.uk -> courtside, rsletz.co.uk -> rsletz)
+  if (joinedCore && d === joinedCore) return true;
+  if (joinedAll && d === joinedAll) return true;
+  if (joinedCore && (d.includes(joinedCore) || (joinedCore.length >= 6 && joinedCore.includes(d)))) return true;
+
+  // 2. Multi-word match: If company has multiple core words, require at least 2 matching words
+  if (coreWords.length >= 2) {
+    const matchCount = coreWords.filter(w => d.includes(w)).length;
+    if (matchCount >= 2) return true;
+    return false;
   }
-  return matchCount > 0;
+
+  // 3. Single core word: exact match or strong prefix/suffix match (e.g. courtside.uk -> courtside)
+  if (coreWords.length === 1) {
+    const single = coreWords[0];
+    if (d === single) return true;
+    if (single.length >= 5 && (d.startsWith(single) || d.endsWith(single))) return true;
+  }
+
+  return false;
 }
 
 function getDomain(url) {
@@ -179,7 +235,7 @@ async function searchCompany(scraper, company) {
   
   for (const link of res.links) {
     const domain = getDomain(link);
-    if (!domain) continue;
+    if (!domain || isBlocked(domain)) continue;
 
     if (isSocialOrDirectory(domain) && !domain.includes("gov.uk")) {
       socialUrls.push(link);
@@ -205,5 +261,8 @@ module.exports = {
   searchCompany,
   isSocialOrDirectory,
   getDomain,
+  getSld,
+  isBlocked,
+  isLikelyCompanyWebsite,
   extractWebsiteContext
 };
