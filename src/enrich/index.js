@@ -121,6 +121,56 @@ async function runEnrichment() {
           }
           if (page.html) {
             peopleFromSite = extractPeople(page.html, activeOfficers, page.finalUrl);
+
+            // Crawl high-value contact & team subpages
+            try {
+              const origin = new URL(page.finalUrl || searchRes.websiteUrl).origin;
+              const linkMatches = [...page.html.matchAll(/href=["']([^"'#\s>]+)["']/gi)].map(m => m[1]);
+              const subpageLinks = new Set();
+              for (const rawHref of linkMatches) {
+                try {
+                  const resolved = new URL(rawHref, origin);
+                  if (resolved.origin === origin) {
+                    const p = resolved.pathname.toLowerCase();
+                    if (
+                      p.includes('/contact') ||
+                      p.includes('/about') ||
+                      p.includes('/team') ||
+                      p.includes('/people') ||
+                      p.includes('/leadership') ||
+                      p.includes('/staff')
+                    ) {
+                      if (!/\.(jpg|jpeg|png|gif|webp|svg|pdf|css|js|woff|woff2)$/i.test(p)) {
+                        subpageLinks.add(resolved.toString());
+                      }
+                    }
+                  }
+                } catch {}
+              }
+
+              const prioritized = [...subpageLinks].sort((a, b) => {
+                const score = (u) => {
+                  if (u.includes('team') || u.includes('leadership')) return 3;
+                  if (u.includes('contact')) return 2;
+                  if (u.includes('about')) return 1;
+                  return 0;
+                };
+                return score(b) - score(a);
+              }).slice(0, 2);
+
+              for (const subUrl of prioritized) {
+                console.log(`  Inspecting subpage: ${subUrl}`);
+                const subPage = await scraper.fetchHtml(subUrl, { throwOnError: false, timeout: 15000 });
+                if (subPage.html) {
+                  const subEmails = extractEmails(subPage.html);
+                  if (subEmails.length > 0) websiteEmails.push(...subEmails);
+                  const subPeople = extractPeople(subPage.html, activeOfficers, subUrl);
+                  if (subPeople.length > 0) peopleFromSite.push(...subPeople);
+                }
+              }
+            } catch (subErr) {
+              console.warn('  Subpage crawling error:', subErr.message);
+            }
           }
         }
       }
@@ -216,7 +266,7 @@ async function runEnrichment() {
            personEmail = foundExact;
            emailSource = website.url || 'search'; 
            verificationStatus = 'exact_match';
-         } else if (!isCatchAll && !catchAllUnknown && inferred.length > 0) {
+         } else if (!isCatchAll && inferred.length > 0) {
            for (const candidate of inferred) {
              const v = await verifyEmail(candidate);
              if (v.status === 'valid_domain') {
