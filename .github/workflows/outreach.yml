@@ -1,29 +1,29 @@
 name: Outreach Automation
 
-'on':
+"on":
   schedule:
-    - cron: '13 0 * * *'
-    - cron: '37 2 * * *'
-    - cron: '1 5 * * *'
-    - cron: '25 7 * * *'
-    - cron: '49 9 * * *'
-    - cron: '13 12 * * *'
-    - cron: '37 14 * * *'
-    - cron: '1 17 * * *'
-    - cron: '25 19 * * *'
-    - cron: '49 21 * * *'
+    - cron: "13 0 * * *"
+    - cron: "37 2 * * *"
+    - cron: "1 5 * * *"
+    - cron: "25 7 * * *"
+    - cron: "49 9 * * *"
+    - cron: "13 12 * * *"
+    - cron: "37 14 * * *"
+    - cron: "1 17 * * *"
+    - cron: "25 19 * * *"
+    - cron: "49 21 * * *"
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Run in dry-run mode (no emails sent, no CSV changes)'
+        description: "Run in dry-run mode (no emails sent, no CSV changes)"
         required: false
         type: boolean
         default: false
       test_email:
-        description: 'Optional: redirect this manual run to a test email address; leave blank to contact the company'
+        description: "Optional: redirect this manual run to a test email address; leave blank to contact the company"
         required: false
         type: string
-        default: ''
+        default: ""
 
 concurrency:
   group: outreach-pipeline
@@ -36,12 +36,12 @@ permissions:
 jobs:
   outreach:
     name: Run Outreach and Auto-Merge
-    if: github.repository == 'Nahid625/Recent-uk-Companys'
+    if: github.repository == 'ops551/data-pipeline-test'
     runs-on: ubuntu-latest
 
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-      ENRICH_BATCH_SIZE: '50'
+      ENRICH_BATCH_SIZE: "50"
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
       SMTP_HOST: ${{ secrets.SMTP_HOST }}
@@ -50,7 +50,7 @@ jobs:
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
-      OUTREACH_LIMIT: '1'
+      OUTREACH_LIMIT: "1"
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
       TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}
       DAYS_BACK: "10"
@@ -70,12 +70,12 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '24.x'
-          cache: 'npm'
+          node-version: "24.x"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
-        
+
       - name: Install Puppeteer Browsers
         run: npx puppeteer browsers install chrome
 
