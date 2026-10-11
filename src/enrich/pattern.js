@@ -5,30 +5,62 @@ const resolveMx = promisify(dns.resolveMx);
 const { isValidEmailAddress } = require('../emailAddress');
 
 const GENERIC_PREFIXES = new Set([
-  'info', 'contact', 'hello', 'sales', 'support', 'admin', 'team', 
+  'info', 'contact', 'hello', 'sales', 'support', 'admin', 'team',
   'office', 'enquiries', 'marketing', 'press', 'jobs', 'careers',
-  'hello', 'help', 'accounts', 'billing', 'general'
+  'help', 'accounts', 'billing', 'general'
 ]);
+
+const exhaustedKeys = new Set();
+
+function resetExhaustedKeys() {
+  exhaustedKeys.clear();
+}
+
+function parseKeys(envVal) {
+  if (!envVal) return [];
+  return String(envVal).split(',').map((k) => k.trim()).filter(Boolean);
+}
+
+function isQuotaExceeded(status, data) {
+  if (status === 402 || status === 429 || status === 401 || status === 403) {
+    return true;
+  }
+  if (!data) return false;
+
+  const text = typeof data === 'string' ? data : JSON.stringify(data);
+  const quotaRegex = /(?:quota|credit|rate\s*limit|too\s*many\s*requests|exceeded|insufficient|payment\s*required|out_of_credits)/i;
+
+  if (quotaRegex.test(text)) {
+    return true;
+  }
+  if (data.status === 'credit_exhausted' || data.status === 'out_of_credits' || data.status === 'quota_exceeded') {
+    return true;
+  }
+  if (data.success === false && quotaRegex.test(data.message || '')) {
+    return true;
+  }
+  return false;
+}
 
 function detectPattern(emails) {
   if (!emails || !Array.isArray(emails) || emails.length === 0) {
     return { pattern: null, confidence: 0, sampleCount: 0 };
   }
-  
+
   const patternCounts = {};
   let validSamples = 0;
 
   for (const email of emails) {
     const parts = String(email).toLowerCase().split('@');
     if (parts.length !== 2) continue;
-    
+
     const user = parts[0];
     const domain = parts[1];
-    
+
     if (!user || !domain || GENERIC_PREFIXES.has(user)) {
       continue;
     }
-    
+
     let pattern = null;
     if (user.includes('.')) {
       const sub = user.split('.');
@@ -75,11 +107,11 @@ function detectPattern(emails) {
 
 function inferEmails(name, domain, patternInfo) {
   if (!name || !domain) return [];
-  
+
   const cleanName = name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
   const parts = cleanName.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return [];
-  
+
   if (parts.length === 1) {
     return [`${parts[0]}@${domain}`];
   }
@@ -99,7 +131,9 @@ function inferEmails(name, domain, patternInfo) {
       case 'first.l': add(`${first}.${l}`); break;
       case 'first_last': add(`${first}_${last}`); break;
       case 'first-last': add(`${first}-${last}`); break;
-      case 'first': 
+      case 'first':
+        add(`${first}`);
+        break;
       case 'firstlast':
       case 'first_or_firstlast':
         add(`${first}`);
@@ -107,9 +141,10 @@ function inferEmails(name, domain, patternInfo) {
         break;
     }
   } else {
-    // Standard fallbacks if no pattern is confidently known
-    add(`${first}`);
+    // UK SME priority: first.last@, first@, f.last@, then additional fallbacks
     add(`${first}.${last}`);
+    add(`${first}`);
+    add(`${f}.${last}`);
     add(`${f}${last}`);
     add(`${first}${last}`);
   }
@@ -117,7 +152,130 @@ function inferEmails(name, domain, patternInfo) {
   return [...new Set(candidates)];
 }
 
-async function verifyEmailSMTP(email) {
+async function verifyQuickEmailVerification(email, apiKey) {
+  const url = `https://api.quickemailverification.com/v1/verify?email=${encodeURIComponent(email)}&apikey=${encodeURIComponent(apiKey)}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    return { quotaExceeded: true };
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) {
+    return { quotaExceeded: res.status >= 400 };
+  }
+  if (isQuotaExceeded(res.status, data)) {
+    return { quotaExceeded: true };
+  }
+  const isValid = data.result === 'valid' && (data.safe_to_send === 'true' || data.safe_to_send === true);
+  return {
+    success: true,
+    isValid,
+    reason: isValid ? 'quickemailverification' : (data.reason || 'qev_invalid')
+  };
+}
+
+async function verifySniffmail(email, apiKey) {
+  const url = 'https://api.sniffmail.io/verify';
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`
+    },
+    body: JSON.stringify({ email }),
+    signal: AbortSignal.timeout(5000)
+  });
+  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    return { quotaExceeded: true };
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) {
+    return { quotaExceeded: res.status >= 400 };
+  }
+  if (isQuotaExceeded(res.status, data)) {
+    return { quotaExceeded: true };
+  }
+  const isValid = data.is_deliverable === true || data.is_valid === true;
+  return {
+    success: true,
+    isValid,
+    reason: isValid ? 'sniffmail' : (data.reason || 'sniffmail_invalid')
+  };
+}
+
+async function verifyReoon(email, apiKey) {
+  const url = `https://emailverifier.reoon.com/api/v1/verify?email=${encodeURIComponent(email)}&key=${encodeURIComponent(apiKey)}&mode=power`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    return { quotaExceeded: true };
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) {
+    return { quotaExceeded: res.status >= 400 };
+  }
+  if (isQuotaExceeded(res.status, data)) {
+    return { quotaExceeded: true };
+  }
+  const isValid = data.status === 'valid' || data.status === 'safe';
+  return {
+    success: true,
+    isValid,
+    reason: isValid ? 'reoon' : (data.status || 'reoon_invalid')
+  };
+}
+
+async function verifyZeroBounce(email, apiKey) {
+  const url = `https://api.zerobounce.net/v2/validate?api_key=${encodeURIComponent(apiKey)}&email=${encodeURIComponent(email)}`;
+  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    return { quotaExceeded: true };
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) {
+    return { quotaExceeded: res.status >= 400 };
+  }
+  if (isQuotaExceeded(res.status, data)) {
+    return { quotaExceeded: true };
+  }
+  const isValid = data.status === 'valid';
+  return {
+    success: true,
+    isValid,
+    reason: isValid ? 'zerobounce' : (data.status || 'zerobounce_invalid')
+  };
+}
+
+async function verifyVerifalia(email, username, password) {
+  const url = 'https://api.verifalia.com/v2.7/email-validations?waitTime=5000';
+  const auth = Buffer.from(`${username}:${password}`).toString('base64');
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Basic ${auth}`
+    },
+    body: JSON.stringify({ entries: [{ inputData: email }] }),
+    signal: AbortSignal.timeout(5000)
+  });
+  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    return { quotaExceeded: true };
+  }
+  const data = await res.json().catch(() => null);
+  if (!data) {
+    return { quotaExceeded: res.status >= 400 };
+  }
+  if (isQuotaExceeded(res.status, data)) {
+    return { quotaExceeded: true };
+  }
+  const entry = data.entries && data.entries[0];
+  const isValid = Boolean(entry && entry.classification === 'Deliverable');
+  return {
+    success: true,
+    isValid,
+    reason: isValid ? 'verifalia' : ((entry && entry.classification) || 'verifalia_invalid')
+  };
+}
+
+async function verifyEmailSmtp(email) {
   if (!isValidEmailAddress(email)) {
     return { status: 'invalid', reason: 'syntax' };
   }
@@ -126,7 +284,7 @@ async function verifyEmailSMTP(email) {
   let mxRecords;
   try {
     const mxPromise = resolveMx(domain);
-    const timeoutPromise = new Promise((_, reject) => 
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), 5000)
     );
     mxRecords = await Promise.race([mxPromise, timeoutPromise]);
@@ -145,7 +303,7 @@ async function verifyEmailSMTP(email) {
     let resolved = false;
 
     const socket = new net.Socket();
-    
+
     const finish = (result) => {
       if (resolved) return;
       resolved = true;
@@ -155,14 +313,14 @@ async function verifyEmailSMTP(email) {
 
     socket.setTimeout(5000);
     socket.on('timeout', () => finish({ status: 'unknown', reason: 'smtp_timeout' }));
-    socket.on('error', (err) => finish({ status: 'unknown', reason: 'smtp_error' }));
+    socket.on('error', () => finish({ status: 'unknown', reason: 'smtp_error' }));
 
     socket.connect(25, bestMx);
 
     socket.on('data', (data) => {
       const msg = data.toString();
       const code = parseInt(msg.substring(0, 3), 10);
-      
+
       if (step === 0) {
         if (code === 220) {
           step = 1;
@@ -202,62 +360,130 @@ async function verifyEmailSMTP(email) {
   });
 }
 
+async function verifyEmail(email) {
+  if (!isValidEmailAddress(email)) {
+    return { status: 'invalid', reason: 'syntax' };
+  }
+
+  // Priority 1: QuickEmailVerification
+  const qevKeys = parseKeys(process.env.QUICK_EMAIL_VERIFICATION_API_KEY);
+  for (const key of qevKeys) {
+    if (exhaustedKeys.has(`qev:${key}`)) continue;
+    try {
+      const res = await verifyQuickEmailVerification(email, key);
+      if (res.quotaExceeded) {
+        exhaustedKeys.add(`qev:${key}`);
+        continue;
+      }
+      return res.isValid
+        ? { status: 'valid_domain', reason: 'quickemailverification' }
+        : { status: 'invalid', reason: res.reason || 'quickemailverification_invalid' };
+    } catch {
+      exhaustedKeys.add(`qev:${key}`);
+      continue;
+    }
+  }
+
+  // Priority 2: Sniffmail
+  const sniffKeys = parseKeys(process.env.SNIFFMAIL_API_KEY);
+  for (const key of sniffKeys) {
+    if (exhaustedKeys.has(`sniffmail:${key}`)) continue;
+    try {
+      const res = await verifySniffmail(email, key);
+      if (res.quotaExceeded) {
+        exhaustedKeys.add(`sniffmail:${key}`);
+        continue;
+      }
+      return res.isValid
+        ? { status: 'valid_domain', reason: 'sniffmail' }
+        : { status: 'invalid', reason: res.reason || 'sniffmail_invalid' };
+    } catch {
+      exhaustedKeys.add(`sniffmail:${key}`);
+      continue;
+    }
+  }
+
+  // Priority 3: Reoon
+  const reoonKeys = parseKeys(process.env.REON_API_KEY || process.env.REOON_API_KEY);
+  for (const key of reoonKeys) {
+    if (exhaustedKeys.has(`reoon:${key}`)) continue;
+    try {
+      const res = await verifyReoon(email, key);
+      if (res.quotaExceeded) {
+        exhaustedKeys.add(`reoon:${key}`);
+        continue;
+      }
+      return res.isValid
+        ? { status: 'valid_domain', reason: 'reoon' }
+        : { status: 'invalid', reason: res.reason || 'reoon_invalid' };
+    } catch {
+      exhaustedKeys.add(`reoon:${key}`);
+      continue;
+    }
+  }
+
+  // Priority 4: ZeroBounce
+  const zbKeys = parseKeys(process.env.ZEROBOUNCE || process.env.ZEROBOUNCE_API_KEY);
+  for (const key of zbKeys) {
+    if (exhaustedKeys.has(`zerobounce:${key}`)) continue;
+    try {
+      const res = await verifyZeroBounce(email, key);
+      if (res.quotaExceeded) {
+        exhaustedKeys.add(`zerobounce:${key}`);
+        continue;
+      }
+      return res.isValid
+        ? { status: 'valid_domain', reason: 'zerobounce' }
+        : { status: 'invalid', reason: res.reason || 'zerobounce_invalid' };
+    } catch {
+      exhaustedKeys.add(`zerobounce:${key}`);
+      continue;
+    }
+  }
+
+  // Priority 5: Verifalia
+  const vUser = process.env.VERIFALIA_USERNAME;
+  const vPass = process.env.VERIFALIA_PASSWORD;
+  if (vUser && vPass && !exhaustedKeys.has(`verifalia:${vUser}`)) {
+    try {
+      const res = await verifyVerifalia(email, vUser, vPass);
+      if (res.quotaExceeded) {
+        exhaustedKeys.add(`verifalia:${vUser}`);
+      } else {
+        return res.isValid
+          ? { status: 'valid_domain', reason: 'verifalia' }
+          : { status: 'invalid', reason: res.reason || 'verifalia_invalid' };
+      }
+    } catch {
+      exhaustedKeys.add(`verifalia:${vUser}`);
+    }
+  }
+
+  // Priority 6: Raw SMTP Fallback
+  return await verifyEmailSmtp(email);
+}
+
 async function checkCatchAll(domain) {
   if (!domain) return { isCatchAll: false, unknown: false };
   const fakeEmail = `fake_${Date.now()}_test@${domain}`;
-  const v = await verifyEmailSMTP(fakeEmail);
+  const v = await verifyEmail(fakeEmail);
   return {
     isCatchAll: v.status === 'valid_domain',
     unknown: v.status === 'unknown'
   };
 }
 
-
-async function verifyEmail(email) {
-  // Try APIs first if configured
-  const qevKey = process.env.QUICK_EMAIL_VERIFICATION_API_KEY;
-  const mevKey = process.env.MY_EMAIL_VERIFIER_API_KEY;
-  const eaKey = process.env.EMAIL_AWESOME_API_KEY;
-
-  if (qevKey || mevKey || eaKey) {
-    try {
-      if (qevKey) {
-        const res = await fetch(`https://api.quickemailverification.com/v1/verify?email=${email}&apikey=${qevKey}`);
-        if (res.status === 200) {
-          const data = await res.json();
-          return { status: data.result === 'valid' ? 'valid_domain' : 'invalid', reason: 'api_qev' };
-        }
-      }
-    } catch(e) {}
-    
-    try {
-      if (mevKey) {
-        const res = await fetch(`https://client.myemailverifier.com/verifier/validate_single/${email}/${mevKey}`);
-        if (res.status === 200) {
-          const data = await res.json();
-          return { status: (data.Status && data.Status.toLowerCase() === 'valid') ? 'valid_domain' : 'invalid', reason: 'api_mev' };
-        }
-      }
-    } catch(e) {}
-
-    try {
-      if (eaKey) {
-        const res = await fetch(`https://api.emailawesome.com/v1/verify?email=${email}&apikey=${eaKey}`);
-        if (res.status === 200) {
-          const data = await res.json();
-          return { status: (data.state === 'deliverable' || data.result === 'valid') ? 'valid_domain' : 'invalid', reason: 'api_ea' };
-        }
-      }
-    } catch(e) {}
-  }
-
-  // Fallback to SMTP if no API keys or all APIs rate-limited/failed
-  return await verifyEmailSMTP(email);
-}
-
 module.exports = {
   detectPattern,
   inferEmails,
   verifyEmail,
-  checkCatchAll
+  checkCatchAll,
+  verifyEmailSmtp,
+  verifyQuickEmailVerification,
+  verifySniffmail,
+  verifyReoon,
+  verifyZeroBounce,
+  verifyVerifalia,
+  resetExhaustedKeys,
+  exhaustedKeys
 };
