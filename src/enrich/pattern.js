@@ -10,6 +10,14 @@ const GENERIC_PREFIXES = new Set([
   'help', 'accounts', 'billing', 'general'
 ]);
 
+const TITLE_PREFIXES = new Set([
+  'dr', 'mr', 'mrs', 'ms', 'miss', 'prof', 'professor', 'sir', 'dame', 'lord', 'lady', 'rev', 'reverend'
+]);
+
+const TITLE_SUFFIXES = new Set([
+  'obe', 'mbe', 'cbe', 'kbe', 'dbe', 'phd', 'esq', 'jr', 'sr', 'ii', 'iii', 'iv', 'kc', 'qc'
+]);
+
 const exhaustedKeys = new Set();
 
 function resetExhaustedKeys() {
@@ -111,6 +119,13 @@ function inferEmails(name, domain, patternInfo) {
   const cleanName = name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
   const parts = cleanName.split(/\s+/).filter(Boolean);
   if (parts.length === 0) return [];
+
+  while (parts.length > 1 && TITLE_PREFIXES.has(parts[0])) {
+    parts.shift();
+  }
+  while (parts.length > 1 && TITLE_SUFFIXES.has(parts[parts.length - 1])) {
+    parts.pop();
+  }
 
   if (parts.length === 1) {
     return [`${parts[0]}@${domain}`];
@@ -466,7 +481,7 @@ async function verifyEmail(email) {
 async function checkCatchAll(domain) {
   if (!domain) return { isCatchAll: false, unknown: false };
   const fakeEmail = `fake_${Date.now()}_test@${domain}`;
-  const v = await verifyEmail(fakeEmail);
+  const v = await verifyEmailSmtp(fakeEmail);
   return {
     isCatchAll: v.status === 'valid_domain',
     unknown: v.status === 'unknown'

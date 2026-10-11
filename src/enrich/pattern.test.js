@@ -4,6 +4,7 @@ const {
   detectPattern,
   inferEmails,
   verifyEmail,
+  checkCatchAll,
   verifyQuickEmailVerification,
   verifySniffmail,
   verifyReoon,
@@ -294,3 +295,39 @@ test('Automated quota failover: advances across provider chain on 429 and quota 
     restoreEnv();
   }
 });
+
+test('inferEmails strips officer title prefixes and honorific suffixes', () => {
+  const drResult = inferEmails('Dr. Sarah Connor', 'company.com', { pattern: 'first.last' });
+  assert.deepEqual(drResult, ['sarah.connor@company.com']);
+
+  const profResult = inferEmails('Prof. Dr. Sarah Connor', 'company.com', { pattern: 'first.last' });
+  assert.deepEqual(profResult, ['sarah.connor@company.com']);
+
+  const obeResult = inferEmails('Sir John Smith OBE', 'company.com', null);
+  assert.equal(obeResult[0], 'john.smith@company.com');
+  assert.equal(obeResult[1], 'john@company.com');
+
+  const phdResult = inferEmails('Jane Doe PhD', 'company.com', { pattern: 'f.last' });
+  assert.deepEqual(phdResult, ['j.doe@company.com']);
+});
+
+test('checkCatchAll utilizes raw SMTP verification and never consumes API credits', async () => {
+  try {
+    process.env.QUICK_EMAIL_VERIFICATION_API_KEY = 'qev_key';
+    process.env.SNIFFMAIL_API_KEY = 'sniff_key';
+
+    let fetchCalled = false;
+    global.fetch = async () => {
+      fetchCalled = true;
+      return { status: 200, json: async () => ({ is_deliverable: true }) };
+    };
+
+    // Use a nonexistent domain so resolveMx rejects without making external calls
+    const res = await checkCatchAll('thisdomainwillneverexist1234567.co.uk');
+    assert.strictEqual(res.isCatchAll, false);
+    assert.strictEqual(fetchCalled, false, 'checkCatchAll must not invoke external API endpoints');
+  } finally {
+    restoreEnv();
+  }
+});
+
