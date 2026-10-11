@@ -17,7 +17,8 @@ function buildUrl({ incorporatedFrom, incorporatedTo, size, startIndex }) {
 
 // Companies House uses HTTP Basic auth with the key as username and no password.
 function authHeader(apiKey) {
-  return 'Basic ' + Buffer.from(`${apiKey}:`).toString('base64');
+  const cleanKey = String(apiKey || '').replace(/^["']|["']$/g, '').trim();
+  return 'Basic ' + Buffer.from(`${cleanKey}:`).toString('base64');
 }
 
 function rateLimitWaitMs(response, now) {

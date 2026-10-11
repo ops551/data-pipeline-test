@@ -333,10 +333,13 @@ async function runEnrichment() {
            }
          }
          
+         const topPerson = peopleList.length > 0 ? peopleList[0] : null;
          const leadData = {
             emails: bestGeneric ? [bestGeneric] : [],
             phones: extractedData.phones,
-            contact_type: 'company',
+            person_name: topPerson ? topPerson.name : '',
+            job_title: topPerson ? topPerson.job_title : '',
+            contact_type: topPerson ? 'person_fallback' : 'company',
             fallback_used: bestGeneric ? 'yes' : 'no',
             verification_status: vStatus
          };
