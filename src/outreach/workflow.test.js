@@ -95,8 +95,14 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_SECURE, '${{ secrets.SMTP_SECURE }}');
     assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
-    assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}', 'sender identity is configured via secrets');
+    assert.strictEqual(env.EMAIL_FROM, undefined, 'sender identity is fixed in the email module');
     assert.strictEqual(env.SPAM_ALERT_EMAIL, '${{ secrets.SPAM_ALERT_EMAIL }}');
+    assert.strictEqual(env.QUICK_EMAIL_VERIFICATION_API_KEY, '${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}');
+    assert.strictEqual(env.SNIFFMAIL_API_KEY, '${{ secrets.SNIFFMAIL_API_KEY }}');
+    assert.strictEqual(env.REON_API_KEY, '${{ secrets.REON_API_KEY }}');
+    assert.strictEqual(env.ZEROBOUNCE, '${{ secrets.ZEROBOUNCE }}');
+    assert.strictEqual(env.VERIFALIA_USERNAME, '${{ secrets.VERIFALIA_USERNAME }}');
+    assert.strictEqual(env.VERIFALIA_PASSWORD, '${{ secrets.VERIFALIA_PASSWORD }}');
     assert.strictEqual(
       env.TEST_EMAIL,
       "${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}"

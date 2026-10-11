@@ -36,7 +36,7 @@ permissions:
 jobs:
   outreach:
     name: Run Outreach and Auto-Merge
-    if: github.repository =='ops551/data-pipeline-test'
+    if: github.repository == 'Nahid625/Recent-uk-Companys'
     runs-on: ubuntu-latest
 
     env:
@@ -49,12 +49,17 @@ jobs:
       SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
       SMTP_USER: ${{ secrets.SMTP_USER }}
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
-      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
       OUTREACH_LIMIT: '1'
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
       TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}
       DAYS_BACK: "10"
+      QUICK_EMAIL_VERIFICATION_API_KEY: ${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}
+      SNIFFMAIL_API_KEY: ${{ secrets.SNIFFMAIL_API_KEY }}
+      REON_API_KEY: ${{ secrets.REON_API_KEY }}
+      ZEROBOUNCE: ${{ secrets.ZEROBOUNCE }}
+      VERIFALIA_USERNAME: ${{ secrets.VERIFALIA_USERNAME }}
+      VERIFALIA_PASSWORD: ${{ secrets.VERIFALIA_PASSWORD }}
 
     steps:
       - name: Checkout repository
