@@ -704,4 +704,43 @@ test('generateEmail generates developer collaboration email end-to-end for softw
   assert.ok(result.body.includes(TECH_SIGNATURE_TITLE));
 });
 
+test('extractFirstName rejects corporate brands and countries, falling back to company greeting (Unit 5.20)', async () => {
+  assert.strictEqual(extractFirstName('Deloitte India'), '');
+  assert.strictEqual(extractFirstName('PwC UK'), '');
+  assert.strictEqual(extractFirstName('Google Asia'), '');
+  assert.strictEqual(extractFirstName('Accenture'), '');
+  assert.strictEqual(extractFirstName('Cass Coulston'), 'Cass');
+  assert.strictEqual(extractFirstName('Dr Cass Coulston'), 'Cass');
+
+  let capturedPrompt = '';
+  const mockModel = {
+    generateContent: async (prompt) => {
+      capturedPrompt = prompt;
+      return {
+        response: {
+          text: () => JSON.stringify({
+            subject: 'Support for Beacon Consulting',
+            body: 'Hey Beacon Consulting,\n\nI can help automate your workflow.\n\nBest regards,\nNahid'
+          })
+        }
+      };
+    }
+  };
+
+  const result = await generateEmail(
+    {
+      company_name: 'Beacon Consulting Ltd',
+      person_name: 'Deloitte India',
+      sic_codes: '70229'
+    },
+    { model: mockModel }
+  );
+
+  assert.ok(capturedPrompt.includes('Hey Beacon Consulting Ltd,'));
+  assert.ok(!capturedPrompt.includes('Hey Deloitte,'));
+  assert.ok(result.body.includes('Hey Beacon Consulting Ltd,'));
+  assert.ok(!result.body.includes('Hey Deloitte,'));
+});
+
+
 

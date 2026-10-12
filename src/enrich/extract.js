@@ -241,7 +241,8 @@ const FALSE_NAME_WORDS = new Set([
   'our values', 'our company', 'the company', 'our services',
   'case studies', 'case study', 'client reviews', 'testimonials',
   'happy clients', 'recent news', 'latest news', 'blog post',
-  'read article', 'privacy policy', 'terms conditions'
+  'read article', 'privacy policy', 'terms conditions',
+  'deloitte india', 'pwc india', 'google uk', 'amazon uk', 'accenture uk'
 ]);
 
 const BAD_NAME_TOKENS = new Set([
@@ -256,7 +257,23 @@ const BAD_NAME_TOKENS = new Set([
   'customer', 'customers', 'review', 'reviews', 'testimonial', 'testimonials',
   'story', 'stories', 'study', 'studies', 'project', 'projects',
   'ceo', 'cto', 'cfo', 'coo', 'cmo', 'founder', 'director', 'managing', 'chief',
-  'executive', 'officer', 'manager', 'head', 'lead', 'president', 'vp'
+  'executive', 'officer', 'manager', 'head', 'lead', 'president', 'vp',
+  // Corporate brands & agencies
+  'deloitte', 'pwc', 'kpmg', 'ey', 'ernst', 'accenture', 'mckinsey', 'bain', 'bcg',
+  'capgemini', 'cognizant', 'tcs', 'infosys', 'wipro', 'ibm', 'microsoft',
+  'google', 'amazon', 'oracle', 'salesforce', 'cisco', 'intel', 'meta',
+  'apple', 'stripe', 'shopify', 'sap', 'adobe', 'netflix', 'uber', 'airbnb',
+  'bloomberg', 'reuters', 'barclays', 'hsbc', 'lloyds', 'natwest', 'santander',
+  'kallidus', 'hubspot', 'zoho', 'zendesk', 'atlassian', 'slack', 'wordpress',
+  // Country & regional tokens
+  'india', 'indian', 'pakistan', 'pakistani', 'bangladesh', 'bangladeshi',
+  'china', 'chinese', 'america', 'american', 'usa', 'europe', 'european',
+  'asia', 'asian', 'pacific', 'africa', 'african', 'germany', 'german', 'france', 'french',
+  'spain', 'spanish', 'italy', 'italian', 'australia', 'australian', 'canada', 'canadian',
+  'brazil', 'brazilian', 'japan', 'japanese', 'russia', 'russian', 'global',
+  'international', 'worldwide', 'national', 'dubai', 'uae', 'singapore',
+  // Role prefixes and form artifacts
+  'senior', 'independent', 'referral', 'referrals', 'enquiry', 'enquiries'
 ]);
 
 function isValidPersonName(name) {
@@ -583,10 +600,16 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     }
   }
 
-  // Standard leadership pattern: Name Role
-  const standardLeadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Director(?:\s+of\s+[A-Za-z]+)?|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)/g;
+  const TITLE_PREFIX_REGEX = '(?:(?:Dr|Prof|Professor|Mr|Mrs|Ms|Miss|Sir|Dame|Lord|Lady)\\.?\\s+)?';
+  const NAME_REGEX = '([A-Z][a-z]+ [A-Z][a-z]+)';
+  const DELIM_REGEX = '[\\s\\n,–|:.-]+';
+  const LEADERSHIP_ROLES_BASE = 'Managing [Dd]irector|Operations [Dd]irector|Director(?:\\s+of\\s+[A-Za-z]+)?|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead';
+
+  // Standard leadership pattern: Name Role (e.g. "Cass Coulston, Founder" or "Dr Cass Coulston. Founder")
+  const standardLeadershipRegex = new RegExp('\\b' + TITLE_PREFIX_REGEX + NAME_REGEX + DELIM_REGEX + '(' + LEADERSHIP_ROLES_BASE + ')\\b', 'g');
   for (const m of text.matchAll(standardLeadershipRegex)) {
-    const candidateName = m[1].trim();
+    const rawName = m[1].trim();
+    const candidateName = stripTitlePrefix(rawName);
     let candidateRole = m[2].trim();
 
     if (!isValidPersonName(candidateName)) continue;
@@ -607,11 +630,12 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     }
   }
 
-  // Reverse leadership patterns: Role Name & Founded by Name
-  const reverseLeadershipRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead|Founded by|Co-founded by|Established by|Led by)[\s\n,–|:\-]+([A-Z][a-z]+ [A-Z][a-z]+)\b/gi;
+  // Reverse leadership patterns: Role Name & Founded by Name (e.g. "Founder. Dr Cass Coulston" or "Led by Founder Cass Coulston")
+  const reverseLeadershipRegex = new RegExp('\\b(' + LEADERSHIP_ROLES_BASE + '|Founded by|Co-founded by|Established by|Led by founder|Led by)' + DELIM_REGEX + TITLE_PREFIX_REGEX + NAME_REGEX + '\\b', 'gi');
   for (const m of text.matchAll(reverseLeadershipRegex)) {
     const rawRole = m[1].trim();
-    const candidateName = m[2].trim();
+    const rawName = m[2].trim();
+    const candidateName = stripTitlePrefix(rawName);
 
     if (!isValidPersonName(candidateName)) continue;
     if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
@@ -620,7 +644,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     if (/^founded by$/i.test(rawRole)) candidateRole = 'Founder';
     else if (/^co-founded by$/i.test(rawRole)) candidateRole = 'Co-Founder';
     else if (/^established by$/i.test(rawRole)) candidateRole = 'Founder';
-    else if (/^led by$/i.test(rawRole)) candidateRole = 'Managing Director';
+    else if (/^led by(?: founder)?$/i.test(rawRole)) candidateRole = 'Founder';
     else if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) candidateRole = 'CEO';
     else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) candidateRole = 'CTO';
     else if (/^cmo$/i.test(rawRole) || /^chief marketing officer$/i.test(rawRole)) candidateRole = 'CMO';
@@ -638,7 +662,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
 
   // Single first-name leadership mentions linked to officers list
   if (Array.isArray(officers) && officers.length > 0) {
-    const singleAfterRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)\s+([A-Z][a-z]+)\b/gi;
+    const singleAfterRegex = new RegExp('\\b(' + LEADERSHIP_ROLES_BASE + ')' + DELIM_REGEX + TITLE_PREFIX_REGEX + '([A-Z][a-z]+)\\b', 'gi');
     for (const m of text.matchAll(singleAfterRegex)) {
       const rawRole = m[1].trim();
       const firstName = m[2].trim();
@@ -674,7 +698,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
       }
     }
 
-    const singleBeforeRegex = /\b([A-Z][a-z]+)[\s,–|-]+(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)\b/gi;
+    const singleBeforeRegex = new RegExp('\\b' + TITLE_PREFIX_REGEX + '([A-Z][a-z]+)' + DELIM_REGEX + '(' + LEADERSHIP_ROLES_BASE + ')\\b', 'gi');
     for (const m of text.matchAll(singleBeforeRegex)) {
       const firstName = m[1].trim();
       const rawRole = m[2].trim();
