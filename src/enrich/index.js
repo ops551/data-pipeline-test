@@ -7,7 +7,7 @@ const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
 const { searchCompany, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
-const { detectPattern, inferEmails, verifyEmail, checkCatchAll } = require('./pattern');
+const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 
 const PUBLIC_EMAIL_PROVIDERS = new Set([
@@ -260,39 +260,28 @@ async function runEnrichment() {
 
       let personLeads = [];
       for (const person of peopleList) {
-         let personEmail = '';
-         let emailSource = '';
-         let verificationStatus = '';
-         let patternDetected = patternInfo.pattern || '';
+         const patternDetected = patternInfo.pattern || '';
+         const resolved = await resolvePersonEmail({
+           person,
+           domain,
+           patternInfo,
+           allExtractedEmails,
+           isCatchAll,
+           officerCount: activeOfficers.length,
+           peopleCount: peopleList.length,
+           websiteUrl: website.url,
+           verifyEmailFn: verifyEmail
+         });
          
-         const inferred = domain ? inferEmails(person.name, domain, patternInfo) : [];
-         const foundExact = inferred.find(e => allExtractedEmails.includes(e));
-         
-         if (foundExact) {
-           personEmail = foundExact;
-           emailSource = website.url || 'search'; 
-           verificationStatus = 'exact_match';
-         } else if (!isCatchAll && inferred.length > 0) {
-           for (const candidate of inferred) {
-             const v = await verifyEmail(candidate);
-             if (v.status === 'valid_domain') {
-               personEmail = candidate;
-               emailSource = 'inferred';
-               verificationStatus = v.reason;
-               break;
-             }
-           }
-         }
-         
-         if (personEmail) {
+         if (resolved && resolved.email) {
             personLeads.push({
                ...person,
-               email: personEmail,
-               email_source_url: emailSource,
+               email: resolved.email,
+               email_source_url: resolved.emailSource,
                pattern_detected: patternDetected,
                pattern_sample_count: patternInfo.sampleCount,
                pattern_confidence: patternInfo.confidence,
-               verification_status: verificationStatus,
+               verification_status: resolved.verificationStatus,
                fallback_used: 'no',
                contact_type: 'person'
             });

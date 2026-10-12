@@ -5,6 +5,7 @@ const {
   inferEmails,
   verifyEmail,
   checkCatchAll,
+  resolvePersonEmail,
   verifyQuickEmailVerification,
   verifySniffmail,
   verifyReoon,
@@ -330,4 +331,179 @@ test('checkCatchAll utilizes raw SMTP verification and never consumes API credit
     restoreEnv();
   }
 });
+
+test('resolvePersonEmail allows solo founders on catch-all domains and prefers first@domain', async () => {
+  const person = { name: 'Lauren Mucklow', weight: 90 };
+  const domain = 'whatshesaid.uk';
+  const verifyEmailFn = async (email) => {
+    assert.strictEqual(email, 'lauren@whatshesaid.uk');
+    return { status: 'valid_domain', reason: 'smtp_250' };
+  };
+
+  const result = await resolvePersonEmail({
+    person,
+    domain,
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 1,
+    verifyEmailFn
+  });
+
+  assert.deepStrictEqual(result, {
+    email: 'lauren@whatshesaid.uk',
+    emailSource: 'inferred_catch_all',
+    verificationStatus: 'catch_all_inferred'
+  });
+});
+
+test('resolvePersonEmail handles 2-officer micro-SMEs on catch-all domains using first.last or pattern', async () => {
+  const person = { name: 'Jane Smith', weight: 80 };
+  const domain = 'company.co.uk';
+
+  // Without pattern: defaults to first.last@domain
+  const res1 = await resolvePersonEmail({
+    person,
+    domain,
+    isCatchAll: true,
+    officerCount: 2,
+    peopleCount: 2,
+    verifyEmailFn: async (email) => {
+      assert.strictEqual(email, 'jane.smith@company.co.uk');
+      return { status: 'valid_domain', reason: 'smtp_250' };
+    }
+  });
+
+  assert.deepStrictEqual(res1, {
+    email: 'jane.smith@company.co.uk',
+    emailSource: 'inferred_catch_all',
+    verificationStatus: 'catch_all_inferred'
+  });
+
+  // With pattern: respects detected pattern
+  const res2 = await resolvePersonEmail({
+    person,
+    domain,
+    patternInfo: { pattern: 'f.last' },
+    isCatchAll: true,
+    officerCount: 2,
+    peopleCount: 2,
+    verifyEmailFn: async (email) => {
+      assert.strictEqual(email, 'j.smith@company.co.uk');
+      return { status: 'valid_domain', reason: 'smtp_250' };
+    }
+  });
+
+  assert.deepStrictEqual(res2, {
+    email: 'j.smith@company.co.uk',
+    emailSource: 'inferred_catch_all',
+    verificationStatus: 'catch_all_inferred'
+  });
+});
+
+test('resolvePersonEmail blocks non-micro SMEs and low-weight officers on catch-all domains', async () => {
+  // Non-micro SME (>2 officers and >2 people)
+  const resNonMicro = await resolvePersonEmail({
+    person: { name: 'Alice Walker', weight: 90 },
+    domain: 'bigcorp.co.uk',
+    isCatchAll: true,
+    officerCount: 3,
+    peopleCount: 3,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resNonMicro, null);
+
+  // Boundary leak test: 5 registered officers but only 1 person found on site
+  const resOfficerBoundary = await resolvePersonEmail({
+    person: { name: 'Alice Walker', weight: 90 },
+    domain: 'bigcorp.co.uk',
+    isCatchAll: true,
+    officerCount: 5,
+    peopleCount: 1,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resOfficerBoundary, null);
+
+  // Boundary test: 1 officer but 5 people found on site
+  const resPeopleBoundary = await resolvePersonEmail({
+    person: { name: 'Alice Walker', weight: 90 },
+    domain: 'bigcorp.co.uk',
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 5,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resPeopleBoundary, null);
+
+  // Low weight role (<30)
+  const resLowWeight = await resolvePersonEmail({
+    person: { name: 'Bob Low', weight: 20 },
+    domain: 'sme.co.uk',
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 1,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resLowWeight, null);
+});
+
+test('resolvePersonEmail prioritizes exact match from extracted emails', async () => {
+  let verifyCalled = false;
+  const result = await resolvePersonEmail({
+    person: { name: 'Lauren Mucklow', weight: 90 },
+    domain: 'whatshesaid.uk',
+    allExtractedEmails: ['lauren.mucklow@whatshesaid.uk', 'contact@whatshesaid.uk'],
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 1,
+    websiteUrl: 'https://whatshesaid.uk',
+    verifyEmailFn: async () => {
+      verifyCalled = true;
+      return { status: 'valid_domain', reason: 'smtp_250' };
+    }
+  });
+
+  assert.strictEqual(verifyCalled, false);
+  assert.deepStrictEqual(result, {
+    email: 'lauren.mucklow@whatshesaid.uk',
+    emailSource: 'https://whatshesaid.uk',
+    verificationStatus: 'exact_match'
+  });
+});
+
+test('resolvePersonEmail rejects candidate if MX verification fails on catch-all domain', async () => {
+  const result = await resolvePersonEmail({
+    person: { name: 'Lauren Mucklow', weight: 90 },
+    domain: 'invalid-mx-domain.uk',
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 1,
+    verifyEmailFn: async () => ({ status: 'invalid', reason: 'dns_error' })
+  });
+
+  assert.strictEqual(result, null);
+});
+
+test('resolvePersonEmail sequentially checks candidates on non-catch-all domains', async () => {
+  const verifiedList = [];
+  const result = await resolvePersonEmail({
+    person: { name: 'John Doe', weight: 90 },
+    domain: 'example.co.uk',
+    isCatchAll: false,
+    verifyEmailFn: async (email) => {
+      verifiedList.push(email);
+      if (email === 'john@example.co.uk') {
+        return { status: 'valid_domain', reason: 'quickemailverification' };
+      }
+      return { status: 'invalid', reason: 'mailbox_not_found' };
+    }
+  });
+
+  assert.deepStrictEqual(result, {
+    email: 'john@example.co.uk',
+    emailSource: 'inferred',
+    verificationStatus: 'quickemailverification'
+  });
+  assert.deepStrictEqual(verifiedList, ['john.doe@example.co.uk', 'john@example.co.uk']);
+});
+
 
