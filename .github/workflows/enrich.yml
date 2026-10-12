@@ -1,0 +1,87 @@
+name: Enrichment Automation
+
+"on":
+  schedule:
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: "Number of companies to enrich per run"
+        required: false
+        type: string
+        default: "50"
+  repository_dispatch:
+    types:
+      - enrich-run
+
+concurrency:
+  group: enrich-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  enrich:
+    name: Auto-Collect and Enrich Leads
+    if: github.repository == 'ops551/data-pipeline-test' || github.repository == 'Nahid625/Recent-uk-Companys'
+    runs-on: ubuntu-latest
+
+    env:
+      GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+      ENRICH_BATCH_SIZE: ${{ inputs.batch_size || '50' }}
+      COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
+      DAYS_BACK: "30"
+      QUICK_EMAIL_VERIFICATION_API_KEY: ${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}
+      SNIFFMAIL_API_KEY: ${{ secrets.SNIFFMAIL_API_KEY }}
+      REON_API_KEY: ${{ secrets.REON_API_KEY }}
+      ZEROBOUNCE: ${{ secrets.ZEROBOUNCE }}
+      VERIFALIA_USERNAME: ${{ secrets.VERIFALIA_USERNAME }}
+      VERIFALIA_PASSWORD: ${{ secrets.VERIFALIA_PASSWORD }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Puppeteer Browsers
+        run: npx puppeteer browsers install chrome
+
+      - name: Collect recent companies
+        run: npm start
+
+      - name: Enrich companies
+        run: npm run enrich
+
+      - name: Check CSV changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain *.csv)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in CSV files."
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in CSV files."
+          fi
+
+      - name: Commit and Push Directly to main
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add *.csv
+          git commit -m "chore(enrich): auto-collect and enrich leads [run ${{ github.run_id }}]"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break || sleep 3
+          done
