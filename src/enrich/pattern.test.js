@@ -363,12 +363,12 @@ test('checkCatchAll utilizes raw SMTP verification and never consumes API credit
   }
 });
 
-test('resolvePersonEmail allows solo founders on catch-all domains and prefers first@domain', async () => {
+test('resolvePersonEmail allows solo founders on catch-all domains with verified API and prefers first@domain', async () => {
   const person = { name: 'Lauren Mucklow', weight: 90 };
   const domain = 'whatshesaid.uk';
   const verifyEmailFn = async (email) => {
     assert.strictEqual(email, 'lauren@whatshesaid.uk');
-    return { status: 'valid_domain', reason: 'smtp_250' };
+    return { status: 'valid_domain', reason: 'sniffmail' };
   };
 
   const result = await resolvePersonEmail({
@@ -387,7 +387,29 @@ test('resolvePersonEmail allows solo founders on catch-all domains and prefers f
   });
 });
 
-test('resolvePersonEmail handles 2-officer micro-SMEs on catch-all domains using first.last or pattern', async () => {
+test('resolvePersonEmail rejects raw SMTP (smtp_250) on catch-all domains to prevent bounce traps (Unit 5.21)', async () => {
+  const person = { name: 'Syed Jafri', weight: 90 };
+  const domain = 'witnessme.com';
+  const verifyEmailFn = async (email) => {
+    assert.strictEqual(email, 'syed@witnessme.com');
+    // Raw SMTP returns 250 on Google Workspace catch-all, but mailbox does not exist
+    return { status: 'valid_domain', reason: 'smtp_250' };
+  };
+
+  const result = await resolvePersonEmail({
+    person,
+    domain,
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 1,
+    verifyEmailFn
+  });
+
+  // MUST be rejected because smtp_250 is unreliable on catch-all domains
+  assert.strictEqual(result, null);
+});
+
+test('resolvePersonEmail handles 2-officer micro-SMEs on catch-all domains using first.last or pattern with API verification', async () => {
   const person = { name: 'Jane Smith', weight: 80 };
   const domain = 'company.co.uk';
 
@@ -400,7 +422,7 @@ test('resolvePersonEmail handles 2-officer micro-SMEs on catch-all domains using
     peopleCount: 2,
     verifyEmailFn: async (email) => {
       assert.strictEqual(email, 'jane.smith@company.co.uk');
-      return { status: 'valid_domain', reason: 'smtp_250' };
+      return { status: 'valid_domain', reason: 'quickemailverification' };
     }
   });
 
@@ -420,7 +442,7 @@ test('resolvePersonEmail handles 2-officer micro-SMEs on catch-all domains using
     peopleCount: 2,
     verifyEmailFn: async (email) => {
       assert.strictEqual(email, 'j.smith@company.co.uk');
-      return { status: 'valid_domain', reason: 'smtp_250' };
+      return { status: 'valid_domain', reason: 'reoon' };
     }
   });
 

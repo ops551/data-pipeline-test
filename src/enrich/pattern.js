@@ -573,7 +573,10 @@ async function resolvePersonEmail({
 
   try {
     const v = await verifyEmailFn(candidate);
-    if (v && v.status === 'valid_domain') {
+    // On catch-all domains, raw SMTP (smtp_250) is unreliable because catch-all servers
+    // (Google Workspace, Microsoft 365, cPanel) accept any recipient during SMTP handshake and bounce later.
+    // Inferred emails on catch-all domains MUST be verified by a dedicated verification API (Sniffmail, QEV, Reoon, etc.).
+    if (v && v.status === 'valid_domain' && v.reason !== 'smtp_250') {
       return {
         email: candidate,
         emailSource: 'inferred_catch_all',

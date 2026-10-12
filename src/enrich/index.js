@@ -412,7 +412,7 @@ async function runEnrichment() {
          if (!bestGeneric && domain) {
            const fallbackEmail = `info@${domain}`;
            const v = await verifyEmail(fallbackEmail);
-           if (v.status === 'valid_domain') {
+           if (v.status === 'valid_domain' && (!isCatchAll || v.reason !== 'smtp_250')) {
              bestGeneric = fallbackEmail;
              vStatus = 'inferred_fallback';
            }
