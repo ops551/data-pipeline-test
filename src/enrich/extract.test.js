@@ -524,6 +524,68 @@ test('extractEmails blocks emails from directory domains', () => {
   assert.deepStrictEqual(emails, ['hello@mycompany.co.uk']);
 });
 
+test('isValidPersonName rejects corporate brands and geographic country names (Unit 5.20)', () => {
+  const { isValidPersonName } = require('./extract');
+  assert.strictEqual(isValidPersonName('Deloitte India'), false);
+  assert.strictEqual(isValidPersonName('PwC UK'), false);
+  assert.strictEqual(isValidPersonName('Google Asia'), false);
+  assert.strictEqual(isValidPersonName('Accenture USA'), false);
+  assert.strictEqual(isValidPersonName('McKinsey Europe'), false);
+  assert.strictEqual(isValidPersonName('Amazon Global'), false);
+  assert.strictEqual(isValidPersonName('Cass Coulston'), true);
+  assert.strictEqual(isValidPersonName('Jane Smith'), true);
+});
+
+test('extractPeople extracts leaders with honorific titles and tag boundaries (Unit 5.20)', () => {
+  const { extractPeople } = require('./extract');
+  
+  // Test case 1: Beacon Consulting pattern: <p>Founder</p><h3>Dr Cass Coulston</h3>
+  const htmlBeacon = `
+    <div>
+      <p class="eyebrow">Founder</p>
+      <h3>Dr Cass Coulston</h3>
+      <p>Organisational Psychologist</p>
+    </div>
+  `;
+  const people1 = extractPeople(htmlBeacon, [], 'https://beaconconsulting.london/about/team', 'Beacon Consulting Ltd');
+  assert.strictEqual(people1.length, 1);
+  assert.strictEqual(people1[0].name, 'Cass Coulston');
+  assert.strictEqual(people1[0].role, 'Founder');
+
+  // Test case 2: Heading card pattern: <h3>Cass Coulston</h3><p>Founder</p>
+  const htmlCard = `
+    <div class="card">
+      <h3>Dr Cass Coulston</h3>
+      <p class="role">Founder</p>
+    </div>
+  `;
+  const people2 = extractPeople(htmlCard, [], 'https://beaconconsulting.london/about/team', 'Beacon Consulting Ltd');
+  assert.strictEqual(people2.length, 1);
+  assert.strictEqual(people2[0].name, 'Cass Coulston');
+  assert.strictEqual(people2[0].role, 'Founder');
+
+  // Test case 3: Meta description or natural mention: "led by founder Cass Coulston"
+  const htmlMention = `
+    <div>
+      <p>Beacon Consulting is led by founder Cass Coulston in London.</p>
+    </div>
+  `;
+  const people3 = extractPeople(htmlMention, [], 'https://beaconconsulting.london/', 'Beacon Consulting Ltd');
+  assert.strictEqual(people3.length, 1);
+  assert.strictEqual(people3[0].name, 'Cass Coulston');
+  assert.strictEqual(people3[0].role, 'Founder');
+
+  // Test case 4: Reject "Deloitte India, Managing Director" from search snippet
+  const htmlSnippet = `
+    <div>
+      <p>Deloitte India, Managing Director at Beacon Consulting placement services.</p>
+    </div>
+  `;
+  const people4 = extractPeople(htmlSnippet, [], 'search_snippet', 'Beacon Consulting Ltd');
+  assert.strictEqual(people4.length, 0);
+});
+
+
 
 
 
