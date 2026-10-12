@@ -126,7 +126,7 @@ async function runEnrichment() {
             console.warn('  Company homepage returned no readable page content.');
           }
           if (page.html) {
-            peopleFromSite = extractPeople(page.html, activeOfficers, page.finalUrl);
+            peopleFromSite = extractPeople(page.html, activeOfficers, page.finalUrl, company.company_name);
 
             // Crawl high-value contact & team subpages
             try {
@@ -170,7 +170,7 @@ async function runEnrichment() {
                 if (subPage.html) {
                   const subEmails = extractEmails(subPage.html);
                   if (subEmails.length > 0) websiteEmails.push(...subEmails);
-                  const subPeople = extractPeople(subPage.html, activeOfficers, subUrl);
+                  const subPeople = extractPeople(subPage.html, activeOfficers, subUrl, company.company_name);
                   if (subPeople.length > 0) peopleFromSite.push(...subPeople);
                 }
               }

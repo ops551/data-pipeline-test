@@ -144,3 +144,133 @@ test('rankEmailsByCompanyName accepts legitimate public email matching full bran
     ['kmlsecure@outlook.com']
   );
 });
+
+test('stripTestimonialsAndReviews removes blockquotes, testimonial/review containers, and review headings', () => {
+  const { stripTestimonialsAndReviews, extractPeople } = require('./extract');
+  const html = `
+    <div>
+      <h2>Our Leadership</h2>
+      <p>Jane Smith - Managing Director</p>
+      <blockquote>
+        <p>"Jane was great to work with!" - Customer Bob, CEO</p>
+      </blockquote>
+      <div class="testimonial-card">
+        <p>John Doe, Founder of ClientCorp says we are the best.</p>
+      </div>
+      <section id="case-studies">
+        <h3>Case Studies</h3>
+        <p>Alice Walker, Director</p>
+      </section>
+      <h3>What our clients say</h3>
+      <p>Charlie Brown, President loved our work</p>
+      <h2>Our Office</h2>
+    </div>
+  `;
+  const cleaned = stripTestimonialsAndReviews(html);
+  assert.ok(!cleaned.includes('Customer Bob'));
+  assert.ok(!cleaned.includes('testimonial-card'));
+  assert.ok(!cleaned.includes('John Doe'));
+  assert.ok(!cleaned.includes('Alice Walker'));
+  assert.ok(!cleaned.includes('Charlie Brown'));
+  assert.ok(cleaned.includes('Jane Smith'));
+  assert.ok(cleaned.includes('Our Office'));
+
+  const people = extractPeople(html, [], 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Jane Smith');
+  assert.strictEqual(people[0].role, 'Managing Director');
+});
+
+test('isExternalEntity rejects external organizations and extractPeople discards external leaders', () => {
+  const { isExternalEntity, extractPeople } = require('./extract');
+
+  assert.strictEqual(
+    isExternalEntity('Second2None School', 'What She Said Ltd', 'https://whatshesaid.co.uk'),
+    true
+  );
+  assert.strictEqual(
+    isExternalEntity('What She Said', 'What She Said Ltd', 'https://whatshesaid.co.uk'),
+    false
+  );
+  assert.strictEqual(
+    isExternalEntity('the company', 'What She Said Ltd', 'https://whatshesaid.co.uk'),
+    false
+  );
+  assert.strictEqual(
+    isExternalEntity('our business', 'What She Said Ltd', 'https://whatshesaid.co.uk'),
+    false
+  );
+
+  const html = `
+    <div>
+      <p>Laura Nicholson, Founder & Director of Second2None School spoke at our event.</p>
+      <p>Sarah Connor, Founder of What She Said Ltd led the session.</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://whatshesaid.co.uk', 'What She Said Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Sarah Connor');
+  assert.strictEqual(people[0].role, 'Founder');
+});
+
+test('isValidPersonName discards false names like Our Co, The Team, About Us, Read More', () => {
+  const { isValidPersonName, extractPeople } = require('./extract');
+
+  assert.strictEqual(isValidPersonName('Our Co'), false);
+  assert.strictEqual(isValidPersonName('The Team'), false);
+  assert.strictEqual(isValidPersonName('About Us'), false);
+  assert.strictEqual(isValidPersonName('Meet Us'), false);
+  assert.strictEqual(isValidPersonName('Read More'), false);
+  assert.strictEqual(isValidPersonName('Jane Smith'), true);
+  assert.strictEqual(isValidPersonName('Lauren Mucklow'), true);
+
+  const html = `
+    <div>
+      <p>Our Co - Managing Director</p>
+      <p>The Team - Operations Director</p>
+      <p>About Us - CEO</p>
+      <p>Jane Smith - Managing Director</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Jane Smith');
+});
+
+test('extractPeople extracts reverse leadership patterns: Role Name & Founded by Name', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Co-Founder Lauren Mucklow started this journey in 2020.</p>
+      <p>Founded by Jane Smith in Manchester.</p>
+      <p>Managing Director David Brown heads the operations.</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 3);
+  assert.strictEqual(people[0].name, 'Lauren Mucklow');
+  assert.strictEqual(people[0].role, 'Co-Founder');
+  assert.strictEqual(people[1].name, 'Jane Smith');
+  assert.strictEqual(people[1].role, 'Founder');
+  assert.strictEqual(people[2].name, 'David Brown');
+  assert.strictEqual(people[2].role, 'Managing Director');
+});
+
+test('extractPeople links single first-name leadership mentions to officer list', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Co-Founder Lauren is passionate about creating great design.</p>
+    </div>
+  `;
+  const officers = [
+    { name: 'Lauren Mucklow', role: 'director' }
+  ];
+  const people = extractPeople(html, officers, 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Lauren Mucklow');
+  assert.strictEqual(people[0].role, 'Co-Founder');
+});
+
