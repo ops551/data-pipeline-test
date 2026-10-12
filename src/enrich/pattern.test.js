@@ -412,6 +412,28 @@ test('resolvePersonEmail blocks non-micro SMEs and low-weight officers on catch-
   });
   assert.strictEqual(resNonMicro, null);
 
+  // Boundary leak test: 5 registered officers but only 1 person found on site
+  const resOfficerBoundary = await resolvePersonEmail({
+    person: { name: 'Alice Walker', weight: 90 },
+    domain: 'bigcorp.co.uk',
+    isCatchAll: true,
+    officerCount: 5,
+    peopleCount: 1,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resOfficerBoundary, null);
+
+  // Boundary test: 1 officer but 5 people found on site
+  const resPeopleBoundary = await resolvePersonEmail({
+    person: { name: 'Alice Walker', weight: 90 },
+    domain: 'bigcorp.co.uk',
+    isCatchAll: true,
+    officerCount: 1,
+    peopleCount: 5,
+    verifyEmailFn: async () => ({ status: 'valid_domain', reason: 'smtp_250' })
+  });
+  assert.strictEqual(resPeopleBoundary, null);
+
   // Low weight role (<30)
   const resLowWeight = await resolvePersonEmail({
     person: { name: 'Bob Low', weight: 20 },

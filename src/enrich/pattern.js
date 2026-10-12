@@ -536,20 +536,20 @@ async function resolvePersonEmail({
     return null;
   }
 
-  const countOfficers = officerCount !== undefined && officerCount !== null ? officerCount : (peopleCount || 0);
-  const countPeople = peopleCount !== undefined && peopleCount !== null ? peopleCount : (officerCount || 0);
+  const countOfficers = (officerCount !== undefined && officerCount !== null) ? officerCount : (peopleCount || 0);
+  const countPeople = (peopleCount !== undefined && peopleCount !== null) ? peopleCount : (officerCount || 0);
 
-  const isMicroSme = (countOfficers <= 2 || countPeople <= 2) && (person.weight || 0) >= 30;
-  if (!isMicroSme || (countOfficers > 2 && countPeople > 2)) {
+  // A micro-SME must have at most 2 officers AND at most 2 people, and role weight >= 30
+  const isMicroSme = countOfficers <= 2 && countPeople <= 2 && (person.weight || 0) >= 30;
+  if (!isMicroSme) {
     return null;
   }
 
   let candidate;
   if (patternInfo && patternInfo.pattern) {
     candidate = inferred[0];
-  } else if (countOfficers === 2 || (countOfficers === 0 && countPeople === 2)) {
-    candidate = inferred[0];
-  } else if (countOfficers <= 1 || countPeople <= 1) {
+  } else if (countOfficers <= 1 && countPeople <= 1) {
+    // True solo founder (at most 1 officer and at most 1 person) -> prefer first@domain
     const cleanName = person.name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
     const parts = cleanName.split(/\s+/).filter(Boolean);
     while (parts.length > 1 && TITLE_PREFIXES.has(parts[0])) {
@@ -559,6 +559,7 @@ async function resolvePersonEmail({
     const firstEmail = first ? `${first}@${domain}` : null;
     candidate = (firstEmail && inferred.includes(firstEmail)) ? firstEmail : (firstEmail || inferred[0]);
   } else {
+    // 2 directors/officers -> default to first.last@domain
     candidate = inferred[0];
   }
 
