@@ -136,11 +136,13 @@ function getPendingLeads(options = {}) {
       const availableEmails = emails.filter(email =>
         isValidEmailAddress(email) &&
         !hasLegacy &&
-        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`)
+        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`) &&
+        !reservedRecipients.has(email.toLowerCase())
       );
       if (availableEmails.length === 0) return false;
       eligibleEmails.set(lead, availableEmails);
       sentCompanyEmails.add(`${compNum}:${availableEmails[0].toLowerCase()}`);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
       return true;
     }
     if (channel === 'email') {
@@ -152,12 +154,14 @@ function getPendingLeads(options = {}) {
       const hasLegacy = sentCompanyEmails.has(`${compNum}:__legacy_no_email__`);
       const availableEmails = emails.filter(email =>
         !hasLegacy &&
-        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`)
+        !sentCompanyEmails.has(`${compNum}:${email.toLowerCase()}`) &&
+        !reservedRecipients.has(email.toLowerCase())
       );
       if (availableEmails.length === 0) return false;
 
       eligibleEmails.set(lead, availableEmails);
       sentCompanyEmails.add(`${compNum}:${availableEmails[0].toLowerCase()}`);
+      reservedRecipients.add(availableEmails[0].toLowerCase());
       return true;
     }
     if (channel === 'whatsapp') {
