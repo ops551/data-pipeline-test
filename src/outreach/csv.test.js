@@ -188,7 +188,7 @@ test('getPendingLeads excludes leads that are already in sent_leads.csv', () => 
   assert.equal(pending[0].company_number, '34567890');
 });
 
-test('getPendingLeads allows sending to the same recipient for a different company', () => {
+test('cross-company duplicate prevention: excludes Company B if identical email was sent under Company A', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   const duplicateRecipientLeads = [
     { ...sampleLeads[0], emails: 'ukteammail@findawealthmanager.com' },
@@ -204,11 +204,11 @@ test('getPendingLeads allows sending to the same recipient for a different compa
   }, sentLeadsPath);
 
   const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
-  // Since tracking is company + email, all 3 companies are pending because 98765432 is a different company
-  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678', '23456789', '34567890']);
+  // Both 12345678 and 23456789 are excluded because ukteammail was already sent to 98765432
+  assert.deepEqual(pending.map(lead => lead.company_number), ['34567890']);
 });
 
-test('getPendingLeads selects a shared recipient for multiple companies in the same run', () => {
+test('intra-batch duplicate prevention: returns only Lead 1 when Lead 1 and Lead 2 share identical email address', () => {
   const { leadsPath, sentLeadsPath } = createTempWorkspace();
   seedLeadsFile(leadsPath, [
     { ...sampleLeads[0], emails: 'shared@example.com' },
@@ -216,8 +216,33 @@ test('getPendingLeads selects a shared recipient for multiple companies in the s
   ]);
 
   const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
-  // With composite identity, both companies get the email
-  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678', '23456789']);
+  // Only the first lead gets selected to prevent duplicate emails in the same run
+  assert.deepEqual(pending.map(lead => lead.company_number), ['12345678']);
+});
+
+test('multi-person isolation within same company: two founders with different emails under same company remain eligible', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+  const founderAlice = {
+    ...sampleLeads[0],
+    company_number: '66666666',
+    person_name: 'Alice Smith',
+    emails: 'alice@company.co.uk'
+  };
+  const founderBob = {
+    ...sampleLeads[1],
+    company_number: '66666666',
+    person_name: 'Bob Jones',
+    emails: 'bob@company.co.uk'
+  };
+
+  seedLeadsFile(leadsPath, [founderAlice, founderBob]);
+
+  const pending = getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email' });
+  assert.equal(pending.length, 2);
+  assert.equal(pending[0].person_name, 'Alice Smith');
+  assert.equal(pending[0].emails, 'alice@company.co.uk');
+  assert.equal(pending[1].person_name, 'Bob Jones');
+  assert.equal(pending[1].emails, 'bob@company.co.uk');
 });
 
 test('getPendingLeads sends an unsent alternate address when the first was already used for THIS company', () => {
