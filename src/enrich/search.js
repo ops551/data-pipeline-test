@@ -264,5 +264,7 @@ module.exports = {
   getSld,
   isBlocked,
   isLikelyCompanyWebsite,
-  extractWebsiteContext
+  extractWebsiteContext,
+  DIRECTORY_DOMAINS,
+  BLOCKED_DOMAINS
 };
