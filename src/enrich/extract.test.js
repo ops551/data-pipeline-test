@@ -476,5 +476,42 @@ test('peopleMap upgrades officer to Founder and retains multi-person decision ma
   assert.strictEqual(peopleList[1].weight, 85);
 });
 
+test('rankEmailsByCompanyName accepts 3-letter words like red box', () => {
+  const { rankEmailsByCompanyName } = require('./extract');
+  const emails = ['info@redbox.co.uk', 'random@other.com'];
+  const ranked = rankEmailsByCompanyName(emails, 'RED BOX LTD');
+  assert.strictEqual(ranked.length, 1);
+  assert.strictEqual(ranked[0], 'info@redbox.co.uk');
+});
+
+test('extractPeople matches an officer with title prefix like Dr John Smith', () => {
+  const { extractPeople } = require('./extract');
+  const html = `
+    <div>
+      <p>John Smith is our Founder and lead researcher.</p>
+    </div>
+  `;
+  const officers = [{ name: 'Dr John Smith', role: 'Director' }];
+  const people = extractPeople(html, officers, 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Dr John Smith');
+  assert.strictEqual(people[0].role, 'Founder');
+});
+
+test('extractPeople matches single first name with title-prefixed officer', () => {
+  const { extractPeople } = require('./extract');
+  const html = `
+    <div>
+      <p>Founder John established the clinic in 2018.</p>
+    </div>
+  `;
+  const officers = [{ name: 'Prof John Doe', role: 'Director' }];
+  const people = extractPeople(html, officers, 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Prof John Doe');
+  assert.strictEqual(people[0].role, 'Founder');
+});
+
+
 
 

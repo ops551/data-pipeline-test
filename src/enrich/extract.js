@@ -135,7 +135,7 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
 
   const cleanName = (companyName || '').toLowerCase().replace(/\b(ltd|limited|uk|co|inc|cic)\b/g, '').replace(/[^a-z0-9]/g, ' ').trim();
   const words = cleanName.split(/\s+/).filter(w =>
-    w.length > 3 && !GENERIC_COMPANY_TERMS.has(w) && !UK_GEO_WORDS.has(w)
+    w.length >= 3 && !GENERIC_COMPANY_TERMS.has(w) && !UK_GEO_WORDS.has(w)
   );
   const joinedName = words.join('');
   const officerNames = String(officersStr || '')
@@ -409,6 +409,19 @@ function hasExternalEntityContext(text, matchIdx, matchLength, companyName, sour
   return false;
 }
 
+const TITLE_PREFIXES = new Set([
+  'dr', 'mr', 'mrs', 'ms', 'miss', 'prof', 'professor', 'sir', 'dame', 'lord', 'lady', 'rev', 'reverend'
+]);
+
+function stripTitlePrefix(name) {
+  if (!name || typeof name !== 'string') return '';
+  const parts = name.trim().split(/\s+/);
+  while (parts.length > 1 && TITLE_PREFIXES.has(parts[0].toLowerCase().replace(/\./g, ''))) {
+    parts.shift();
+  }
+  return parts.join(' ');
+}
+
 function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   if (!html) return [];
 
@@ -426,11 +439,22 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
       const nameStr = officer.name;
       if (!nameStr) continue;
 
-      let matchIdx = textLower.indexOf(nameStr.toLowerCase());
-      let matchLength = nameStr.length;
+      const cleanOfficerName = stripTitlePrefix(nameStr);
+      const searchTargets = cleanOfficerName && cleanOfficerName.toLowerCase() !== nameStr.toLowerCase()
+        ? [cleanOfficerName, nameStr]
+        : [nameStr];
 
-      if (matchIdx === -1) {
-        const nameParts = nameStr.split(' ');
+      let matchIdx = -1;
+      let matchLength = 0;
+
+      for (const targetName of searchTargets) {
+        matchIdx = textLower.indexOf(targetName.toLowerCase());
+        if (matchIdx !== -1) {
+          matchLength = targetName.length;
+          break;
+        }
+
+        const nameParts = targetName.split(' ');
         if (nameParts.length >= 3) {
           const first = nameParts[0];
           const last = nameParts[nameParts.length - 1];
@@ -440,6 +464,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
           if (m) {
             matchIdx = m.index;
             matchLength = m[0].length;
+            break;
           }
         }
       }
@@ -501,6 +526,13 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         }
 
         foundNames.add(nameStr.toLowerCase());
+        if (cleanOfficerName) {
+          foundNames.add(cleanOfficerName.toLowerCase());
+          const cParts = cleanOfficerName.toLowerCase().split(/\s+/);
+          if (cParts.length >= 2) {
+            foundNames.add(`${cParts[0]} ${cParts[cParts.length - 1]}`);
+          }
+        }
         const nParts = nameStr.toLowerCase().split(/\s+/);
         if (nParts.length >= 2) {
           foundNames.add(`${nParts[0]} ${nParts[nParts.length - 1]}`);
@@ -581,7 +613,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
 
       const matchingOfficers = officers.filter((o) => {
         if (!o.name) return false;
-        const oParts = o.name.trim().split(/\s+/);
+        const clean = stripTitlePrefix(o.name);
+        const oParts = (clean || o.name).trim().split(/\s+/);
         return oParts[0].toLowerCase() === firstName.toLowerCase();
       });
 
@@ -594,6 +627,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
         foundNames.add(matchingOfficer.name.toLowerCase());
+        const cleanMatched = stripTitlePrefix(matchingOfficer.name);
+        if (cleanMatched) foundNames.add(cleanMatched.toLowerCase());
         found.push({
           name: matchingOfficer.name,
           role: role,
@@ -614,7 +649,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
 
       const matchingOfficers = officers.filter((o) => {
         if (!o.name) return false;
-        const oParts = o.name.trim().split(/\s+/);
+        const clean = stripTitlePrefix(o.name);
+        const oParts = (clean || o.name).trim().split(/\s+/);
         return oParts[0].toLowerCase() === firstName.toLowerCase();
       });
 
@@ -627,6 +663,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
         foundNames.add(matchingOfficer.name.toLowerCase());
+        const cleanMatched = stripTitlePrefix(matchingOfficer.name);
+        if (cleanMatched) foundNames.add(cleanMatched.toLowerCase());
         found.push({
           name: matchingOfficer.name,
           role: role,

@@ -180,11 +180,15 @@ async function verifyQuickEmailVerification(email, apiKey) {
   if (isQuotaExceeded(res.status, data)) {
     return { quotaExceeded: true };
   }
-  const isValid = data.result === 'valid';
+  const isDeliverable = data.result === 'valid';
+  const isSafe = String(data.safe_to_send).toLowerCase() === 'true';
+  const isAcceptAll = String(data.accept_all).toLowerCase() === 'true';
+  const isValid = isDeliverable && isSafe && !isAcceptAll;
   return {
     success: true,
     isValid,
-    reason: isValid ? 'quickemailverification' : (data.reason || 'qev_invalid')
+    isCatchAll: isAcceptAll,
+    reason: isValid ? 'quickemailverification' : (isAcceptAll ? 'qev_accept_all_unsafe' : (data.reason || 'qev_invalid'))
   };
 }
 
@@ -209,10 +213,12 @@ async function verifySniffmail(email, apiKey) {
   if (isQuotaExceeded(res.status, data)) {
     return { quotaExceeded: true };
   }
-  const isValid = data.is_deliverable === true || data.is_valid === true;
+  const isValid = data.is_valid === true && data.is_deliverable === true && data.is_reachable !== 'risky';
+  const isCatchAll = Boolean(data.is_catchall || data.catch_all || data.is_reachable === 'risky');
   return {
     success: true,
     isValid,
+    isCatchAll,
     reason: isValid ? 'sniffmail' : (data.reason || 'sniffmail_invalid')
   };
 }
@@ -230,11 +236,13 @@ async function verifyReoon(email, apiKey) {
   if (isQuotaExceeded(res.status, data)) {
     return { quotaExceeded: true };
   }
-  const isValid = data.status === 'valid' || data.status === 'safe';
+  const isCatchAll = data.status === 'catch_all' || data.is_catch_all === true;
+  const isValid = (data.status === 'valid' || data.status === 'safe') && !isCatchAll;
   return {
     success: true,
     isValid,
-    reason: isValid ? 'reoon' : (data.status || 'reoon_invalid')
+    isCatchAll,
+    reason: isValid ? 'reoon' : (isCatchAll ? 'reoon_catch_all' : (data.status || 'reoon_invalid'))
   };
 }
 
