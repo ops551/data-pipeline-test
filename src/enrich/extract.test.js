@@ -512,6 +512,18 @@ test('extractPeople matches single first name with title-prefixed officer', () =
   assert.strictEqual(people[0].role, 'Founder');
 });
 
+test('extractEmails blocks emails from directory domains', () => {
+  const text = `
+    Find us on Checkatrade: reviews@checkatrade.com
+    Listed on Yell: support@yell.com
+    Trustpilot badge: info@trustpilot.com
+    Direct contact: hello@mycompany.co.uk
+    Old 192 directory listing: data@192.com
+  `;
+  const emails = extractEmails(text);
+  assert.deepStrictEqual(emails, ['hello@mycompany.co.uk']);
+});
+
 
 
 

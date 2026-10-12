@@ -75,6 +75,18 @@ const TITLES = new Set([
   "LADY",
 ]);
 
+const INVALID_FIRST_NAME_TOKENS = new Set([
+  ...TITLES,
+  "FINANCE", "MANAGING", "OPERATIONS", "MARKETING", "EXECUTIVE",
+  "DIRECTOR", "OFFICER", "MANAGER", "HEAD", "LEAD", "FOUNDER",
+  "COFOUNDER", "CO", "CEO", "CTO", "CFO", "COO", "CMO",
+  "PRESIDENT", "VP", "CHIEF", "PARTNER", "PRINCIPAL", "OWNER",
+  "TEAM", "STAFF", "OUR", "THE", "ADMIN", "INFO", "SALES",
+  "SUPPORT", "ENQUIRIES", "ENQUIRY", "CONTACT", "OFFICE", "GENERAL", "CUSTOMER",
+  "ABOUT", "US", "READ", "MORE", "SERVICE", "SERVICES", "COMPANY",
+  "HELP", "DESK", "CARE", "LINE", "CENTRE", "CENTER", "COMMUNITY"
+]);
+
 function extractFirstName(rawName) {
   if (!rawName || typeof rawName !== "string") return "";
   const trimmed = rawName.trim();
@@ -89,8 +101,8 @@ function extractFirstName(rawName) {
   const tokens = namePart.split(/\s+/).filter(Boolean);
   for (const token of tokens) {
     const cleanToken = token.replace(/[^a-zA-Z]/g, "").toUpperCase();
-    if (cleanToken && !TITLES.has(cleanToken)) {
-      return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+    if (cleanToken && !INVALID_FIRST_NAME_TOKENS.has(cleanToken)) {
+      return cleanToken.charAt(0).toUpperCase() + cleanToken.slice(1).toLowerCase();
     }
   }
 
@@ -360,6 +372,24 @@ function cleanEmailContent(rawText, options = {}) {
 
   body = `${body.trim()}\n\n${signature}`;
 
+  // Safe in-place replacements for accidental innocent trigger words
+  const SAFE_WORD_REPLACEMENTS = [
+    { pattern: /\bregarding\b/gi, replacement: "about" },
+    { pattern: /\bwon't\b/gi, replacement: "will not" },
+    { pattern: /\bLIMITED\b/g, replacement: "Ltd" },
+  ];
+
+  for (const { pattern, replacement } of SAFE_WORD_REPLACEMENTS) {
+    const replacer = (match) => {
+      if (match[0] === match[0].toUpperCase() && match.slice(1) === match.slice(1).toLowerCase()) {
+        return replacement.charAt(0).toUpperCase() + replacement.slice(1);
+      }
+      return replacement;
+    };
+    subject = subject.replace(pattern, replacer);
+    body = body.replace(pattern, replacer);
+  }
+
   // --- SPAM CHECKER LOGIC ADDED HERE ---
   // --- SPAM WORDS BLOCKING LOGIC ---
   const combinedText = `${subject} ${body}`.toLowerCase();
@@ -378,8 +408,9 @@ function cleanEmailContent(rawText, options = {}) {
     const securityError = new Error(
       `❌ Security Block: Generated email contains forbidden spam word "${foundSpamWord}".`,
     );
-    // Error object-er sathe blocked body ar subject attach kore dilam
+    // Error object-er sathe blocked body, subject, and blockedWord attach kore dilam
     securityError.blockedContent = { subject, body };
+    securityError.blockedWord = foundSpamWord;
     throw securityError;
   }
   // -------------------------------------
@@ -409,9 +440,16 @@ async function generateEmail(company, options = {}) {
     ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
   if (options.model) {
+    let currentPrompt = prompt;
+    let spamAttempts = 0;
+    const maxSpamRetries =
+      typeof options.maxSpamRetries === "number"
+        ? options.maxSpamRetries
+        : 2;
+
     for (let attempt = 1; ; attempt++) {
       try {
-        const result = await options.model.generateContent(prompt);
+        const result = await options.model.generateContent(currentPrompt);
         let rawText = "";
         if (result && result.response) {
           if (typeof result.response.text === "function") {
@@ -432,6 +470,19 @@ async function generateEmail(company, options = {}) {
           )
         });
       } catch (err) {
+        if (err.blockedContent && spamAttempts < maxSpamRetries) {
+          spamAttempts++;
+          const blockedWord = err.blockedWord || "forbidden phrases";
+          currentPrompt = [
+            prompt,
+            "",
+            `CRITICAL CORRECTION (Retry ${spamAttempts}/${maxSpamRetries}): Your previous email draft was rejected because it contained the forbidden spam word "${blockedWord}".`,
+            `You MUST NOT use "${blockedWord}" or any forbidden words (${FORBIDDEN_SPAM_WORDS.join(", ")}).`,
+            "Please rewrite the entire outreach email using natural synonyms and clean phrasing while maintaining the same meaning.",
+          ].join("\n");
+          continue;
+        }
+
         const isRateLimit =
           err.status === 429 ||
           /429|RESOURCE_EXHAUSTED/i.test(err.message || "");
@@ -478,9 +529,16 @@ async function generateEmail(company, options = {}) {
       },
     });
 
+    let currentPrompt = prompt;
+    let spamAttempts = 0;
+    const maxSpamRetries =
+      typeof options.maxSpamRetries === "number"
+        ? options.maxSpamRetries
+        : 2;
+
     for (let attempt = 1; ; attempt++) {
       try {
-        const result = await generativeModel.generateContent(prompt);
+        const result = await generativeModel.generateContent(currentPrompt);
         let rawText = "";
         if (result && result.response) {
           if (typeof result.response.text === "function") {
@@ -501,6 +559,19 @@ async function generateEmail(company, options = {}) {
           )
         });
       } catch (err) {
+        if (err.blockedContent && spamAttempts < maxSpamRetries) {
+          spamAttempts++;
+          const blockedWord = err.blockedWord || "forbidden phrases";
+          currentPrompt = [
+            prompt,
+            "",
+            `CRITICAL CORRECTION (Retry ${spamAttempts}/${maxSpamRetries}): Your previous email draft was rejected because it contained the forbidden spam word "${blockedWord}".`,
+            `You MUST NOT use "${blockedWord}" or any forbidden words (${FORBIDDEN_SPAM_WORDS.join(", ")}).`,
+            "Please rewrite the entire outreach email using natural synonyms and clean phrasing while maintaining the same meaning.",
+          ].join("\n");
+          continue;
+        }
+
         // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model
         const isModelUnsupported =
           err.status === 404 &&
@@ -547,6 +618,7 @@ module.exports = {
   buildSignature,
   resolveApiKey,
   extractFirstName,
+  INVALID_FIRST_NAME_TOKENS,
   mapSicToIndustry,
   buildPrompt,
   cleanEmailContent,
