@@ -5,7 +5,7 @@ const { parseCSV } = require('./csvParser');
 const { getCompanyOfficers } = require('../companiesHouse');
 const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
-const { searchCompany, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
+const { searchCompany, searchCompanyLeadership, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
 const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
@@ -22,14 +22,23 @@ const ROLE_WEIGHTS = {
   'CTO': 95,
   'CEO': 90,
   'Managing Director': 90,
+  'CMO': 90,
   'VP': 85,
   'VP Engineering': 85,
   'Head': 85,
   'Head of Engineering': 85,
+  'Head of Marketing': 85,
+  'Marketing Director': 85,
+  'Head of Growth': 85,
+  'Growth Lead': 80,
   'Manager': 75,
   'Engineering Manager': 75,
   'Lead': 75,
   'Backend Lead': 75,
+  'Marketing Manager': 75,
+  'Social Media Lead': 75,
+  'Digital Marketing Lead': 75,
+  'Social Media Manager': 70,
   'COO': 65,
   'Operations Head': 65,
   'IT Director': 60,
@@ -210,6 +219,12 @@ async function runEnrichment() {
         sources.push('web_scrape');
       }
 
+      const leadershipRes = await searchCompanyLeadership(scraper, company.company_name);
+      if (leadershipRes.html) {
+        const leadEmails = extractEmails(leadershipRes.html);
+        if (leadEmails.length > 0) extractedData.emails.push(...leadEmails);
+      }
+
       const allExtractedEmails = [...new Set([...websiteEmails, ...extractedData.emails])];
       const patternInfo = detectPattern(allExtractedEmails);
 
@@ -240,6 +255,28 @@ async function runEnrichment() {
              weight: w
            });
          }
+      }
+      if (leadershipRes.html) {
+        const snippetPeople = extractPeople(leadershipRes.html, activeOfficers, 'search_snippet', company.company_name);
+        for (const p of snippetPeople) {
+           const key = p.name.toLowerCase();
+           const w = getRoleWeight(p.role);
+           if (peopleMap.has(key)) {
+             const existing = peopleMap.get(key);
+             if (w > existing.weight) {
+               existing.job_title = p.role;
+               existing.role_source_url = p.source_url;
+               existing.weight = w;
+             }
+           } else {
+             peopleMap.set(key, {
+               name: p.name,
+               job_title: p.role,
+               role_source_url: p.source_url,
+               weight: w
+             });
+           }
+        }
       }
       const peopleList = Array.from(peopleMap.values()).sort((a,b) => b.weight - a.weight);
 

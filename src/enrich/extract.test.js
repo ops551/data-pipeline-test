@@ -363,4 +363,118 @@ test('extractPeople avoids ambiguous single first-name officer binding when mult
   assert.strictEqual(peopleSingle[0].name, 'Lauren Mucklow');
 });
 
+test('extractPeople extracts marketing and growth leadership roles (CMO, Head of Marketing, Social Media Lead)', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Alice Walker, CMO</p>
+      <p>Bob Miller, Head of Marketing</p>
+      <p>Charlie Davis, Social Media Lead</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://test.com', 'Test Ltd');
+  assert.strictEqual(people.length, 3);
+  assert.strictEqual(people[0].name, 'Alice Walker');
+  assert.strictEqual(people[0].role, 'CMO');
+  assert.strictEqual(people[1].name, 'Bob Miller');
+  assert.strictEqual(people[1].role, 'Head of Marketing');
+  assert.strictEqual(people[2].name, 'Charlie Davis');
+  assert.strictEqual(people[2].role, 'Social Media Lead');
+});
+
+test('extractPeople upgrades officer role when snippet confirms them as Founder', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Founder John Smith started the company in London.</p>
+    </div>
+  `;
+  const officers = [{ name: 'John Smith', role: 'Director' }];
+  const people = extractPeople(html, officers, 'search_snippet', 'Acme Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'John Smith');
+  assert.strictEqual(people[0].role, 'Founder');
+});
+
+test('extractPeople discovers distinct decision makers for multi-person leads', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Founder Jane Doe established the business in 2022.</p>
+      <p>Mark Evans, Growth Lead</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://test.com', 'Acme Ltd');
+  assert.strictEqual(people.length, 2);
+  const jane = people.find((p) => p.name === 'Jane Doe');
+  assert.ok(jane);
+  assert.strictEqual(jane.role, 'Founder');
+
+  const mark = people.find((p) => p.name === 'Mark Evans');
+  assert.ok(mark);
+  assert.strictEqual(mark.role, 'Growth Lead');
+});
+
+test('peopleMap upgrades officer to Founder and retains multi-person decision makers', () => {
+  const { extractPeople } = require('./extract');
+
+  const officers = [
+    { name: 'John Smith', role: 'Director' }
+  ];
+
+  const snippetHtml = `
+    <div>
+      <p>Founder John Smith started the company in London.</p>
+      <p>Sarah Jenkins, Head of Marketing</p>
+    </div>
+  `;
+
+  const snippetPeople = extractPeople(snippetHtml, officers, 'search_snippet', 'Acme Ltd');
+  assert.strictEqual(snippetPeople.length, 2);
+
+  const peopleMap = new Map();
+  peopleMap.set('john smith', {
+    name: 'John Smith',
+    job_title: 'Director',
+    role_source_url: 'officers_api',
+    weight: 30
+  });
+
+  for (const p of snippetPeople) {
+    const key = p.name.toLowerCase();
+    const weightMap = { 'Founder': 100, 'Head of Marketing': 85, 'Director': 30 };
+    const w = weightMap[p.role] || 10;
+    if (peopleMap.has(key)) {
+      const existing = peopleMap.get(key);
+      if (w > existing.weight) {
+        existing.job_title = p.role;
+        existing.role_source_url = p.source_url;
+        existing.weight = w;
+      }
+    } else {
+      peopleMap.set(key, {
+        name: p.name,
+        job_title: p.role,
+        role_source_url: p.source_url,
+        weight: w
+      });
+    }
+  }
+
+  const peopleList = Array.from(peopleMap.values()).sort((a, b) => b.weight - a.weight);
+  assert.strictEqual(peopleList.length, 2);
+  assert.strictEqual(peopleList[0].name, 'John Smith');
+  assert.strictEqual(peopleList[0].job_title, 'Founder');
+  assert.strictEqual(peopleList[0].weight, 100);
+  assert.strictEqual(peopleList[0].role_source_url, 'search_snippet');
+
+  assert.strictEqual(peopleList[1].name, 'Sarah Jenkins');
+  assert.strictEqual(peopleList[1].job_title, 'Head of Marketing');
+  assert.strictEqual(peopleList[1].weight, 85);
+});
+
+
 
