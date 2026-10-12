@@ -180,7 +180,7 @@ async function verifyQuickEmailVerification(email, apiKey) {
   if (isQuotaExceeded(res.status, data)) {
     return { quotaExceeded: true };
   }
-  const isValid = data.result === 'valid' && (data.safe_to_send === 'true' || data.safe_to_send === true);
+  const isValid = data.result === 'valid';
   return {
     success: true,
     isValid,

@@ -5,7 +5,7 @@ const { parseCSV } = require('./csvParser');
 const { getCompanyOfficers } = require('../companiesHouse');
 const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
-const { searchCompany, extractWebsiteContext } = require('./search');
+const { searchCompany, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
 const { detectPattern, inferEmails, verifyEmail, checkCatchAll } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
@@ -319,9 +319,36 @@ async function runEnrichment() {
          let bestGeneric = '';
          let vStatus = '';
          if (allExtractedEmails.length > 0) {
-           const ranked = rankEmailsByCompanyName(allExtractedEmails, company.company_name, directorsStr);
-           bestGeneric = ranked.length > 0 ? ranked[0] : allExtractedEmails[0];
-           if (bestGeneric) vStatus = 'extracted_generic';
+           const validCandidates = allExtractedEmails.filter(email => {
+             const emailDomain = (email.split('@')[1] || '').toLowerCase();
+             if (!emailDomain) return false;
+             if (DIRECTORY_DOMAINS.some(d => emailDomain === d || emailDomain.endsWith('.' + d))) return false;
+             if (BLOCKED_DOMAINS.has(emailDomain)) return false;
+             return true;
+           });
+           const ranked = rankEmailsByCompanyName(validCandidates, company.company_name, directorsStr);
+           if (ranked.length > 0) {
+             bestGeneric = ranked[0];
+             vStatus = 'extracted_generic';
+           } else if (domain) {
+             const domainMatch = validCandidates.find(e => {
+               const ed = (e.split('@')[1] || '').toLowerCase();
+               return ed === domain || ed.endsWith('.' + domain);
+             });
+             if (domainMatch) {
+               bestGeneric = domainMatch;
+               vStatus = 'extracted_generic';
+             }
+           }
+         }
+         
+         if (bestGeneric) {
+           const v = await verifyEmail(bestGeneric);
+           if (v.status === 'invalid') {
+             console.log(`  Extracted generic email ${bestGeneric} is invalid (${v.reason}). Discarding.`);
+             bestGeneric = '';
+             vStatus = '';
+           }
          }
          
          if (!bestGeneric && domain) {
