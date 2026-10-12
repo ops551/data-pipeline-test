@@ -318,8 +318,8 @@ function buildPrompt(company = {}, options = {}) {
       ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows.`
       : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists.`,
     hasVerifiedWebsite
-      ? "3. Value Proposition: Briefly explain that you help businesses in their specific sector automate routine client communications or scheduling—such as automating scheduled social media posts and stories, smart personalised replies to customer enquiries across communication channels, and a central dashboard to monitor content and track incoming enquiries in real time so routine tasks take less time while keeping everything organised and visible in one place."
-      : "3. Value Proposition: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually—such as automated scheduled social media posts and stories, smart replies to customer enquiries across communication channels, and a central dashboard to track incoming enquiries and scheduled content in real time to cut down time on routine tasks while keeping everything organized and visible in one place.",
+      ? '3. Value Proposition: Briefly explain that you help businesses in their specific sector automate routine client communications or scheduling. Clearly state these exact three natural, tangible automation sentences: "I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels." "You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time." "This would cut down time on routine tasks while keeping everything organised and visible in one place."'
+      : '3. Value Proposition: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. Clearly state these exact three natural, tangible automation sentences: "I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels." "You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time." "This would cut down time on routine tasks while keeping everything organised and visible in one place."',
     hasInspectedWebsite
       ? "4. Personalization: Include exactly one 10-20 word positive sentence, informed by a service or feature shown in the homepage snapshot, suggesting a website update and relevant automation (such as scheduled social posts or automated enquiry replies) to make a routine task easier. Do not identify or imply any flaw, missing feature, or problem; present it as a helpful improvement idea, not a criticism."
       : null,
@@ -330,7 +330,7 @@ function buildPrompt(company = {}, options = {}) {
     `7. Sign-off: Must end with:\n${signature}`,
     "",
     "Rules:",
-    "- Keep it under 100 words before the signature.",
+    "- Keep it under 120 words before the signature.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Keep the intended meaning when replacing forbidden terms; do not remove a useful idea just to avoid a word.",
@@ -370,7 +370,7 @@ function cleanEmailContent(rawText, options = {}) {
     }
 
     const subject = `A quick question for ${emailCompanyName}`;
-    const body = `${greetingFallback}\n\nI came across ${emailCompanyName} and wanted to reach out briefly. I help businesses set up clean websites and automated workflows to reduce time spent on manual tasks.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
+    const body = `${greetingFallback}\n\nI came across ${emailCompanyName} and wanted to reach out briefly. I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels. You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time. This would cut down time on routine tasks while keeping everything organised and visible in one place.\n\nAre you currently looking for any support or improvements with your digital systems?\n\nIf you are interested, let me know and we can briefly discuss. If not, no worries—just let me know and I will make sure not to contact you again.\n\n${signature}`;
     return { subject, body, text: `Subject: ${subject}\n\n${body}` };
   }
 
