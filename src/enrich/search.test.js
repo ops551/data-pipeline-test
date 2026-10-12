@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert');
 const {
   searchCompany,
+  searchCompanyLeadership,
   isSocialOrDirectory,
   getDomain,
   getSld,
@@ -110,3 +111,40 @@ test('isLikelyCompanyWebsite matches genuine company domains and blocks junk pla
   assert.strictEqual(isLikelyCompanyWebsite('dentalplans.com', 'NORTHERN DENTAL GROUP LTD'), false);
   assert.strictEqual(isLikelyCompanyWebsite('glyndwrinnovations.co.uk', 'GLYNDWR GROUP LTD'), false);
 });
+
+test('searchCompanyLeadership forms targeted leadership query stripping company suffixes', async () => {
+  let capturedQuery = '';
+  const mockScraper = {
+    search: async (query) => {
+      capturedQuery = query;
+      return {
+        html: '<div>Snippet text mentioning Founder John Doe</div>',
+        links: ['https://example.com']
+      };
+    }
+  };
+
+  const res = await searchCompanyLeadership(mockScraper, 'Acme Innovations Limited');
+  assert.strictEqual(capturedQuery, '"Acme Innovations" founder OR director');
+  assert.match(res.html, /Founder John Doe/);
+  assert.deepStrictEqual(res.links, ['https://example.com']);
+
+  // Tests suffix stripping with LTD
+  await searchCompanyLeadership(mockScraper, 'Global Tech Solutions Ltd.');
+  assert.strictEqual(capturedQuery, '"Global Tech Solutions" founder OR director');
+});
+
+test('searchCompanyLeadership handles scraper errors gracefully', async () => {
+  const failingScraper = {
+    search: async () => {
+      throw new Error('Search network failure');
+    }
+  };
+
+  const res = await searchCompanyLeadership(failingScraper, 'Acme Ltd');
+  assert.deepStrictEqual(res, { html: '', links: [] });
+
+  const nullRes = await searchCompanyLeadership(null, 'Acme Ltd');
+  assert.deepStrictEqual(nullRes, { html: '', links: [] });
+});
+

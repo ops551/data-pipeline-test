@@ -291,8 +291,31 @@ async function searchCompany(scraper, company) {
   };
 }
 
+async function searchCompanyLeadership(scraper, companyName) {
+  if (!scraper || !companyName) {
+    return { html: '', links: [] };
+  }
+  const cleanName = companyName
+    .replace(/\b(ltd\.?|limited|plc\.?|llp\.?|cic\.?|inc\.?|corp\.?)\b/gi, '')
+    .replace(/[^a-zA-Z0-9\s]/g, ' ')
+    .trim()
+    .replace(/\s+/g, ' ');
+
+  const query = `"${cleanName}" founder OR director`;
+  try {
+    const res = await scraper.search(query);
+    return {
+      html: res?.html || '',
+      links: res?.links || []
+    };
+  } catch {
+    return { html: '', links: [] };
+  }
+}
+
 module.exports = {
   searchCompany,
+  searchCompanyLeadership,
   isSocialOrDirectory,
   getDomain,
   getSld,

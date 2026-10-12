@@ -218,7 +218,7 @@ const BAD_NAME_TOKENS = new Set([
   'find', 'join', 'call', 'send', 'meet', 'work', 'client', 'clients',
   'customer', 'customers', 'review', 'reviews', 'testimonial', 'testimonials',
   'story', 'stories', 'study', 'studies', 'project', 'projects',
-  'ceo', 'cto', 'cfo', 'coo', 'founder', 'director', 'managing', 'chief',
+  'ceo', 'cto', 'cfo', 'coo', 'cmo', 'founder', 'director', 'managing', 'chief',
   'executive', 'officer', 'manager', 'head', 'lead', 'president', 'vp'
 ]);
 
@@ -467,7 +467,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         const windowStr = text.substring(start, end);
         const namePosInWindow = matchIdx - start;
 
-        const roleRegex = /\b(CEO|Chief Executive Officer|Founder|Co-Founder|CTO|CFO|COO|Director|Managing Director|Manager|Head|Lead|President|VP|Vice President)\b/gi;
+        const roleRegex = /\b(CEO|Chief Executive Officer|Founder|Co-Founder|CTO|Chief Technology Officer|CFO|COO|CMO|Chief Marketing Officer|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead|Director|Managing Director|Operations Director|Manager|Head|Lead|President|VP|Vice President)\b/gi;
 
         let bestRole = null;
         let minDistance = Infinity;
@@ -495,7 +495,9 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
           if (role.toLowerCase() === 'cto') role = 'CTO';
           if (role.toLowerCase() === 'cfo') role = 'CFO';
           if (role.toLowerCase() === 'coo') role = 'COO';
+          if (role.toLowerCase() === 'cmo') role = 'CMO';
           if (role.toLowerCase() === 'vp') role = 'VP';
+          role = role.replace(/\bOf\b/g, 'of');
         }
 
         foundNames.add(nameStr.toLowerCase());
@@ -513,7 +515,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   }
 
   // Standard leadership pattern: Name Role
-  const standardLeadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Director(?:\s+of\s+[A-Za-z]+)?|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO)/g;
+  const standardLeadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Director(?:\s+of\s+[A-Za-z]+)?|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)/g;
   for (const m of text.matchAll(standardLeadershipRegex)) {
     const candidateName = m[1].trim();
     let candidateRole = m[2].trim();
@@ -523,7 +525,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
 
     if (candidateRole.toLowerCase() === 'ceo') candidateRole = 'CEO';
     else if (candidateRole.toLowerCase() === 'cto') candidateRole = 'CTO';
-    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+    else if (candidateRole.toLowerCase() === 'cmo') candidateRole = 'CMO';
+    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
     if (!foundNames.has(candidateName.toLowerCase())) {
       foundNames.add(candidateName.toLowerCase());
@@ -536,7 +539,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   }
 
   // Reverse leadership patterns: Role Name & Founded by Name
-  const reverseLeadershipRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Founded by|Co-founded by|Established by|Led by)[\s\n,–|:\-]+([A-Z][a-z]+ [A-Z][a-z]+)\b/gi;
+  const reverseLeadershipRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead|Founded by|Co-founded by|Established by|Led by)[\s\n,–|:\-]+([A-Z][a-z]+ [A-Z][a-z]+)\b/gi;
   for (const m of text.matchAll(reverseLeadershipRegex)) {
     const rawRole = m[1].trim();
     const candidateName = m[2].trim();
@@ -551,7 +554,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     else if (/^led by$/i.test(rawRole)) candidateRole = 'Managing Director';
     else if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) candidateRole = 'CEO';
     else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) candidateRole = 'CTO';
-    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+    else if (/^cmo$/i.test(rawRole) || /^chief marketing officer$/i.test(rawRole)) candidateRole = 'CMO';
+    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
     if (!foundNames.has(candidateName.toLowerCase())) {
       foundNames.add(candidateName.toLowerCase());
@@ -565,7 +569,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
 
   // Single first-name leadership mentions linked to officers list
   if (Array.isArray(officers) && officers.length > 0) {
-    const singleAfterRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO)\s+([A-Z][a-z]+)\b/gi;
+    const singleAfterRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)\s+([A-Z][a-z]+)\b/gi;
     for (const m of text.matchAll(singleAfterRegex)) {
       const rawRole = m[1].trim();
       const firstName = m[2].trim();
@@ -586,7 +590,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         let role = rawRole;
         if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) role = 'CEO';
         else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) role = 'CTO';
-        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+        else if (/^cmo$/i.test(rawRole) || /^chief marketing officer$/i.test(rawRole)) role = 'CMO';
+        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
         foundNames.add(matchingOfficer.name.toLowerCase());
         found.push({
@@ -597,7 +602,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
       }
     }
 
-    const singleBeforeRegex = /\b([A-Z][a-z]+)[\s,–|-]+(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO)\b/gi;
+    const singleBeforeRegex = /\b([A-Z][a-z]+)[\s,–|-]+(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Chief Marketing Officer|CMO|Marketing Director|Head of Marketing|Marketing Manager|Social Media Lead|Social Media Manager|Growth Lead|Head of Growth|Digital Marketing Lead)\b/gi;
     for (const m of text.matchAll(singleBeforeRegex)) {
       const firstName = m[1].trim();
       const rawRole = m[2].trim();
@@ -618,7 +623,8 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
         let role = rawRole;
         if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) role = 'CEO';
         else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) role = 'CTO';
-        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+        else if (/^cmo$/i.test(rawRole) || /^chief marketing officer$/i.test(rawRole)) role = 'CMO';
+        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/g, 'of');
 
         foundNames.add(matchingOfficer.name.toLowerCase());
         found.push({
