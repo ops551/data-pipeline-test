@@ -5,10 +5,16 @@ const { parseCSV } = require('./csvParser');
 const { getCompanyOfficers } = require('../companiesHouse');
 const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
-const { searchCompany, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS } = require('./search');
+const { searchCompany, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
 const { detectPattern, inferEmails, verifyEmail, checkCatchAll } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
+
+const PUBLIC_EMAIL_PROVIDERS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com',
+  'yahoo.com', 'yahoo.co.uk', 'icloud.com', 'aol.com', 'live.com',
+  'mail.com', 'proton.me', 'protonmail.com'
+]);
 
 const ROLE_WEIGHTS = {
   'Founder': 100,
@@ -324,19 +330,45 @@ async function runEnrichment() {
              if (!emailDomain) return false;
              if (DIRECTORY_DOMAINS.some(d => emailDomain === d || emailDomain.endsWith('.' + d))) return false;
              if (BLOCKED_DOMAINS.has(emailDomain)) return false;
+
+             // DOMAIN OWNERSHIP RULE:
+             // If company has an identified website domain, the email MUST either match that domain
+             // OR be from a recognized public small business email provider (e.g. gmail/outlook).
+             // NEVER accept an email from an unrelated third-party corporate domain!
+             if (domain) {
+               const isOurDomain = emailDomain === domain || emailDomain.endsWith('.' + domain);
+               const isPublic = PUBLIC_EMAIL_PROVIDERS.has(emailDomain);
+               if (!isOurDomain && !isPublic) {
+                 return false;
+               }
+             } else {
+               // If company has NO identified website domain, DO NOT accept third-party corporate domains
+               // from search snippets. Only accept public providers matching company or direct brand domain.
+               const isPublic = PUBLIC_EMAIL_PROVIDERS.has(emailDomain);
+               const isBrandSld = isLikelyCompanyWebsite(emailDomain, company.company_name);
+               if (!isPublic && !isBrandSld) {
+                 return false;
+               }
+             }
              return true;
            });
-           const ranked = rankEmailsByCompanyName(validCandidates, company.company_name, directorsStr);
-           if (ranked.length > 0) {
-             bestGeneric = ranked[0];
-             vStatus = 'extracted_generic';
-           } else if (domain) {
+
+           // If we have an official company domain, prioritize emails belonging to that domain
+           if (domain) {
              const domainMatch = validCandidates.find(e => {
                const ed = (e.split('@')[1] || '').toLowerCase();
                return ed === domain || ed.endsWith('.' + domain);
              });
              if (domainMatch) {
                bestGeneric = domainMatch;
+               vStatus = 'extracted_generic';
+             }
+           }
+
+           if (!bestGeneric) {
+             const ranked = rankEmailsByCompanyName(validCandidates, company.company_name, directorsStr);
+             if (ranked.length > 0) {
+               bestGeneric = ranked[0];
                vStatus = 'extracted_generic';
              }
            }
