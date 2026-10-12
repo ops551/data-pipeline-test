@@ -5,10 +5,12 @@ const {
   DEFAULT_SENDER_NAME,
   FORBIDDEN_SPAM_WORDS,
   DEFAULT_SIGNATURE,
+  TECH_SIGNATURE_TITLE,
   buildSignature,
   resolveApiKey,
   extractFirstName,
   mapSicToIndustry,
+  isTechOrSoftwareCompany,
   buildPrompt,
   cleanEmailContent,
   generateEmail
@@ -535,4 +537,134 @@ test('generateEmail retries with corrective prompt when generated content contai
   assert.equal(result.subject, 'Digital automation for your website');
   assert.ok(result.body.includes('We build modern automation'));
 });
+
+test('isTechOrSoftwareCompany correctly identifies software and tech agencies', () => {
+  // Positive cases: SIC codes
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '62012' }), true); // software development
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '62020; 70229' }), true); // IT consultancy
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: ['47110', '62090'] }), true);
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '58210' }), true); // software publishing
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '63110' }), true); // data hosting
+  assert.equal(isTechOrSoftwareCompany({ company_name: 'Various Labs Ltd', sic_codes: '62012;62020;70229;73110' }), true);
+
+  // Positive cases: Industry descriptors
+  assert.equal(isTechOrSoftwareCompany({ industry: 'Custom Software Development Studio' }), true);
+  assert.equal(isTechOrSoftwareCompany({ industry: 'Web Development Studio' }), true);
+  assert.equal(isTechOrSoftwareCompany({ industry: 'Digital Product Agency' }), true);
+
+  // Negative cases: Non-tech industries
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '81210' }), false); // cleaning
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '56101' }), false); // restaurant
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '43210' }), false); // trades
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '47110' }), false); // retail
+  assert.equal(isTechOrSoftwareCompany({ sic_codes: '96020' }), false); // beauty
+  assert.equal(isTechOrSoftwareCompany({ industry: 'commercial and domestic cleaning' }), false);
+  assert.equal(isTechOrSoftwareCompany({}), false);
+  assert.equal(isTechOrSoftwareCompany(null), false);
+});
+
+test('buildSignature provides Backend Developer title for tech companies', () => {
+  const techSig = buildSignature({ isTech: true });
+  assert.ok(techSig.includes('Best regards,'));
+  assert.ok(techSig.includes('Nahid'));
+  assert.ok(techSig.includes(TECH_SIGNATURE_TITLE));
+  assert.equal(techSig.includes('Web Design & Business Automation'), false);
+
+  const nonTechSig = buildSignature({ isTech: false });
+  assert.ok(nonTechSig.includes('Web Design & Business Automation'));
+
+  // Custom title overrides default
+  const customSig = buildSignature({ isTech: true, senderTitle: 'Staff Backend Engineer' });
+  assert.ok(customSig.includes('Staff Backend Engineer'));
+});
+
+test('buildPrompt generates developer collaboration pitch for tech companies (Persona B)', () => {
+  const prompt = buildPrompt({
+    company_name: 'Various Labs Ltd',
+    sic_codes: '62012;62020',
+    website_url: 'https://variouslabs.co.uk',
+    website_context: 'Focus on custom dashboards, apps, and software tools.',
+    active_directors: 'Zaki Smith'
+  });
+
+  // Persona B: Developer to developer / tech agency collaboration
+  assert.ok(prompt.includes('Hey Zaki,'));
+  assert.ok(prompt.includes('backend developer and business automation engineer'));
+  assert.ok(prompt.includes('Node.js, API integrations, and automation'));
+  assert.ok(prompt.includes('take on project overflow when client deadlines get tight'));
+  assert.ok(prompt.includes('collaborate with contract or remote backend developers'));
+  assert.ok(prompt.includes(TECH_SIGNATURE_TITLE));
+
+  // Must NOT pitch web design to a software studio
+  assert.doesNotMatch(prompt, /web designer and business automation specialist/i);
+  assert.doesNotMatch(prompt, /build or upgrade websites/i);
+  assert.doesNotMatch(prompt, /routine client communications or scheduling/i);
+});
+
+test('buildPrompt includes tangible social media and dashboard automation for non-tech businesses (Persona A)', () => {
+  const prompt = buildPrompt({
+    company_name: 'Bella Italia Dining Ltd',
+    sic_codes: '56101',
+    active_directors: 'Marco Rossi'
+  });
+
+  // Persona A: Web design & tangible customer inquiry/social media automation
+  assert.ok(prompt.includes('Hey Marco,'));
+  assert.ok(prompt.includes('web designer and business automation specialist'));
+  assert.ok(prompt.includes('scheduled social media posts and stories'));
+  assert.ok(prompt.includes('smart replies to customer enquiries across communication channels'));
+  assert.ok(prompt.includes('central dashboard to track incoming enquiries'));
+  assert.ok(prompt.includes('Web Design & Business Automation'));
+
+  // Must NOT pitch contract backend development to a restaurant
+  assert.doesNotMatch(prompt, /Node\.js, API integrations/i);
+  assert.doesNotMatch(prompt, /overflow development work/i);
+});
+
+test('cleanEmailContent handles tech company fallback cleanly', () => {
+  const cleanedTech = cleanEmailContent('', {
+    companyName: 'Various Labs Ltd',
+    directorName: 'Zaki',
+    isTech: true
+  });
+
+  assert.equal(cleanedTech.subject, 'Backend developer support for Various Labs Ltd');
+  assert.ok(cleanedTech.body.includes('Hey Zaki,'));
+  assert.ok(cleanedTech.body.includes('specializing in Node.js, API integrations, and workflow automation'));
+  assert.ok(cleanedTech.body.includes('contract backend developers'));
+  assert.ok(cleanedTech.body.includes(TECH_SIGNATURE_TITLE));
+});
+
+test('generateEmail generates developer collaboration email end-to-end for software studio', async () => {
+  let capturedPrompt = '';
+  const mockModel = {
+    generateContent: async (prompt) => {
+      capturedPrompt = prompt;
+      return {
+        response: {
+          text: () => JSON.stringify({
+            subject: 'Contract backend developer support for Various Labs Ltd',
+            body: 'Hey Zaki,\n\nI noticed your custom software and dashboard work. If your studio ever needs hands on backend Node.js APIs during project crunches, I would love to help.\n\nBest regards,\nNahid'
+          })
+        }
+      };
+    }
+  };
+
+  const result = await generateEmail(
+    {
+      company_name: 'Various Labs Ltd',
+      sic_codes: '62012;62020',
+      active_directors: 'Zaki Smith'
+    },
+    { model: mockModel }
+  );
+
+  assert.ok(capturedPrompt.includes('backend developer and business automation engineer'));
+  assert.ok(capturedPrompt.includes('Node.js, API integrations'));
+  assert.equal(result.subject, 'Contract backend developer support for Various Labs Ltd');
+  assert.ok(result.body.includes('Hey Zaki,'));
+  assert.ok(result.body.includes(TECH_SIGNATURE_TITLE));
+});
+
 
