@@ -129,7 +129,6 @@ async function extractContactDetails(scraper, urls) {
   };
 }
 
-module.exports = { extractEmails, extractPhones, extractContactDetails };
 
 function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
   if (!emails || emails.length === 0) return [];
@@ -197,27 +196,245 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
   return validEmails.map(s => s.email);
 }
 
-function extractPeople(html, officers = [], sourceUrl = '') {
+const FALSE_NAME_WORDS = new Set([
+  'our co', 'the team', 'about us', 'meet us', 'read more',
+  'our team', 'meet the', 'contact us', 'get in', 'find out',
+  'learn more', 'click here', 'our story', 'who we', 'what we',
+  'join us', 'view all', 'see more', 'our work', 'our mission',
+  'our values', 'our company', 'the company', 'our services',
+  'case studies', 'case study', 'client reviews', 'testimonials',
+  'happy clients', 'recent news', 'latest news', 'blog post',
+  'read article', 'privacy policy', 'terms conditions'
+]);
+
+const BAD_NAME_TOKENS = new Set([
+  'our', 'the', 'about', 'team', 'read', 'more', 'services', 'contact',
+  'company', 'co', 'group', 'policy', 'home', 'privacy', 'terms', 'conditions',
+  'cookies', 'cookie', 'blog', 'news', 'menu', 'nav', 'header', 'footer',
+  'search', 'login', 'register', 'signup', 'signin', 'email', 'phone',
+  'address', 'copyright', 'rights', 'reserved', 'ltd', 'limited', 'inc',
+  'plc', 'llp', 'cic', 'uk', 'us', 'me', 'we', 'you', 'it', 'he', 'she',
+  'they', 'what', 'who', 'how', 'why', 'when', 'where', 'get', 'see', 'view',
+  'find', 'join', 'call', 'send', 'meet', 'work', 'client', 'clients',
+  'customer', 'customers', 'review', 'reviews', 'testimonial', 'testimonials',
+  'story', 'stories', 'study', 'studies', 'project', 'projects',
+  'ceo', 'cto', 'cfo', 'coo', 'founder', 'director', 'managing', 'chief',
+  'executive', 'officer', 'manager', 'head', 'lead', 'president', 'vp'
+]);
+
+function isValidPersonName(name) {
+  if (!name || typeof name !== 'string') return false;
+  const trimmed = name.trim();
+  const lower = trimmed.toLowerCase();
+
+  if (FALSE_NAME_WORDS.has(lower)) return false;
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length < 2 || parts.length > 4) return false;
+
+  if (/[0-9@_#$%\^&*()=+\[\]{}|\\/<>~`]/.test(trimmed)) return false;
+
+  for (const part of parts) {
+    const pLower = part.toLowerCase();
+    if (BAD_NAME_TOKENS.has(pLower)) return false;
+    if (part.length < 2) return false;
+    if (!/^[A-Z][a-zA-Z'’\-]*$/.test(part)) return false;
+  }
+
+  return true;
+}
+
+function stripTestimonialsAndReviews(html) {
+  if (!html || typeof html !== 'string') return '';
+  let cleaned = html;
+
+  cleaned = cleaned.replace(/<blockquote\b[\s\S]*?<\/blockquote>/gi, ' ');
+
+  const CONTAINER_TAGS = ['section', 'article', 'aside', 'figure', 'div', 'li'];
+  const CLASS_ID_PATTERN = /(?:class|id)=["'][^"']*\b(?:testimonial|testimonials|review|reviews|case-study|case-studies|client-story|client-stories|client-quote|client-quotes|customer-story|customer-stories|what-clients-say|client-feedback)\b[^"']*["']/i;
+
+  for (const tag of CONTAINER_TAGS) {
+    const openTagRegex = new RegExp(`<${tag}\\b([^>]*)>`, 'gi');
+    let match;
+    while ((match = openTagRegex.exec(cleaned)) !== null) {
+      const attrs = match[1];
+      if (CLASS_ID_PATTERN.test(attrs)) {
+        const startIndex = match.index;
+        let depth = 1;
+        let curr = startIndex + match[0].length;
+        const nextTagRegex = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'gi');
+        nextTagRegex.lastIndex = curr;
+        let subMatch;
+        let closed = false;
+        while ((subMatch = nextTagRegex.exec(cleaned)) !== null) {
+          if (subMatch[1] === '/') {
+            depth--;
+            if (depth === 0) {
+              const endIndex = subMatch.index + subMatch[0].length;
+              cleaned = cleaned.slice(0, startIndex) + ' ' + cleaned.slice(endIndex);
+              openTagRegex.lastIndex = startIndex;
+              closed = true;
+              break;
+            }
+          } else if (!subMatch[0].endsWith('/>')) {
+            depth++;
+          }
+        }
+        if (!closed) {
+          cleaned = cleaned.slice(0, startIndex);
+          break;
+        }
+      }
+    }
+  }
+
+  const HEADING_SECTION_REGEX = /<(h[1-6])\b[^>]*>[^<]*(?:what\s+(?:our\s+)?clients?\s+say|client\s+reviews?|testimonials?|success\s+stories|case\s+studies)[^<]*<\/\1>(?:(?!<\/(?:section|div|article|aside|main|body|li)>|<h[1-6]\b)[\s\S])*/gi;
+  cleaned = cleaned.replace(HEADING_SECTION_REGEX, ' ');
+
+  return cleaned;
+}
+
+const INTERNAL_FUNCTIONAL_DEPARTMENTS = new Set([
+  'operations', 'marketing', 'sales', 'finance', 'technology', 'engineering',
+  'product', 'people', 'hr', 'human resources', 'communications', 'strategy',
+  'commercial', 'client services', 'customer service', 'customer success',
+  'design', 'creative', 'legal', 'compliance', 'business development',
+  'growth', 'innovation', 'research', 'development', 'procurement',
+  'logistics', 'digital', 'media', 'partnerships'
+]);
+
+function isExternalEntity(entityStr, companyName = '', sourceUrl = '') {
+  if (!entityStr || typeof entityStr !== 'string') return false;
+
+  const rawEntity = entityStr.trim();
+  if (!rawEntity) return false;
+  const entityLower = rawEntity.toLowerCase();
+
+  // Ignore email addresses and web domain tokens
+  if (entityLower.includes('@') || /\.(?:com|co\.uk|org|net|io|gov\.uk|ac\.uk|biz|info)\b/i.test(entityLower)) {
+    return false;
+  }
+
+  // Ignore tenure and duration phrases
+  if (/\b(?:(?:over|more\s+than)\s+)?\d+\s+years?\b/i.test(entityLower) || /\b(?:for|of)\s+(?:(?:over|more\s+than)\s+)?\d+\s+years?\b/i.test(entityLower)) {
+    return false;
+  }
+
+  // Department whitelist (functional areas within the company)
+  if (
+    INTERNAL_FUNCTIONAL_DEPARTMENTS.has(entityLower) ||
+    [...INTERNAL_FUNCTIONAL_DEPARTMENTS].some(dept => entityLower === dept || entityLower.startsWith(dept + ' ') || entityLower.endsWith(' ' + dept))
+  ) {
+    return false;
+  }
+
+  const GENERIC_INTERNAL_ENTITIES = new Set([
+    'the company', 'our company', 'this company',
+    'the business', 'our business', 'this business',
+    'the team', 'our team', 'this team',
+    'the firm', 'our firm', 'this firm',
+    'the agency', 'our agency', 'this agency',
+    'the practice', 'our practice',
+    'the studio', 'our studio',
+    'the group', 'our group',
+    'our organization', 'the organization',
+    'our organisation', 'the organisation',
+    'company', 'business', 'team', 'firm', 'agency', 'studio'
+  ]);
+  if (GENERIC_INTERNAL_ENTITIES.has(entityLower)) {
+    return false;
+  }
+
+  const STOP_WORDS = new Set([
+    'ltd', 'limited', 'co', 'uk', 'inc', 'llp', 'plc', 'cic', 'group',
+    'holdings', 'services', 'solutions', 'the', 'and', '&', 'of', 'for', 'at'
+  ]);
+
+  const cleanWords = (str) => {
+    return (str || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter((w) => w.length > 1 && !STOP_WORDS.has(w));
+  };
+
+  const entityWords = cleanWords(rawEntity);
+  if (entityWords.length === 0) return false;
+
+  if (companyName) {
+    const companyWords = cleanWords(companyName);
+    const hasOverlap = entityWords.some((ew) => companyWords.includes(ew));
+    if (hasOverlap) return false;
+
+    const normEntity = entityWords.join('');
+    const normCompany = companyWords.join('');
+    if (normCompany && normEntity && (normCompany.includes(normEntity) || normEntity.includes(normCompany))) {
+      return false;
+    }
+  }
+
+  if (sourceUrl) {
+    try {
+      const parsed = new URL(sourceUrl);
+      const domainSlug = parsed.hostname.toLowerCase().replace(/^www\./, '').split('.')[0];
+      const normDomain = domainSlug.replace(/[^a-z0-9]/g, '');
+      const normEntity = entityWords.join('');
+      if (normDomain && normEntity && (normDomain.includes(normEntity) || normEntity.includes(normDomain))) {
+        return false;
+      }
+      if (entityWords.some((ew) => ew.length > 2 && normDomain.includes(ew))) {
+        return false;
+      }
+    } catch {}
+  }
+
+  return true;
+}
+
+function hasExternalEntityContext(text, matchIdx, matchLength, companyName, sourceUrl) {
+  if (!companyName && !sourceUrl) return false;
+
+  const windowEnd = Math.min(text.length, matchIdx + matchLength + 80);
+  const snippet = text.substring(matchIdx, windowEnd).split(/[.;\n]/)[0];
+
+  // Match of/at followed by Title Case proper nouns without /i flag
+  const entityRegex = /\b(?:of|at|Of|At)\s+(the\s+company|our\s+company|this\s+company|the\s+business|our\s+business|the\s+team|our\s+team|[A-Z0-9][A-Za-z0-9&'’\-]+(?:\s+[A-Z0-9][A-Za-z0-9&'’\-]+){0,5})/g;
+  for (const m of snippet.matchAll(entityRegex)) {
+    const entity = m[1].trim();
+    if (isExternalEntity(entity, companyName, sourceUrl)) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   if (!html) return [];
-  
-  const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+
+  const cleanedHtml = stripTestimonialsAndReviews(html);
+  // Replace block closing tags and breaks with punctuation/newlines to prevent bleed
+  const withBoundaries = cleanedHtml.replace(/<\/(?:p|div|section|article|li|h[1-6]|td|tr)>|<br\s*\/?>/gi, '.\n ');
+  const text = withBoundaries.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
   const found = [];
   const textLower = text.toLowerCase();
-  
+  const foundNames = new Set();
+
+
   if (Array.isArray(officers) && officers.length > 0) {
     for (const officer of officers) {
       const nameStr = officer.name;
       if (!nameStr) continue;
-      
+
       let matchIdx = textLower.indexOf(nameStr.toLowerCase());
       let matchLength = nameStr.length;
-      
+
       if (matchIdx === -1) {
         const nameParts = nameStr.split(' ');
         if (nameParts.length >= 3) {
           const first = nameParts[0];
           const last = nameParts[nameParts.length - 1];
-          const escapeRegExp = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+          const escapeRegExp = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
           const regex = new RegExp(`\\b${escapeRegExp(first)}\\b.{0,15}\\b${escapeRegExp(last)}\\b`, 'i');
           const m = text.match(regex);
           if (m) {
@@ -226,17 +443,21 @@ function extractPeople(html, officers = [], sourceUrl = '') {
           }
         }
       }
-      
+
       if (matchIdx !== -1) {
+        if (hasExternalEntityContext(text, matchIdx, matchLength, companyName, sourceUrl)) {
+          continue;
+        }
+
         let start = Math.max(0, matchIdx - 50);
         let end = Math.min(text.length, matchIdx + matchLength + 80);
-        
+
         const beforeStr = text.substring(start, matchIdx);
         const lastDot = beforeStr.lastIndexOf('.');
         if (lastDot !== -1) {
           start += lastDot + 1;
         }
-        
+
         const afterStr = text.substring(matchIdx + matchLength, end);
         const firstDot = afterStr.indexOf('.');
         if (firstDot !== -1) {
@@ -245,12 +466,12 @@ function extractPeople(html, officers = [], sourceUrl = '') {
 
         const windowStr = text.substring(start, end);
         const namePosInWindow = matchIdx - start;
-        
+
         const roleRegex = /\b(CEO|Chief Executive Officer|Founder|Co-Founder|CTO|CFO|COO|Director|Managing Director|Manager|Head|Lead|President|VP|Vice President)\b/gi;
-        
+
         let bestRole = null;
         let minDistance = Infinity;
-        
+
         for (const m of windowStr.matchAll(roleRegex)) {
           const roleStart = m.index;
           const roleEnd = m.index + m[0].length;
@@ -260,23 +481,28 @@ function extractPeople(html, officers = [], sourceUrl = '') {
           } else if (roleStart > namePosInWindow + matchLength) {
             dist = roleStart - (namePosInWindow + matchLength);
           }
-          
+
           if (dist < minDistance) {
             minDistance = dist;
             bestRole = m[0];
           }
         }
-        
+
         let role = officer.role;
         if (bestRole) {
-          role = bestRole.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+          role = bestRole.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
           if (role.toLowerCase() === 'ceo') role = 'CEO';
           if (role.toLowerCase() === 'cto') role = 'CTO';
           if (role.toLowerCase() === 'cfo') role = 'CFO';
           if (role.toLowerCase() === 'coo') role = 'COO';
           if (role.toLowerCase() === 'vp') role = 'VP';
         }
-        
+
+        foundNames.add(nameStr.toLowerCase());
+        const nParts = nameStr.toLowerCase().split(/\s+/);
+        if (nParts.length >= 2) {
+          foundNames.add(`${nParts[0]} ${nParts[nParts.length - 1]}`);
+        }
         found.push({
           name: nameStr,
           role: role,
@@ -286,15 +512,18 @@ function extractPeople(html, officers = [], sourceUrl = '') {
     }
   }
 
-  // Also extract prominent leadership named directly on team/about page
-  const foundNames = new Set(found.map(p => p.name.toLowerCase()));
-  const leadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO)/g;
-  for (const m of text.matchAll(leadershipRegex)) {
+  // Standard leadership pattern: Name Role
+  const standardLeadershipRegex = /([A-Z][a-z]+ [A-Z][a-z]+)[\s\n,–|:\-]+(Managing [Dd]irector|Operations [Dd]irector|Director(?:\s+of\s+[A-Za-z]+)?|Chief Executive Officer|CEO|Founder|Co-Founder|Chief Technology Officer|CTO)/g;
+  for (const m of text.matchAll(standardLeadershipRegex)) {
     const candidateName = m[1].trim();
     let candidateRole = m[2].trim();
+
+    if (!isValidPersonName(candidateName)) continue;
+    if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
+
     if (candidateRole.toLowerCase() === 'ceo') candidateRole = 'CEO';
     else if (candidateRole.toLowerCase() === 'cto') candidateRole = 'CTO';
-    else candidateRole = candidateRole.replace(/\b\w/g, c => c.toUpperCase());
+    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
 
     if (!foundNames.has(candidateName.toLowerCase())) {
       foundNames.add(candidateName.toLowerCase());
@@ -306,6 +535,102 @@ function extractPeople(html, officers = [], sourceUrl = '') {
     }
   }
 
+  // Reverse leadership patterns: Role Name & Founded by Name
+  const reverseLeadershipRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO|Founded by|Co-founded by|Established by|Led by)[\s\n,–|:\-]+([A-Z][a-z]+ [A-Z][a-z]+)\b/gi;
+  for (const m of text.matchAll(reverseLeadershipRegex)) {
+    const rawRole = m[1].trim();
+    const candidateName = m[2].trim();
+
+    if (!isValidPersonName(candidateName)) continue;
+    if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
+
+    let candidateRole = rawRole;
+    if (/^founded by$/i.test(rawRole)) candidateRole = 'Founder';
+    else if (/^co-founded by$/i.test(rawRole)) candidateRole = 'Co-Founder';
+    else if (/^established by$/i.test(rawRole)) candidateRole = 'Founder';
+    else if (/^led by$/i.test(rawRole)) candidateRole = 'Managing Director';
+    else if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) candidateRole = 'CEO';
+    else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) candidateRole = 'CTO';
+    else candidateRole = candidateRole.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+
+    if (!foundNames.has(candidateName.toLowerCase())) {
+      foundNames.add(candidateName.toLowerCase());
+      found.push({
+        name: candidateName,
+        role: candidateRole,
+        source_url: sourceUrl
+      });
+    }
+  }
+
+  // Single first-name leadership mentions linked to officers list
+  if (Array.isArray(officers) && officers.length > 0) {
+    const singleAfterRegex = /\b(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO)\s+([A-Z][a-z]+)\b/gi;
+    for (const m of text.matchAll(singleAfterRegex)) {
+      const rawRole = m[1].trim();
+      const firstName = m[2].trim();
+
+      const afterMatch = text.substring(m.index + m[0].length, m.index + m[0].length + 20);
+      if (/^\s+[A-Z][a-z]+/.test(afterMatch)) continue;
+      if (BAD_NAME_TOKENS.has(firstName.toLowerCase())) continue;
+      if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
+
+      const matchingOfficers = officers.filter((o) => {
+        if (!o.name) return false;
+        const oParts = o.name.trim().split(/\s+/);
+        return oParts[0].toLowerCase() === firstName.toLowerCase();
+      });
+
+      if (matchingOfficers.length === 1 && !foundNames.has(matchingOfficers[0].name.toLowerCase())) {
+        const matchingOfficer = matchingOfficers[0];
+        let role = rawRole;
+        if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) role = 'CEO';
+        else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) role = 'CTO';
+        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+
+        foundNames.add(matchingOfficer.name.toLowerCase());
+        found.push({
+          name: matchingOfficer.name,
+          role: role,
+          source_url: sourceUrl
+        });
+      }
+    }
+
+    const singleBeforeRegex = /\b([A-Z][a-z]+)[\s,–|-]+(Founder|Co-Founder|Chief Executive Officer|CEO|Managing Director|Operations Director|Director(?:\s+of\s+[A-Za-z]+)?|Chief Technology Officer|CTO)\b/gi;
+    for (const m of text.matchAll(singleBeforeRegex)) {
+      const firstName = m[1].trim();
+      const rawRole = m[2].trim();
+
+      const beforeMatch = text.substring(Math.max(0, m.index - 20), m.index);
+      if (/[A-Z][a-z]+\s*$/.test(beforeMatch)) continue;
+      if (BAD_NAME_TOKENS.has(firstName.toLowerCase())) continue;
+      if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
+
+      const matchingOfficers = officers.filter((o) => {
+        if (!o.name) return false;
+        const oParts = o.name.trim().split(/\s+/);
+        return oParts[0].toLowerCase() === firstName.toLowerCase();
+      });
+
+      if (matchingOfficers.length === 1 && !foundNames.has(matchingOfficers[0].name.toLowerCase())) {
+        const matchingOfficer = matchingOfficers[0];
+        let role = rawRole;
+        if (/^ceo$/i.test(rawRole) || /^chief executive officer$/i.test(rawRole)) role = 'CEO';
+        else if (/^cto$/i.test(rawRole) || /^chief technology officer$/i.test(rawRole)) role = 'CTO';
+        else role = role.replace(/\b\w/g, (c) => c.toUpperCase()).replace(/\bOf\b/, 'of');
+
+        foundNames.add(matchingOfficer.name.toLowerCase());
+        found.push({
+          name: matchingOfficer.name,
+          role: role,
+          source_url: sourceUrl
+        });
+      }
+    }
+  }
+
+
   return found;
 }
 
@@ -314,5 +639,10 @@ module.exports = {
   extractPhones, 
   extractContactDetails, 
   rankEmailsByCompanyName,
-  extractPeople
+  extractPeople,
+  stripTestimonialsAndReviews,
+  isExternalEntity,
+  FALSE_NAME_WORDS,
+  isValidPersonName
 };
+
