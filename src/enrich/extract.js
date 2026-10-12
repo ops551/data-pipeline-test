@@ -25,6 +25,45 @@ const PLACEHOLDER_USERNAMES = new Set([
   'admin_email', 'noreply', 'no-reply'
 ]);
 
+const DIRECTORY_DOMAINS = [
+  'companieshouse.gov.uk',
+  'find-and-update.company-information.service.gov.uk',
+  'endole.co.uk',
+  'bizstats.co.uk',
+  'companycheck.co.uk',
+  'suite.endole.co.uk',
+  'checkatrade.com',
+  'yell.com',
+  'trustpilot.com',
+  '192.com',
+  'thomsonlocal.com',
+  'yelp.co.uk',
+  'cylex-uk.co.uk',
+  'companiesintheuk.co.uk',
+  'corpium.co.uk',
+  'secret-bases.co.uk',
+  'kompass.com',
+  'scotlandscompanies.com',
+  'uk.globaldatabase.com',
+  'bizdb.co.uk',
+  'companydirectorcheck.com',
+  'checkcompany.co.uk',
+  'cbdb.co.uk',
+  'pomanda.com',
+  'savills.com',
+  'rightmove.co.uk',
+  'zoopla.co.uk',
+  'onthemarket.com',
+  'foxtons.co.uk',
+  'knightfrank.com',
+  'hamptons.co.uk',
+  'purplebricks.co.uk',
+  'connells.co.uk',
+  'countrywide.co.uk',
+  'dentalplans.com',
+  'bark.com'
+];
+
 const BLOCKED_EMAIL_DOMAINS = new Set([
   'example.com', 'example.org', 'example.net',
   'domain.com', 'yourdomain.com', 'email.com', 'site.com', 'website.com',
@@ -32,10 +71,8 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
   'dictionary.com', 'thesaurus.com', 'thefreedictionary.com', 'wikipedia.org',
   'w3.org', 'schema.org', 'wordpress.org', 'wordpress.com', 'github.com',
   'sentry.io', 'wixpress.com', 'duckduckgo.com',
-  'savills.com', 'rightmove.co.uk', 'zoopla.co.uk', 'onthemarket.com',
-  'foxtons.co.uk', 'knightfrank.com', 'hamptons.co.uk', 'purplebricks.co.uk',
-  'connells.co.uk', 'countrywide.co.uk',
-  'mytempurl.co', 'tempurl.host', 'dentalplans.com', 'bark.com'
+  'mytempurl.co', 'tempurl.host',
+  ...DIRECTORY_DOMAINS
 ]);
 
 const UK_GEO_WORDS = new Set([
@@ -687,6 +724,8 @@ module.exports = {
   stripTestimonialsAndReviews,
   isExternalEntity,
   FALSE_NAME_WORDS,
-  isValidPersonName
+  isValidPersonName,
+  BLOCKED_EMAIL_DOMAINS,
+  DIRECTORY_DOMAINS
 };
 

@@ -60,6 +60,26 @@ test('extractFirstName extracts natural first names from registry and normal for
   assert.equal(extractFirstName('MR.   '), '');
 });
 
+test('extractFirstName rejects role-only and non-person tokens, falling back to empty string', () => {
+  assert.equal(extractFirstName('Finance Director'), '');
+  assert.equal(extractFirstName('Managing Director'), '');
+  assert.equal(extractFirstName('Operations Head'), '');
+  assert.equal(extractFirstName('The Team'), '');
+  assert.equal(extractFirstName('Our Co'), '');
+  assert.equal(extractFirstName('Customer Service'), '');
+  assert.equal(extractFirstName('General Manager'), '');
+  assert.equal(extractFirstName('Sales Lead'), '');
+  assert.equal(extractFirstName('Executive Director'), '');
+  assert.equal(extractFirstName('Director, Finance'), '');
+});
+
+test('extractFirstName skips title and role prefixes to extract real person first name', () => {
+  assert.equal(extractFirstName('Founder Lauren Mucklow'), 'Lauren');
+  assert.equal(extractFirstName('CEO Alice Wonder'), 'Alice');
+  assert.equal(extractFirstName('Director John Smith'), 'John');
+  assert.equal(extractFirstName('Co-Founder Bob Dylan'), 'Bob');
+});
+
 test('mapSicToIndustry maps SIC codes and descriptive names correctly', () => {
   assert.equal(mapSicToIndustry('81210'), 'commercial and domestic cleaning');
   assert.equal(mapSicToIndustry('81221; 81222'), 'commercial and domestic cleaning');

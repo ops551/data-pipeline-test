@@ -75,6 +75,18 @@ const TITLES = new Set([
   "LADY",
 ]);
 
+const INVALID_FIRST_NAME_TOKENS = new Set([
+  ...TITLES,
+  "FINANCE", "MANAGING", "OPERATIONS", "MARKETING", "EXECUTIVE",
+  "DIRECTOR", "OFFICER", "MANAGER", "HEAD", "LEAD", "FOUNDER",
+  "COFOUNDER", "CO", "CEO", "CTO", "CFO", "COO", "CMO",
+  "PRESIDENT", "VP", "CHIEF", "PARTNER", "PRINCIPAL", "OWNER",
+  "TEAM", "STAFF", "OUR", "THE", "ADMIN", "INFO", "SALES",
+  "SUPPORT", "ENQUIRIES", "ENQUIRY", "CONTACT", "OFFICE", "GENERAL", "CUSTOMER",
+  "ABOUT", "US", "READ", "MORE", "SERVICE", "SERVICES", "COMPANY",
+  "HELP", "DESK", "CARE", "LINE", "CENTRE", "CENTER", "COMMUNITY"
+]);
+
 function extractFirstName(rawName) {
   if (!rawName || typeof rawName !== "string") return "";
   const trimmed = rawName.trim();
@@ -89,8 +101,8 @@ function extractFirstName(rawName) {
   const tokens = namePart.split(/\s+/).filter(Boolean);
   for (const token of tokens) {
     const cleanToken = token.replace(/[^a-zA-Z]/g, "").toUpperCase();
-    if (cleanToken && !TITLES.has(cleanToken)) {
-      return token.charAt(0).toUpperCase() + token.slice(1).toLowerCase();
+    if (cleanToken && !INVALID_FIRST_NAME_TOKENS.has(cleanToken)) {
+      return cleanToken.charAt(0).toUpperCase() + cleanToken.slice(1).toLowerCase();
     }
   }
 
@@ -547,6 +559,7 @@ module.exports = {
   buildSignature,
   resolveApiKey,
   extractFirstName,
+  INVALID_FIRST_NAME_TOKENS,
   mapSicToIndustry,
   buildPrompt,
   cleanEmailContent,
