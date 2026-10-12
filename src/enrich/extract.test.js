@@ -274,3 +274,93 @@ test('extractPeople links single first-name leadership mentions to officer list'
   assert.strictEqual(people[0].role, 'Co-Founder');
 });
 
+test('isExternalEntity whitelists internal functional departments', () => {
+  const { isExternalEntity, extractPeople } = require('./extract');
+
+  assert.strictEqual(isExternalEntity('Operations', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('Marketing', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('Finance', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('Sales', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('Human Resources', 'Acme Ltd'), false);
+
+  const html = `
+    <div>
+      <p>Alice Cooper, Director of Operations.</p>
+      <p>Bob Dylan, Director of Marketing.</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://acme.co.uk', 'Acme Ltd');
+  assert.strictEqual(people.length, 2);
+  assert.strictEqual(people[0].name, 'Alice Cooper');
+  assert.strictEqual(people[1].name, 'Bob Dylan');
+});
+
+test('hasExternalEntityContext ignores duration and tenure phrases with for', () => {
+  const { isExternalEntity, extractPeople } = require('./extract');
+
+  assert.strictEqual(isExternalEntity('10 years', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('over 20 years', 'Acme Ltd'), false);
+
+  const html = `
+    <div>
+      <p>Alice Cooper, CEO for 10 years at our helm.</p>
+      <p>Bob Dylan, Managing Director for over 20 years.</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://acme.co.uk', 'Acme Ltd');
+  assert.strictEqual(people.length, 2);
+  assert.strictEqual(people[0].name, 'Alice Cooper');
+  assert.strictEqual(people[0].role, 'CEO');
+  assert.strictEqual(people[1].name, 'Bob Dylan');
+  assert.strictEqual(people[1].role, 'Managing Director');
+});
+
+test('extractPeople replaces block closing tags with boundaries to prevent tag bleed', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Alice Cooper, CEO</p>
+      <p>Contact us at info@example.com</p>
+    </div>
+  `;
+  const people = extractPeople(html, [], 'https://acme.co.uk', 'Acme Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Alice Cooper');
+  assert.strictEqual(people[0].role, 'CEO');
+});
+
+test('isExternalEntity ignores email contact tokens', () => {
+  const { isExternalEntity } = require('./extract');
+
+  assert.strictEqual(isExternalEntity('info@example.com', 'Acme Ltd'), false);
+  assert.strictEqual(isExternalEntity('sales@company.co.uk', 'Acme Ltd'), false);
+});
+
+test('extractPeople avoids ambiguous single first-name officer binding when multiple match', () => {
+  const { extractPeople } = require('./extract');
+
+  const html = `
+    <div>
+      <p>Co-Founder Lauren leads our team.</p>
+    </div>
+  `;
+  // Two officers with the same first name Lauren
+  const ambiguousOfficers = [
+    { name: 'Lauren Mucklow', role: 'director' },
+    { name: 'Lauren Smith', role: 'director' }
+  ];
+  const people = extractPeople(html, ambiguousOfficers, 'https://test.com', 'Test Ltd');
+  // Ambiguous: should not bind
+  assert.strictEqual(people.length, 0);
+
+  // Single officer with first name Lauren
+  const singleOfficer = [
+    { name: 'Lauren Mucklow', role: 'director' }
+  ];
+  const peopleSingle = extractPeople(html, singleOfficer, 'https://test.com', 'Test Ltd');
+  assert.strictEqual(peopleSingle.length, 1);
+  assert.strictEqual(peopleSingle[0].name, 'Lauren Mucklow');
+});
+
+
