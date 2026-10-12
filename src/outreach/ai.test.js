@@ -479,3 +479,60 @@ test('generateEmail propagates error when API fails permanently or exceeds retri
     /API key not valid/
   );
 });
+
+test('cleanEmailContent automatically substitutes innocent trigger words (regarding, won\'t, LIMITED)', () => {
+  const raw = JSON.stringify({
+    subject: 'Reaching out regarding your digital automation',
+    body: 'Hey Sarah,\n\nWe build systems so your team won\'t have to handle routine tasks manually for ACME SERVICES LIMITED.'
+  });
+
+  const cleaned = cleanEmailContent(raw, { companyName: 'ACME SERVICES LIMITED' });
+  assert.ok(cleaned.subject.includes('about your digital automation'));
+  assert.ok(cleaned.body.includes('will not have to handle routine tasks'));
+  assert.ok(cleaned.body.includes('ACME SERVICES Ltd'));
+  assert.doesNotMatch(cleaned.subject, /\bregarding\b/i);
+  assert.doesNotMatch(cleaned.body, /\bwon't\b/i);
+  assert.doesNotMatch(cleaned.body, /\bLIMITED\b/);
+});
+
+test('generateEmail retries with corrective prompt when generated content contains a forbidden spam word and succeeds', async () => {
+  let callCount = 0;
+  const capturedPrompts = [];
+
+  const mockModel = {
+    generateContent: async (promptText) => {
+      callCount++;
+      capturedPrompts.push(promptText);
+      if (callCount === 1) {
+        return {
+          response: {
+            text: () => JSON.stringify({
+              subject: 'Get an instant quote for your website',
+              body: 'Hey Sarah,\n\nWe provide free quotes.\n\nBest regards,\nNahid'
+            })
+          }
+        };
+      }
+      return {
+        response: {
+          text: () => JSON.stringify({
+            subject: 'Digital automation for your website',
+            body: 'Hey Sarah,\n\nWe build modern automation.\n\nBest regards,\nNahid'
+          })
+        }
+      };
+    }
+  };
+
+  const result = await generateEmail(
+    { company_name: 'Alpha Ltd' },
+    { model: mockModel }
+  );
+
+  assert.equal(callCount, 2);
+  assert.ok(capturedPrompts[1].includes('CRITICAL CORRECTION'));
+  assert.ok(capturedPrompts[1].includes('quote'));
+  assert.equal(result.subject, 'Digital automation for your website');
+  assert.ok(result.body.includes('We build modern automation'));
+});
+
