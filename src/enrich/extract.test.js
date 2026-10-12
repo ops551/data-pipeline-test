@@ -116,3 +116,31 @@ test('extractPeople discovers leadership on team page when officers array is emp
   assert.equal(people[1].name, 'Nick Elliott');
   assert.equal(people[1].role, 'Operations Director');
 });
+
+test('rankEmailsByCompanyName rejects estate agent and third-party corporate emails', () => {
+  assert.deepStrictEqual(
+    rankEmailsByCompanyName(
+      ['cobham_sales@savills.com'],
+      'GREEN LANE COBHAM LTD'
+    ),
+    []
+  );
+
+  assert.deepStrictEqual(
+    rankEmailsByCompanyName(
+      ['members@dentalplans.com'],
+      'NORTHERN DENTAL GROUP LTD'
+    ),
+    []
+  );
+});
+
+test('rankEmailsByCompanyName accepts legitimate public email matching full brand slug', () => {
+  assert.deepStrictEqual(
+    rankEmailsByCompanyName(
+      ['kmlsecure@outlook.com'],
+      'KML SECURE LIMITED'
+    ),
+    ['kmlsecure@outlook.com']
+  );
+});

@@ -22,7 +22,19 @@ const DIRECTORY_DOMAINS = [
   'companydirectorcheck.com',
   'checkcompany.co.uk',
   'cbdb.co.uk',
-  'pomanda.com'
+  'pomanda.com',
+  'savills.com',
+  'rightmove.co.uk',
+  'zoopla.co.uk',
+  'onthemarket.com',
+  'foxtons.co.uk',
+  'knightfrank.com',
+  'hamptons.co.uk',
+  'purplebricks.co.uk',
+  'connells.co.uk',
+  'countrywide.co.uk',
+  'dentalplans.com',
+  'bark.com'
 ];
 
 const SOCIAL_DOMAINS = [
@@ -42,7 +54,10 @@ const BLOCKED_DOMAINS = new Set([
   'amazon.co.uk', 'amazon.com', 'ebay.co.uk', 'ebay.com', 'etsy.com', 'aliexpress.com',
   'coral.co.uk', 'bet365.com', 'williamhill.com', 'ladbrokes.com', 'paddypower.com', 'skybet.com',
   'bbc.co.uk', 'theguardian.com', 'dailymail.co.uk', 'telegraph.co.uk', 'independent.co.uk', 'sky.com',
-  'blacks.co.uk', 'millets.co.uk', 'gooutdoors.co.uk', 'jd-sports.co.uk'
+  'blacks.co.uk', 'millets.co.uk', 'gooutdoors.co.uk', 'jd-sports.co.uk',
+  'savills.com', 'rightmove.co.uk', 'zoopla.co.uk', 'onthemarket.com', 'foxtons.co.uk', 'knightfrank.com', 'hamptons.co.uk', 'purplebricks.co.uk', 'connells.co.uk', 'countrywide.co.uk',
+  'mytempurl.co', 'tempurl.host', 'wixsite.com', 'squarespace.com', 'weebly.com', 'godaddysites.com',
+  'dentalplans.com', 'bark.com'
 ]);
 
 const STOPWORDS = new Set([
@@ -84,23 +99,42 @@ function isLikelyCompanyWebsite(domain, companyName) {
   const joinedCore = coreWords.join('');
   const joinedAll = allWords.filter(w => !STOPWORDS.has(w) || w.length > 3).join('');
 
-  // 1. Direct joined match (e.g. courtside.uk -> courtside, rsletz.co.uk -> rsletz)
+  const ALLOWED_AFFIXES = new Set([
+    '', 'ltd', 'limited', 'uk', 'co', 'group', 'services', 'solutions', 'app', 'online', 'store', 'shop'
+  ]);
+
+  // 1. Direct joined match (e.g. courtside.uk -> courtside, rsletz.co.uk -> rsletz, autodesign.works -> autodesign)
   if (joinedCore && d === joinedCore) return true;
   if (joinedAll && d === joinedAll) return true;
-  if (joinedCore && (d.includes(joinedCore) || (joinedCore.length >= 6 && joinedCore.includes(d)))) return true;
+  if (joinedCore && (d.startsWith(joinedCore) || d.endsWith(joinedCore))) {
+    const remaining = d.startsWith(joinedCore) ? d.slice(joinedCore.length) : d.slice(0, d.length - joinedCore.length);
+    if (ALLOWED_AFFIXES.has(remaining)) return true;
+  }
+  if (joinedAll && (d.startsWith(joinedAll) || d.endsWith(joinedAll))) {
+    const remaining = d.startsWith(joinedAll) ? d.slice(joinedAll.length) : d.slice(0, d.length - joinedAll.length);
+    if (ALLOWED_AFFIXES.has(remaining)) return true;
+  }
 
   // 2. Multi-word match: If company has multiple core words, require at least 2 matching words
   if (coreWords.length >= 2) {
-    const matchCount = coreWords.filter(w => d.includes(w)).length;
-    if (matchCount >= 2) return true;
+    const matchingWords = coreWords.filter(w => d.includes(w));
+    if (matchingWords.length >= 2) {
+      const matchedLength = matchingWords.reduce((acc, w) => acc + w.length, 0);
+      if (matchedLength >= d.length * 0.5 || d.length <= matchedLength + 4) {
+        return true;
+      }
+    }
     return false;
   }
 
-  // 3. Single core word: exact match or strong prefix/suffix match (e.g. courtside.uk -> courtside)
+  // 3. Single core word: exact match or strict company suffix (e.g. courtside.uk -> courtside)
   if (coreWords.length === 1) {
     const single = coreWords[0];
     if (d === single) return true;
-    if (single.length >= 5 && (d.startsWith(single) || d.endsWith(single))) return true;
+    if (d.startsWith(single)) {
+      const remaining = d.slice(single.length);
+      if (ALLOWED_AFFIXES.has(remaining)) return true;
+    }
   }
 
   return false;

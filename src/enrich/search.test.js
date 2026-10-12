@@ -99,11 +99,14 @@ test('isLikelyCompanyWebsite matches genuine company domains and blocks junk pla
   assert.strictEqual(isLikelyCompanyWebsite('rsletz.co.uk', 'RS LETZ LTD'), true);
   assert.strictEqual(isLikelyCompanyWebsite('autodesign.works', 'Auto Design Solutions Ltd'), true);
 
-  // Negative matches: Blocked global platforms
+  // Negative matches: Blocked global platforms & estate portals
   assert.strictEqual(isLikelyCompanyWebsite('thesaurus.com', 'THE SMALL APPETITE CLUB LTD'), false);
   assert.strictEqual(isLikelyCompanyWebsite('en.thefreedictionary.com', 'GLOW AND GROW ENTERPRISE LIMITED'), false);
   assert.strictEqual(isLikelyCompanyWebsite('youtube.com', 'HAPPY VERMA LTD'), false);
   assert.strictEqual(isLikelyCompanyWebsite('en.wikipedia.org', 'QWENE LTD'), false);
   assert.strictEqual(isLikelyCompanyWebsite('blacks.co.uk', 'BLACK VELVET STUDIOS LTD'), false);
   assert.strictEqual(isLikelyCompanyWebsite('coral.co.uk', 'CORAL RECOVERY LTD'), false);
+  assert.strictEqual(isLikelyCompanyWebsite('savills.com', 'GREEN LANE COBHAM LTD'), false);
+  assert.strictEqual(isLikelyCompanyWebsite('dentalplans.com', 'NORTHERN DENTAL GROUP LTD'), false);
+  assert.strictEqual(isLikelyCompanyWebsite('glyndwrinnovations.co.uk', 'GLYNDWR GROUP LTD'), false);
 });

@@ -31,7 +31,18 @@ const BLOCKED_EMAIL_DOMAINS = new Set([
   'youtube.com', 'youtu.be', 'google.com', 'apple.com',
   'dictionary.com', 'thesaurus.com', 'thefreedictionary.com', 'wikipedia.org',
   'w3.org', 'schema.org', 'wordpress.org', 'wordpress.com', 'github.com',
-  'sentry.io', 'wixpress.com', 'duckduckgo.com'
+  'sentry.io', 'wixpress.com', 'duckduckgo.com',
+  'savills.com', 'rightmove.co.uk', 'zoopla.co.uk', 'onthemarket.com',
+  'foxtons.co.uk', 'knightfrank.com', 'hamptons.co.uk', 'purplebricks.co.uk',
+  'connells.co.uk', 'countrywide.co.uk',
+  'mytempurl.co', 'tempurl.host', 'dentalplans.com', 'bark.com'
+]);
+
+const UK_GEO_WORDS = new Set([
+  'london', 'cobham', 'surrey', 'manchester', 'birmingham', 'leeds', 'glasgow',
+  'edinburgh', 'bristol', 'york', 'cardiff', 'liverpool', 'oxford', 'cambridge',
+  'kent', 'essex', 'sussex', 'norfolk', 'suffolk', 'devon', 'cornwall', 'hants',
+  'wales', 'scotland', 'uk', 'england'
 ]);
 
 function extractEmails(text) {
@@ -125,7 +136,7 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
 
   const cleanName = (companyName || '').toLowerCase().replace(/\b(ltd|limited|uk|co|inc|cic)\b/g, '').replace(/[^a-z0-9]/g, ' ').trim();
   const words = cleanName.split(/\s+/).filter(w =>
-    w.length > 3 && !GENERIC_COMPANY_TERMS.has(w)
+    w.length > 3 && !GENERIC_COMPANY_TERMS.has(w) && !UK_GEO_WORDS.has(w)
   );
   const joinedName = words.join('');
   const officerNames = String(officersStr || '')
@@ -141,33 +152,39 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
     let companyMatch = false;
 
     if (domain) {
-      const domainName = domain.split('.')[0];
+      const domainLower = domain.toLowerCase();
+      if (BLOCKED_EMAIL_DOMAINS.has(domainLower)) return;
+      const domainName = domainLower.split('.')[0];
 
-      if (joinedName && domainName.includes(joinedName)) {
+      if (joinedName && (domainName === joinedName || domainName.includes(joinedName))) {
         score += 100;
         companyMatch = true;
-      }
-
-      words.forEach(w => {
-        if (domainName.includes(w)) {
-          score += 20;
+      } else if (words.length >= 2) {
+        const matchingDomainWords = words.filter(w => domainName.includes(w));
+        if (matchingDomainWords.length >= 2) {
+          score += 40;
           companyMatch = true;
         }
-      });
-
+      } else if (words.length === 1) {
+        const single = words[0];
+        if (domainName === single || domainName === `${single}ltd` || domainName === `${single}uk` || domainName === `${single}co` || domainName === `${single}group`) {
+          score += 40;
+          companyMatch = true;
+        }
+      }
     }
 
-    if (user && words.length > 0) {
-      words.forEach(w => {
-        if (user.includes(w)) {
-          score += 10;
-          companyMatch = true;
-        }
-      });
+    if (user) {
+      const userLower = user.toLowerCase();
+      // Match full company brand slug in user (e.g. kmlsecure@outlook.com)
+      if (joinedName && joinedName.length >= 5 && (userLower === joinedName || userLower.includes(joinedName))) {
+        score += 50;
+        companyMatch = true;
+      }
     }
 
     const officerMatch = Boolean(user) && officerNames.some(name =>
-      name.every(part => user.includes(part))
+      name.every(part => user.toLowerCase().includes(part))
     );
     if (officerMatch) score += 30;
 
