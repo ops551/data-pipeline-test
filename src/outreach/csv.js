@@ -300,28 +300,34 @@ function moveLeadsToSent(companyNumbers, options = {}) {
     return { success: false, reason: 'no_company_numbers_provided', movedCount: 0, movedLeads: [] };
   }
 
+  const sentToRaw = extraFields.sent_to ? String(extraFields.sent_to) : (options.email ? String(options.email) : '');
+  const sentToSet = sentToRaw ? new Set(sentToRaw.split(/[;,]/).map(e => e.trim().toLowerCase()).filter(Boolean)) : null;
+
   const leads = readLeads(leadsPath);
   const matched = [];
   const remaining = [];
 
   for (const lead of leads) {
-    if (targetSet.has(String(lead.company_number).trim())) {
-      matched.push({ ...lead, ...extraFields, sent_at: lead.sent_at || sentAt });
+    const compNum = String(lead.company_number).trim();
+    const isTargetCompany = targetSet.has(compNum);
 
-      const sentToRaw = extraFields.sent_to ? String(extraFields.sent_to) : '';
-      if (sentToRaw) {
-        const sentToSet = new Set(
-          sentToRaw.split(/[;,]/).map(e => e.trim().toLowerCase()).filter(Boolean)
-        );
-        const emails = String(lead.emails || '').split(/[;,]/).map(e => e.trim()).filter(Boolean);
-        const remainingEmails = emails.filter(e => !sentToSet.has(e.toLowerCase()));
-        if (remainingEmails.length > 0) {
-          remaining.push({ ...lead, emails: remainingEmails.join('; ') });
+    if (isTargetCompany) {
+      const leadEmails = String(lead.emails || '').split(/[;,]/).map(e => e.trim().toLowerCase()).filter(Boolean);
+      const isTargetLead = !sentToSet || leadEmails.some(e => sentToSet.has(e));
+
+      if (isTargetLead) {
+        matched.push({ ...lead, ...extraFields, sent_at: lead.sent_at || sentAt });
+
+        if (sentToSet) {
+          const remainingEmails = leadEmails.filter(e => !sentToSet.has(e));
+          if (remainingEmails.length > 0) {
+            remaining.push({ ...lead, emails: remainingEmails.join('; ') });
+          }
         }
+        continue;
       }
-    } else {
-      remaining.push(lead);
     }
+    remaining.push(lead);
   }
 
   if (matched.length === 0) {

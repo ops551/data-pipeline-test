@@ -490,3 +490,45 @@ test('moveLeadsToSent handles multiple emails in extraFields.sent_to', () => {
   assert.equal(remainingLeads.length, 1);
   assert.equal(remainingLeads[0].emails, 'c@c.com');
 });
+
+test('moveLeadToSent moves only targeted decision-maker row for multi-person company', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+  const multiPersonRows = [
+    {
+      ...sampleLeads[0],
+      company_number: '12345678',
+      person_name: 'Lauren Mucklow',
+      emails: 'lauren@whatshesaid.uk'
+    },
+    {
+      ...sampleLeads[0],
+      company_number: '12345678',
+      person_name: 'John Doe',
+      emails: 'john@whatshesaid.uk'
+    }
+  ];
+  seedLeadsFile(leadsPath, multiPersonRows);
+
+  const res = moveLeadToSent('12345678', {
+    leadsPath,
+    sentLeadsPath,
+    extraFields: { sent_to: 'lauren@whatshesaid.uk' }
+  });
+
+  assert.strictEqual(res.success, true);
+  assert.strictEqual(res.movedCount, 1);
+  assert.strictEqual(res.lead.person_name, 'Lauren Mucklow');
+
+  // Verify leads.csv still has John Doe pending!
+  const remainingLeads = readLeads(leadsPath);
+  assert.strictEqual(remainingLeads.length, 1);
+  assert.strictEqual(remainingLeads[0].person_name, 'John Doe');
+  assert.strictEqual(remainingLeads[0].emails, 'john@whatshesaid.uk');
+
+  // Verify sent_leads.csv only has Lauren Mucklow!
+  const sentLeads = readLeads(sentLeadsPath);
+  assert.strictEqual(sentLeads.length, 1);
+  assert.strictEqual(sentLeads[0].person_name, 'Lauren Mucklow');
+  assert.strictEqual(sentLeads[0].sent_to, 'lauren@whatshesaid.uk');
+});
+

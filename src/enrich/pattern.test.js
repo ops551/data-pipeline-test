@@ -93,12 +93,22 @@ test('QuickEmailVerification parser validates deliverability criteria', async ()
       assert.ok(url.includes('api.quickemailverification.com'));
       return {
         status: 200,
-        json: async () => ({ result: 'valid', safe_to_send: 'true' })
+        json: async () => ({ result: 'valid', safe_to_send: 'true', accept_all: 'false' })
       };
     };
     const validRes = await verifyQuickEmailVerification('test@domain.com', 'test-key');
     assert.strictEqual(validRes.isValid, true);
     assert.strictEqual(validRes.reason, 'quickemailverification');
+
+    // Reject accept_all and safe_to_send=false (prevents bouncing on Microsoft 365 catch-all)
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({ result: 'valid', safe_to_send: 'false', accept_all: 'true', reason: 'accepted_email' })
+    });
+    const acceptAllRes = await verifyQuickEmailVerification('catchall@domain.com', 'test-key');
+    assert.strictEqual(acceptAllRes.isValid, false);
+    assert.strictEqual(acceptAllRes.isCatchAll, true);
+    assert.strictEqual(acceptAllRes.reason, 'qev_accept_all_unsafe');
 
     global.fetch = async () => ({
       status: 200,
@@ -119,12 +129,21 @@ test('Sniffmail parser validates deliverability criteria', async () => {
       assert.strictEqual(options.headers.Authorization, 'Bearer test-sniff-key');
       return {
         status: 200,
-        json: async () => ({ is_deliverable: true, is_valid: true })
+        json: async () => ({ is_deliverable: true, is_valid: true, is_reachable: 'safe' })
       };
     };
     const validRes = await verifySniffmail('test@domain.com', 'test-sniff-key');
     assert.strictEqual(validRes.isValid, true);
     assert.strictEqual(validRes.reason, 'sniffmail');
+
+    // Reject risky/invalid responses even if is_deliverable is true
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({ is_valid: false, is_reachable: 'risky', is_deliverable: true, reason: 'Risky - may not be deliverable' })
+    });
+    const riskyRes = await verifySniffmail('risky@domain.com', 'test-sniff-key');
+    assert.strictEqual(riskyRes.isValid, false);
+    assert.strictEqual(riskyRes.isCatchAll, true);
 
     global.fetch = async () => ({
       status: 200,
@@ -156,6 +175,16 @@ test('Reoon parser validates deliverability criteria', async () => {
     });
     const safeRes = await verifyReoon('test@domain.com', 'test-reoon-key');
     assert.strictEqual(safeRes.isValid, true);
+
+    // Reject catch_all
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({ status: 'catch_all' })
+    });
+    const catchAllRes = await verifyReoon('catchall@domain.com', 'test-reoon-key');
+    assert.strictEqual(catchAllRes.isValid, false);
+    assert.strictEqual(catchAllRes.isCatchAll, true);
+    assert.strictEqual(catchAllRes.reason, 'reoon_catch_all');
 
     global.fetch = async () => ({
       status: 200,
