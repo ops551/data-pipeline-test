@@ -156,7 +156,7 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('upgrade websites and set up automated workflows'));
   assert.ok(prompt.includes('routine client communications or scheduling manually'));
   assert.ok(prompt.includes('If you prefer no further messages, I completely understand and will not contact you again.'));
-  assert.ok(prompt.includes('Keep it under 100 words before the signature.'));
+  assert.ok(prompt.includes('Keep it under 120 words before the signature.'));
   assert.ok(prompt.includes('Make the wording slightly unique for this specific company name and industry'));
   assert.ok(prompt.includes(`Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(', ')}.`));
   assert.ok(prompt.includes('Do not use any forbidden word or phrase anywhere in the subject or body'));
@@ -354,6 +354,9 @@ test('cleanEmailContent handles null or empty input with robust fallback', () =>
   assert.equal(cleaned.subject, 'A quick question for Delta Ltd');
   assert.ok(cleaned.body.includes('Delta Ltd'));
   assert.ok(cleaned.body.includes('I came across Delta Ltd and wanted to reach out briefly.'));
+  assert.ok(cleaned.body.includes('I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.'));
+  assert.ok(cleaned.body.includes('You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.'));
+  assert.ok(cleaned.body.includes('This would cut down time on routine tasks while keeping everything organised and visible in one place.'));
   assert.ok(cleaned.body.includes('Are you currently looking for any support or improvements with your digital systems?'));
   assert.ok(cleaned.body.includes('I will make sure not to contact you again'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
@@ -611,14 +614,48 @@ test('buildPrompt includes tangible social media and dashboard automation for no
   // Persona A: Web design & tangible customer inquiry/social media automation
   assert.ok(prompt.includes('Hey Marco,'));
   assert.ok(prompt.includes('web designer and business automation specialist'));
-  assert.ok(prompt.includes('scheduled social media posts and stories'));
-  assert.ok(prompt.includes('smart replies to customer enquiries across communication channels'));
-  assert.ok(prompt.includes('central dashboard to track incoming enquiries'));
+  assert.ok(prompt.includes('I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.'));
+  assert.ok(prompt.includes('You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.'));
+  assert.ok(prompt.includes('This would cut down time on routine tasks while keeping everything organised and visible in one place.'));
+  assert.ok(prompt.includes('Keep it under 120 words before the signature.'));
   assert.ok(prompt.includes('Web Design & Business Automation'));
 
   // Must NOT pitch contract backend development to a restaurant
   assert.doesNotMatch(prompt, /Node\.js, API integrations/i);
   assert.doesNotMatch(prompt, /overflow development work/i);
+});
+
+test('Persona A prompt and fallback email contain exact 3 natural automation sentences', () => {
+  const sentence1 = 'I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.';
+  const sentence2 = 'You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.';
+  const sentence3 = 'This would cut down time on routine tasks while keeping everything organised and visible in one place.';
+
+  // 1. buildPrompt without website
+  const promptNoWebsite = buildPrompt({
+    company_name: 'Acme Bakery Ltd',
+    sic_codes: '10710'
+  });
+  assert.ok(promptNoWebsite.includes(sentence1));
+  assert.ok(promptNoWebsite.includes(sentence2));
+  assert.ok(promptNoWebsite.includes(sentence3));
+  assert.ok(promptNoWebsite.includes('Keep it under 120 words before the signature.'));
+
+  // 2. buildPrompt with verified website
+  const promptWithWebsite = buildPrompt({
+    company_name: 'Acme Bakery Ltd',
+    sic_codes: '10710',
+    website_url: 'https://acmebakery.co.uk'
+  });
+  assert.ok(promptWithWebsite.includes(sentence1));
+  assert.ok(promptWithWebsite.includes(sentence2));
+  assert.ok(promptWithWebsite.includes(sentence3));
+  assert.ok(promptWithWebsite.includes('Keep it under 120 words before the signature.'));
+
+  // 3. Fallback email for non-tech business
+  const fallback = cleanEmailContent('', { companyName: 'Acme Bakery Ltd', isTech: false });
+  assert.ok(fallback.body.includes(sentence1));
+  assert.ok(fallback.body.includes(sentence2));
+  assert.ok(fallback.body.includes(sentence3));
 });
 
 test('cleanEmailContent handles tech company fallback cleanly', () => {
