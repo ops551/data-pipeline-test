@@ -488,11 +488,102 @@ async function checkCatchAll(domain) {
   };
 }
 
+async function resolvePersonEmail({
+  person,
+  domain,
+  patternInfo = null,
+  allExtractedEmails = [],
+  isCatchAll = false,
+  officerCount,
+  peopleCount,
+  websiteUrl = '',
+  verifyEmailFn = verifyEmail
+} = {}) {
+  if (!person || !person.name || !domain) {
+    return null;
+  }
+
+  const inferred = inferEmails(person.name, domain, patternInfo);
+  if (!inferred || inferred.length === 0) {
+    return null;
+  }
+
+  const extracted = Array.isArray(allExtractedEmails) ? allExtractedEmails : [];
+  const foundExact = inferred.find((e) => extracted.includes(e));
+  if (foundExact) {
+    return {
+      email: foundExact,
+      emailSource: websiteUrl || 'search',
+      verificationStatus: 'exact_match'
+    };
+  }
+
+  if (!isCatchAll) {
+    for (const candidate of inferred) {
+      try {
+        const v = await verifyEmailFn(candidate);
+        if (v && v.status === 'valid_domain') {
+          return {
+            email: candidate,
+            emailSource: 'inferred',
+            verificationStatus: v.reason || 'verified'
+          };
+        }
+      } catch {
+        continue;
+      }
+    }
+    return null;
+  }
+
+  const countOfficers = officerCount !== undefined && officerCount !== null ? officerCount : (peopleCount || 0);
+  const countPeople = peopleCount !== undefined && peopleCount !== null ? peopleCount : (officerCount || 0);
+
+  const isMicroSme = (countOfficers <= 2 || countPeople <= 2) && (person.weight || 0) >= 30;
+  if (!isMicroSme || (countOfficers > 2 && countPeople > 2)) {
+    return null;
+  }
+
+  let candidate;
+  if (patternInfo && patternInfo.pattern) {
+    candidate = inferred[0];
+  } else if (countOfficers === 2 || (countOfficers === 0 && countPeople === 2)) {
+    candidate = inferred[0];
+  } else if (countOfficers <= 1 || countPeople <= 1) {
+    const cleanName = person.name.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+    const parts = cleanName.split(/\s+/).filter(Boolean);
+    while (parts.length > 1 && TITLE_PREFIXES.has(parts[0])) {
+      parts.shift();
+    }
+    const first = parts[0];
+    const firstEmail = first ? `${first}@${domain}` : null;
+    candidate = (firstEmail && inferred.includes(firstEmail)) ? firstEmail : (firstEmail || inferred[0]);
+  } else {
+    candidate = inferred[0];
+  }
+
+  try {
+    const v = await verifyEmailFn(candidate);
+    if (v && v.status === 'valid_domain') {
+      return {
+        email: candidate,
+        emailSource: 'inferred_catch_all',
+        verificationStatus: 'catch_all_inferred'
+      };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
+}
+
 module.exports = {
   detectPattern,
   inferEmails,
   verifyEmail,
   checkCatchAll,
+  resolvePersonEmail,
   verifyEmailSmtp,
   verifyQuickEmailVerification,
   verifySniffmail,
@@ -502,3 +593,4 @@ module.exports = {
   resetExhaustedKeys,
   exhaustedKeys
 };
+
