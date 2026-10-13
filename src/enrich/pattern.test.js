@@ -11,6 +11,7 @@ const {
   verifyReoon,
   verifyZeroBounce,
   verifyVerifalia,
+  verifyEmailSmtp,
   resetExhaustedKeys
 } = require('./pattern');
 
@@ -558,5 +559,96 @@ test('resolvePersonEmail sequentially checks candidates on non-catch-all domains
   });
   assert.deepStrictEqual(verifiedList, ['john.doe@example.co.uk', 'john@example.co.uk']);
 });
+
+test('Unit 5.22: verifyEmailSmtp strips angle brackets from EMAIL_FROM and SMTP_FROM for HELO and MAIL FROM commands', async () => {
+  const dns = require('dns').promises;
+  const net = require('net');
+
+  const origResolveMx = dns.resolveMx;
+  dns.resolveMx = async () => [{ exchange: 'mx.example.com', priority: 10 }];
+
+  const origConnect = net.Socket.prototype.connect;
+  const origWrite = net.Socket.prototype.write;
+
+  async function runSmtpHandshakeTest(envVars) {
+    restoreEnv();
+    if (envVars.EMAIL_FROM !== undefined) process.env.EMAIL_FROM = envVars.EMAIL_FROM;
+    else delete process.env.EMAIL_FROM;
+
+    if (envVars.SMTP_FROM !== undefined) process.env.SMTP_FROM = envVars.SMTP_FROM;
+    else delete process.env.SMTP_FROM;
+
+    const written = [];
+    net.Socket.prototype.connect = function(port, host) {
+      if (port === 25) {
+        this.__isSmtpTest = true;
+        setImmediate(() => {
+          this.emit('data', Buffer.from('220 mx.example.com ESMTP\r\n'));
+        });
+        return this;
+      }
+      return origConnect.apply(this, arguments);
+    };
+
+    net.Socket.prototype.write = function(chunk, ...args) {
+      if (this.__isSmtpTest) {
+        const str = Buffer.isBuffer(chunk) ? chunk.toString() : String(chunk);
+        written.push(str);
+        if (str.startsWith('HELO')) {
+          setImmediate(() => this.emit('data', Buffer.from('250 Hello\r\n')));
+        } else if (str.startsWith('MAIL FROM')) {
+          setImmediate(() => this.emit('data', Buffer.from('250 Sender OK\r\n')));
+        } else if (str.startsWith('RCPT TO')) {
+          setImmediate(() => this.emit('data', Buffer.from('250 Recipient OK\r\n')));
+        }
+        return true;
+      }
+      return origWrite.apply(this, arguments);
+    };
+
+    const res = await verifyEmailSmtp('target@example.com');
+    assert.strictEqual(res.status, 'valid_domain');
+    assert.strictEqual(res.reason, 'smtp_250');
+    return written;
+  }
+
+  try {
+    // 1. Name with angle brackets: "Outreach Bot" <bot@outreach.co.uk>
+    const w1 = await runSmtpHandshakeTest({ EMAIL_FROM: '"Outreach Bot" <bot@outreach.co.uk>' });
+    assert.strictEqual(w1[0], 'HELO outreach.co.uk\r\n');
+    assert.strictEqual(w1[1], 'MAIL FROM:<bot@outreach.co.uk>\r\n');
+
+    // 2. Just angle brackets: <bot@outreach.co.uk>
+    const w2 = await runSmtpHandshakeTest({ EMAIL_FROM: '<bot@outreach.co.uk>' });
+    assert.strictEqual(w2[0], 'HELO outreach.co.uk\r\n');
+    assert.strictEqual(w2[1], 'MAIL FROM:<bot@outreach.co.uk>\r\n');
+
+    // 3. Plain email: bot@outreach.co.uk
+    const w3 = await runSmtpHandshakeTest({ EMAIL_FROM: 'bot@outreach.co.uk' });
+    assert.strictEqual(w3[0], 'HELO outreach.co.uk\r\n');
+    assert.strictEqual(w3[1], 'MAIL FROM:<bot@outreach.co.uk>\r\n');
+
+    // 4. Whitespace inside angle brackets: "  < bot@outreach.co.uk >  "
+    const w4 = await runSmtpHandshakeTest({ EMAIL_FROM: '  < bot@outreach.co.uk >  ' });
+    assert.strictEqual(w4[0], 'HELO outreach.co.uk\r\n');
+    assert.strictEqual(w4[1], 'MAIL FROM:<bot@outreach.co.uk>\r\n');
+
+    // 5. Fallback to SMTP_FROM with name & brackets
+    const w5 = await runSmtpHandshakeTest({ SMTP_FROM: 'Sales <sales@domain.com>' });
+    assert.strictEqual(w5[0], 'HELO domain.com\r\n');
+    assert.strictEqual(w5[1], 'MAIL FROM:<sales@domain.com>\r\n');
+
+    // 6. Default fallback ping@domain when neither is set
+    const w6 = await runSmtpHandshakeTest({});
+    assert.strictEqual(w6[0], 'HELO example.com\r\n');
+    assert.strictEqual(w6[1], 'MAIL FROM:<ping@example.com>\r\n');
+  } finally {
+    dns.resolveMx = origResolveMx;
+    net.Socket.prototype.connect = origConnect;
+    net.Socket.prototype.write = origWrite;
+    restoreEnv();
+  }
+});
+
 
 

@@ -298,6 +298,17 @@ async function verifyVerifalia(email, username, password) {
   };
 }
 
+function extractSenderEmail(rawSender, fallbackDomain) {
+  const sanitized = String(rawSender || '').replace(/[\r\n]/g, '').trim();
+  const match = sanitized.match(/<([^>]+)>/);
+  const candidate = match ? match[1].trim() : sanitized.replace(/[<>]/g, '').trim().split(/\s+/)[0];
+  if (candidate && candidate.includes('@')) {
+    const domain = candidate.split('@').pop().trim();
+    if (domain) return { sender: candidate, domain };
+  }
+  return { sender: `ping@${fallbackDomain}`, domain: fallbackDomain };
+}
+
 async function verifyEmailSmtp(email) {
   if (!isValidEmailAddress(email)) {
     return { status: 'invalid', reason: 'syntax' };
@@ -347,7 +358,10 @@ async function verifyEmailSmtp(email) {
       if (step === 0) {
         if (code === 220) {
           step = 1;
-          const senderDomain = (process.env.EMAIL_FROM || process.env.SMTP_FROM || `ping@${domain}`).split('@')[1] || 'localhost';
+          const { domain: senderDomain } = extractSenderEmail(
+            process.env.EMAIL_FROM || process.env.SMTP_FROM,
+            domain
+          );
           socket.write(`HELO ${senderDomain}\r\n`);
         } else {
           finish({ status: 'unknown', reason: 'smtp_reject_220' });
@@ -355,7 +369,10 @@ async function verifyEmailSmtp(email) {
       } else if (step === 1) {
         if (code === 250) {
           step = 2;
-          const sender = process.env.EMAIL_FROM || process.env.SMTP_FROM || `ping@${domain}`;
+          const { sender } = extractSenderEmail(
+            process.env.EMAIL_FROM || process.env.SMTP_FROM,
+            domain
+          );
           socket.write(`MAIL FROM:<${sender}>\r\n`);
         } else {
           finish({ status: 'unknown', reason: 'smtp_reject_helo' });
@@ -373,7 +390,12 @@ async function verifyEmailSmtp(email) {
           finish({ status: 'valid_domain', reason: 'smtp_250' });
         } else if (code >= 500) {
           socket.write('QUIT\r\n');
-          finish({ status: 'invalid', reason: 'smtp_550' });
+          const isIpBlocked = /5\.7\.1|spamhaus|blacklist|rbl|barracuda|proofpoint|dnsbl/i.test(msg);
+          if (isIpBlocked) {
+            finish({ status: 'unknown', reason: 'smtp_ip_blocked' });
+          } else {
+            finish({ status: 'invalid', reason: 'smtp_550' });
+          }
         } else {
           socket.write('QUIT\r\n');
           finish({ status: 'unknown', reason: `smtp_${code}` });
