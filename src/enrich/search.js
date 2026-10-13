@@ -150,36 +150,29 @@ function getDomain(url) {
 }
 
 function isSocial(domain) {
-  for (const d of SOCIAL_DOMAINS) {
-    if (domain === d || domain.endsWith(`.${d}`)) {
+  if (!domain || typeof domain !== 'string') return false;
+  const d = domain.trim().toLowerCase();
+  for (const s of SOCIAL_DOMAINS) {
+    if (d === s || d.endsWith(`.${s}`)) {
       return true;
     }
   }
   return false;
 }
 
+const DIRECTORY_BOUNDARY_REGEX = /^(?:companieshouse|find-and-update\.company|endole|bizstats|companycheck|checkatrade|yell|trustpilot|192|thomsonlocal|yelp|cylex-uk|pomanda|kompass|bizdb|cbdb|checkcompany)\b/i;
+const DIRECTORY_KEYWORD_REGEX = /(?:[-.]|^)(?:directory|phonebook|yellowpages|business-directory|company-directory|companydirectory|directory-services)\./i;
+
 function isDirectory(domain) {
-  if (
-    domain.includes('company') || 
-    domain.includes('companies') || 
-    domain.includes('director') || 
-    domain.includes('biz') ||
-    domain.includes('phonebook') ||
-    domain.includes('directory') ||
-    domain.includes('search') ||
-    domain.includes('find') ||
-    domain.includes('192') ||
-    domain.includes('data') ||
-    domain.includes('info')
-  ) {
+  if (!domain || typeof domain !== 'string') return false;
+  const d = domain.trim().toLowerCase();
+  if (DIRECTORY_BOUNDARY_REGEX.test(d)) {
     return true;
   }
-  for (const d of DIRECTORY_DOMAINS) {
-    if (domain === d || domain.endsWith(`.${d}`)) {
-      return true;
-    }
+  if (DIRECTORY_KEYWORD_REGEX.test(d)) {
+    return true;
   }
-  return false;
+  return DIRECTORY_DOMAINS.some(entry => d === entry || d.endsWith('.' + entry));
 }
 
 function isSocialOrDirectory(domain) {
@@ -317,6 +310,8 @@ module.exports = {
   searchCompany,
   searchCompanyLeadership,
   isSocialOrDirectory,
+  isSocial,
+  isDirectory,
   getDomain,
   getSld,
   isBlocked,

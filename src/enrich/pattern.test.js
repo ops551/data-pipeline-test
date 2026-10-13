@@ -122,6 +122,15 @@ test('QuickEmailVerification parser validates deliverability criteria', async ()
     const invalidRes = await verifyQuickEmailVerification('bad@domain.com', 'test-key');
     assert.strictEqual(invalidRes.isValid, false);
     assert.strictEqual(invalidRes.reason, 'mailbox_not_found');
+
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => null
+    });
+    const malformedRes = await verifyQuickEmailVerification('malformed@domain.com', 'test-key');
+    assert.strictEqual(malformedRes.success, false);
+    assert.strictEqual(malformedRes.isValid, false);
+    assert.strictEqual(malformedRes.reason, 'qev_malformed_response');
   } finally {
     restoreEnv();
   }
@@ -156,6 +165,15 @@ test('Sniffmail parser validates deliverability criteria', async () => {
     });
     const invalidRes = await verifySniffmail('bad@domain.com', 'test-sniff-key');
     assert.strictEqual(invalidRes.isValid, false);
+
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => null
+    });
+    const malformedRes = await verifySniffmail('malformed@domain.com', 'test-sniff-key');
+    assert.strictEqual(malformedRes.success, false);
+    assert.strictEqual(malformedRes.isValid, false);
+    assert.strictEqual(malformedRes.reason, 'sniffmail_malformed_response');
   } finally {
     restoreEnv();
   }
@@ -197,6 +215,15 @@ test('Reoon parser validates deliverability criteria', async () => {
     });
     const invalidRes = await verifyReoon('bad@domain.com', 'test-reoon-key');
     assert.strictEqual(invalidRes.isValid, false);
+
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => null
+    });
+    const malformedRes = await verifyReoon('malformed@domain.com', 'test-reoon-key');
+    assert.strictEqual(malformedRes.success, false);
+    assert.strictEqual(malformedRes.isValid, false);
+    assert.strictEqual(malformedRes.reason, 'reoon_malformed_response');
   } finally {
     restoreEnv();
   }
@@ -221,6 +248,15 @@ test('ZeroBounce parser validates deliverability criteria', async () => {
     });
     const invalidRes = await verifyZeroBounce('bad@domain.com', 'test-zb-key');
     assert.strictEqual(invalidRes.isValid, false);
+
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => null
+    });
+    const malformedRes = await verifyZeroBounce('malformed@domain.com', 'test-zb-key');
+    assert.strictEqual(malformedRes.success, false);
+    assert.strictEqual(malformedRes.isValid, false);
+    assert.strictEqual(malformedRes.reason, 'zerobounce_malformed_response');
   } finally {
     restoreEnv();
   }
@@ -246,6 +282,15 @@ test('Verifalia parser validates Deliverable classification with basic auth', as
     });
     const invalidRes = await verifyVerifalia('bad@domain.com', 'user1', 'pass1');
     assert.strictEqual(invalidRes.isValid, false);
+
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => null
+    });
+    const malformedRes = await verifyVerifalia('malformed@domain.com', 'user1', 'pass1');
+    assert.strictEqual(malformedRes.success, false);
+    assert.strictEqual(malformedRes.isValid, false);
+    assert.strictEqual(malformedRes.reason, 'verifalia_malformed_response');
   } finally {
     restoreEnv();
   }
@@ -326,6 +371,65 @@ test('Automated quota failover: advances across provider chain on 429 and quota 
     assert.strictEqual(res.status, 'valid_domain');
     assert.strictEqual(res.reason, 'reoon');
     assert.deepEqual(calledProviders, ['qev', 'sniffmail', 'reoon']);
+  } finally {
+    restoreEnv();
+  }
+});
+
+test('verifyEmail advances to subsequent providers when earlier provider returns non-fatal failure or unknown', async () => {
+  try {
+    process.env.QUICK_EMAIL_VERIFICATION_API_KEY = 'qev_key';
+    process.env.SNIFFMAIL_API_KEY = 'sniff_key';
+
+    const called = [];
+    global.fetch = async (url) => {
+      if (url.includes('quickemailverification.com')) {
+        called.push('qev');
+        // Malformed body on 200 causes { success: false, isValid: false, reason: 'qev_malformed_response' }
+        return {
+          status: 200,
+          json: async () => null
+        };
+      }
+      if (url.includes('sniffmail.io')) {
+        called.push('sniffmail');
+        return {
+          status: 200,
+          json: async () => ({ is_valid: true, is_deliverable: true, is_reachable: 'safe' })
+        };
+      }
+      return { status: 500 };
+    };
+
+    const res = await verifyEmail('lead@uk-sme.co.uk');
+    assert.strictEqual(res.status, 'valid_domain');
+    assert.strictEqual(res.reason, 'sniffmail');
+    assert.deepEqual(called, ['qev', 'sniffmail']);
+
+    // Also advance when provider explicitly returns status: 'unknown' or reason: 'unknown'
+    called.length = 0;
+    global.fetch = async (url) => {
+      if (url.includes('quickemailverification.com')) {
+        called.push('qev');
+        return {
+          status: 200,
+          json: async () => ({ result: 'unknown', safe_to_send: 'false', reason: 'unknown' })
+        };
+      }
+      if (url.includes('sniffmail.io')) {
+        called.push('sniffmail');
+        return {
+          status: 200,
+          json: async () => ({ is_valid: true, is_deliverable: true, is_reachable: 'safe' })
+        };
+      }
+      return { status: 500 };
+    };
+
+    const res2 = await verifyEmail('lead@uk-sme.co.uk');
+    assert.strictEqual(res2.status, 'valid_domain');
+    assert.strictEqual(res2.reason, 'sniffmail');
+    assert.deepEqual(called, ['qev', 'sniffmail']);
   } finally {
     restoreEnv();
   }

@@ -996,6 +996,39 @@ test('cleanEmailContent applies TECH_SIGNATURE_TITLE when sector is tech', () =>
   assert.ok(res.body.includes(TECH_SIGNATURE_TITLE));
 });
 
+test('cleanEmailContent does not flag forbidden spam words when appearing as part of company name', () => {
+  const testCompanies = [
+    { name: 'Free Range Design Ltd', triggerWord: 'free' },
+    { name: 'Great Western Railway Ltd', triggerWord: 'great' },
+    { name: 'Save Energy Solutions Ltd', triggerWord: 'save' },
+    { name: 'Best Quotes Ltd', triggerWord: 'quote' },
+    { name: 'Free Quote Opportunity Ltd', triggerWord: 'free quote opportunity' }
+  ];
+
+  for (const { name } of testCompanies) {
+    const raw = JSON.stringify({
+      subject: `Quick question about ${name}`,
+      body: `Hey ${name},\n\nI recently reviewed your operations and wanted to connect.\n\nBest regards,\nNahid`
+    });
+
+    // Should not throw security block
+    assert.doesNotThrow(() => {
+      cleanEmailContent(raw, { companyName: name });
+    });
+  }
+
+  // But if the spam word appears independently in the body, it must still be blocked!
+  const independentSpam = JSON.stringify({
+    subject: `Quick question about Free Range Design Ltd`,
+    body: `Hey Free Range Design Ltd,\n\nWe offer a guaranteed return for all clients.\n\nBest regards,\nNahid`
+  });
+  assert.throws(
+    () => cleanEmailContent(independentSpam, { companyName: 'Free Range Design Ltd' }),
+    /forbidden spam word "guaranteed"/i
+  );
+});
+
+
 
 
 

@@ -265,12 +265,18 @@ const BAD_NAME_TOKENS = new Set([
   'apple', 'stripe', 'shopify', 'sap', 'adobe', 'netflix', 'uber', 'airbnb',
   'bloomberg', 'reuters', 'barclays', 'hsbc', 'lloyds', 'natwest', 'santander',
   'kallidus', 'hubspot', 'zoho', 'zendesk', 'atlassian', 'slack', 'wordpress',
+  // Non-person commercial & corporate words
+  'media', 'studios', 'studio', 'labs', 'lab', 'agency', 'logistics', 'properties', 'property',
+  'enterprises', 'enterprise', 'ventures', 'venture', 'holdings', 'holding', 'systems', 'system',
+  'creative', 'solutions', 'technologies', 'technology', 'capital', 'global', 'retail', 'commerce',
+  'fashion', 'auto', 'motors', 'care', 'health', 'dental', 'clinic', 'academy', 'foundation',
+  'production', 'productions',
   // Country & regional tokens
   'india', 'indian', 'pakistan', 'pakistani', 'bangladesh', 'bangladeshi',
   'china', 'chinese', 'america', 'american', 'usa', 'europe', 'european',
   'asia', 'asian', 'pacific', 'africa', 'african', 'germany', 'german', 'france', 'french',
   'spain', 'spanish', 'italy', 'italian', 'australia', 'australian', 'canada', 'canadian',
-  'brazil', 'brazilian', 'japan', 'japanese', 'russia', 'russian', 'global',
+  'brazil', 'brazilian', 'japan', 'japanese', 'russia', 'russian',
   'international', 'worldwide', 'national', 'dubai', 'uae', 'singapore',
   // Role prefixes and form artifacts
   'senior', 'independent', 'referral', 'referrals', 'enquiry', 'enquiries'
@@ -487,6 +493,74 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   const textLower = text.toLowerCase();
   const foundNames = new Set();
 
+  const BRAND_STOPWORDS = new Set([
+    'the', 'and', '&', 'for', 'with', 'our', 'all', 'new', 'one',
+    'ltd', 'limited', 'uk', 'co', 'inc', 'cic', 'llp', 'plc', 'corp', 'corporation',
+    'group', 'services', 'service', 'solutions', 'solution', 'holdings', 'holding',
+    'enterprises', 'enterprise', 'international', 'of', 'in', 'on', 'at', 'to', 'a', 'an'
+  ]);
+
+  const companyBrandWords = new Set();
+  if (companyName && typeof companyName === 'string') {
+    const rawWords = companyName.toLowerCase().replace(/[^a-z0-9\s]/g, ' ').split(/\s+/).filter(Boolean);
+    for (const w of rawWords) {
+      if (w.length >= 3 && !BRAND_STOPWORDS.has(w) && !GENERIC_COMPANY_TERMS.has(w)) {
+        companyBrandWords.add(w);
+      }
+    }
+  }
+
+  const matchesOfficer = (candidateName) => {
+    if (!Array.isArray(officers) || officers.length === 0) return false;
+    const candLower = candidateName.toLowerCase().trim();
+    const candParts = candLower.split(/\s+/).filter(Boolean);
+    return officers.some((officer) => {
+      if (!officer || !officer.name) return false;
+      const offLower = officer.name.toLowerCase().trim();
+      if (offLower === candLower) return true;
+      const cleanOff = stripTitlePrefix(officer.name).toLowerCase().trim();
+      if (cleanOff === candLower) return true;
+      const offParts = cleanOff.split(/\s+/).filter(Boolean);
+      if (offParts.length >= 2 && candParts.length >= 2) {
+        if (offParts[0] === candParts[0] && offParts[offParts.length - 1] === candParts[candParts.length - 1]) {
+          return true;
+        }
+      }
+      return false;
+    });
+  };
+
+  const containsBrandSlugWord = (candidateName) => {
+    if (companyBrandWords.size === 0) return false;
+    const candWords = candidateName.toLowerCase().split(/\s+/).filter(Boolean);
+    return candWords.some((w) => companyBrandWords.has(w));
+  };
+
+  const isNonPersonOrCommercialCandidate = (candidateName) => {
+    const candLower = candidateName.toLowerCase();
+    const candWords = candLower.split(/\s+/).filter(Boolean);
+
+    const hasBadOrCommercialToken = candWords.some((w) =>
+      BAD_NAME_TOKENS.has(w) ||
+      GENERIC_COMPANY_TERMS.has(w) ||
+      BRAND_STOPWORDS.has(w) ||
+      /^(media|studios?|labs?|agency|solutions?|technologies|group|company|enterprises?|ventures?|consulting|holdings?|services?|capital|global|international|creative|productions?|properties|systems?)$/i.test(w)
+    );
+    if (hasBadOrCommercialToken) return true;
+
+    if (companyBrandWords.size > 0 && candWords.every((w) => companyBrandWords.has(w))) {
+      return true;
+    }
+
+    if (companyName) {
+      const cleanComp = companyName.toLowerCase().replace(/[^a-z0-9\s]/g, '').trim();
+      if (cleanComp === candLower || cleanComp.startsWith(candLower) || candLower.startsWith(cleanComp)) {
+        return true;
+      }
+    }
+
+    return false;
+  };
 
   if (Array.isArray(officers) && officers.length > 0) {
     for (const officer of officers) {
@@ -613,6 +687,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     let candidateRole = m[2].trim();
 
     if (!isValidPersonName(candidateName)) continue;
+    if (containsBrandSlugWord(candidateName) && !matchesOfficer(candidateName) && isNonPersonOrCommercialCandidate(candidateName)) continue;
     if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
 
     if (candidateRole.toLowerCase() === 'ceo') candidateRole = 'CEO';
@@ -638,6 +713,7 @@ function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
     const candidateName = stripTitlePrefix(rawName);
 
     if (!isValidPersonName(candidateName)) continue;
+    if (containsBrandSlugWord(candidateName) && !matchesOfficer(candidateName) && isNonPersonOrCommercialCandidate(candidateName)) continue;
     if (hasExternalEntityContext(text, m.index, m[0].length, companyName, sourceUrl)) continue;
 
     let candidateRole = rawRole;

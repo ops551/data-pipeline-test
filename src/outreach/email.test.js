@@ -255,6 +255,21 @@ test('stripExternalLinks preserves official coordinates while stripping rogue UR
   assert.ok(cleaned.includes('GitHub: https://github.com/Nahid625'));
 });
 
+test('stripExternalLinks replaces markdown links with link text without leaving broken brackets', () => {
+  const content = 'Check out [our portfolio](https://example.com/portfolio) and [recent projects](www.example.com/work).';
+  const cleaned = stripExternalLinks(content);
+  assert.equal(cleaned, 'Check out our portfolio and recent projects.');
+  assert.doesNotMatch(cleaned, /\[/);
+  assert.doesNotMatch(cleaned, /\]/);
+});
+
+test('stripExternalLinks preserves whitelisted URL inside markdown links', () => {
+  const content = 'See my code on [GitHub](https://github.com/Nahid625) and [Website](https://nahid-yf63.onrender.com).';
+  const cleaned = stripExternalLinks(content);
+  assert.ok(cleaned.includes('https://github.com/Nahid625'));
+  assert.ok(cleaned.includes('https://nahid-yf63.onrender.com'));
+});
+
 test('formatHtmlContent removes rogue external URLs but preserves whitelisted signature', () => {
   const text = 'Hi,\n\nCongrats on your new venture! Visit https://example.com';
   const html = formatHtmlContent(text);

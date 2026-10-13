@@ -253,7 +253,7 @@ function appendSentWhatsapp(arg1, arg2) {
 
   const defaultSentAt = new Date().toISOString();
   const records = items.map(item => {
-    const phone = item.phone || item.whatsapp_phone || item.target_phone || extractFirstMobileNumber(item.phones) || '';
+    const phone = item.phone || item.phone_number || item.whatsapp_phone || item.target_phone || extractFirstMobileNumber(item.phones) || '';
     return {
       company_number: String(item.company_number ?? '').trim(),
       company_name: String(item.company_name ?? ''),

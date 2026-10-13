@@ -909,7 +909,55 @@ function cleanEmailContent(rawText, options = {}) {
 
   // --- SPAM CHECKER LOGIC ADDED HERE ---
   // --- SPAM WORDS BLOCKING LOGIC ---
-  const combinedText = `${subject} ${body}`.toLowerCase();
+  let spamCheckText = `${subject} ${body}`;
+  const baseName = companyName.replace(/\b(ltd|limited|llp|plc|inc|cic)\b/gi, '').trim();
+  const namesToMask = [
+    companyName,
+    emailCompanyName,
+    options.companyName,
+    baseName,
+    applySafeWordReplacements(companyName),
+    applySafeWordReplacements(emailCompanyName),
+    applySafeWordReplacements(baseName)
+  ]
+    .filter(Boolean)
+    .map(n => String(n).trim())
+    .filter(n => n.length >= 2);
+  const uniqueNames = [...new Set(namesToMask)].sort((a, b) => b.length - a.length);
+  for (const name of uniqueNames) {
+    const escaped = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    spamCheckText = spamCheckText.replace(new RegExp(escaped, 'gi'), '__COMPANY__');
+  }
+
+  // Also remove words in company name that match FORBIDDEN_SPAM_WORDS before checking so 'Free Quote Opportunity Ltd' is never blocked
+  const allCompanyVariants = [
+    companyName,
+    emailCompanyName,
+    options.companyName,
+    baseName,
+    applySafeWordReplacements(companyName),
+    applySafeWordReplacements(emailCompanyName)
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const companyWordsMatchingSpam = FORBIDDEN_SPAM_WORDS.filter(spamWord => {
+    const escaped = spamWord
+      .toLowerCase()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\s+/g, "\\s+");
+    return new RegExp(`(^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`, 'i').test(allCompanyVariants);
+  });
+
+  for (const spamWord of companyWordsMatchingSpam) {
+    const escaped = spamWord
+      .toLowerCase()
+      .replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      .replace(/\s+/g, "\\s+");
+    spamCheckText = spamCheckText.replace(new RegExp(`(^|[^a-z0-9])${escaped}(?=$|[^a-z0-9])`, 'gi'), '$1__COMPANY_WORD__');
+  }
+
+  const combinedText = spamCheckText.toLowerCase();
 
   const foundSpamWord = FORBIDDEN_SPAM_WORDS.find((word) => {
     const escapedWord = word
