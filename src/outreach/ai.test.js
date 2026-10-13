@@ -4,6 +4,8 @@ const {
   DEFAULT_MODEL,
   DEFAULT_SENDER_NAME,
   FORBIDDEN_SPAM_WORDS,
+  SAFE_WORD_REPLACEMENTS,
+  applySafeWordReplacements,
   DEFAULT_SIGNATURE,
   TECH_SIGNATURE_TITLE,
   buildSignature,
@@ -11,6 +13,9 @@ const {
   extractFirstName,
   mapSicToIndustry,
   isTechOrSoftwareCompany,
+  classifySector,
+  SECTOR_CONFIGS,
+  getMockEmail,
   buildPrompt,
   cleanEmailContent,
   generateEmail
@@ -21,6 +26,9 @@ test('constants are correctly configured', () => {
   assert.equal(DEFAULT_SENDER_NAME, 'Nahid');
   assert.equal(DEFAULT_SIGNATURE.name, 'Nahid');
   assert.equal(DEFAULT_SIGNATURE.title, 'Web Design & Business Automation');
+  assert.equal(DEFAULT_SIGNATURE.whatsapp, '+8801615753465');
+  assert.equal(DEFAULT_SIGNATURE.website, 'https://nahid-yf63.onrender.com/');
+  assert.equal(DEFAULT_SIGNATURE.github, 'https://github.com/Nahid625');
 });
 
 test('resolveApiKey returns key from options, GEMINI_API_KEY, or GEMINI', () => {
@@ -102,29 +110,37 @@ test('mapSicToIndustry maps SIC codes and descriptive names correctly', () => {
   assert.equal(mapSicToIndustry(null), 'small business');
 });
 
-test('buildSignature formats a plain-text default signature without contact details', () => {
+test('buildSignature formats default signature with verified official coordinates', () => {
   const signature = buildSignature();
   const expected = [
     'Best regards,',
     'Nahid',
-    'Web Design & Business Automation'
+    'Web Design & Business Automation',
+    'WhatsApp: +8801615753465',
+    'Website: https://nahid-yf63.onrender.com/',
+    'GitHub: https://github.com/Nahid625'
   ].join('\n');
 
   assert.equal(signature, expected);
-  assert.doesNotMatch(signature, /https?:\/\/|www\.|whatsapp|phone|\+?\d[\d ()-]{7,}/i);
+  assert.ok(signature.includes('WhatsApp: +8801615753465'));
+  assert.ok(signature.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(signature.includes('GitHub: https://github.com/Nahid625'));
 });
 
-test('buildSignature supports sender options without adding contact details', () => {
+test('buildSignature supports sender options with coordinates', () => {
   const custom = buildSignature({
     senderName: 'John Doe',
     senderTitle: 'Full-Stack Developer',
     senderGithub: 'https://github.com/johndoe',
-    senderPortfolio: 'https://johndoe.com'
+    senderWebsite: 'https://johndoe.com',
+    senderWhatsapp: '+1234567890'
   });
 
   assert.ok(custom.includes('John Doe'));
   assert.ok(custom.includes('Full-Stack Developer'));
-  assert.doesNotMatch(custom, /https?:\/\/|www\.|whatsapp|phone|\+?\d[\d ()-]{7,}/i);
+  assert.ok(custom.includes('https://github.com/johndoe'));
+  assert.ok(custom.includes('https://johndoe.com'));
+  assert.ok(custom.includes('+1234567890'));
 
   const oldEnv = { ...process.env };
   try {
@@ -133,7 +149,7 @@ test('buildSignature supports sender options without adding contact details', ()
     const fromEnv = buildSignature();
     assert.ok(fromEnv.includes('Env Sender'));
     assert.ok(fromEnv.includes('Automation Consultant'));
-    assert.doesNotMatch(fromEnv, /https?:\/\/|www\.|whatsapp|phone|\+?\d[\d ()-]{7,}/i);
+    assert.ok(fromEnv.includes('WhatsApp: +8801615753465'));
   } finally {
     process.env = oldEnv;
   }
@@ -153,15 +169,13 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('Hey Mark,'));
   assert.ok(prompt.includes('Best regards,\nNahid'));
   assert.ok(prompt.includes('Say you came across Apex Cleaners Ltd and wanted to reach out'));
-  assert.ok(prompt.includes('upgrade websites and set up automated workflows'));
-  assert.ok(prompt.includes('routine client communications or scheduling manually'));
+  assert.ok(prompt.includes('capture every incoming customer enquiry promptly'));
+  assert.ok(prompt.includes('rapid WhatsApp messaging assistant and automated follow-ups'));
   assert.ok(prompt.includes('If you prefer no further messages, I completely understand and will not contact you again.'));
-  assert.ok(prompt.includes('Keep it under 120 words before the signature.'));
-  assert.ok(prompt.includes('Make the wording slightly unique for this specific company name and industry'));
+  assert.ok(prompt.includes('Keep it under 100-120 words before the signature.'));
   assert.ok(prompt.includes(`Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(', ')}.`));
   assert.ok(prompt.includes('Do not use any forbidden word or phrase anywhere in the subject or body'));
   assert.ok(prompt.includes('replace it with a natural, unblocked synonym that keeps the same meaning and tone'));
-  assert.ok(prompt.includes('do not remove a useful idea just to avoid a word'));
   assert.ok(prompt.includes('Do NOT include markdown code fences'));
   assert.ok(prompt.includes('Return ONLY valid JSON'));
 });
@@ -181,20 +195,20 @@ test('cleanEmailContent blocks words from the shared forbidden-word list', () =>
 
 test('cleanEmailContent matches forbidden terms as whole words', () => {
   const emailWithPlural = JSON.stringify({
-    subject: 'Instant quotes for Zenith Ltd',
-    body: 'Hey Sarah,\n\nWe build websites with instant quotes.'
+    subject: 'Freedom for Zenith Ltd',
+    body: 'Hey Sarah,\n\nWe build websites with freedom.'
   });
 
-  assert.equal(cleanEmailContent(emailWithPlural).subject, 'Instant quotes for Zenith Ltd');
+  assert.equal(cleanEmailContent(emailWithPlural).subject, 'Freedom for Zenith Ltd');
 
   const emailWithForbiddenWord = JSON.stringify({
-    subject: 'An instant quote for Zenith Ltd',
+    subject: 'A free audit for Zenith Ltd',
     body: 'Hey Sarah,\n\nWe build websites.'
   });
 
   assert.throws(
     () => cleanEmailContent(emailWithForbiddenWord),
-    /forbidden spam word "quote"/i
+    /forbidden spam word "free"/i
   );
 });
 
@@ -339,8 +353,9 @@ test('cleanEmailContent appends personal signature by default and honors include
 
   const withSig = cleanEmailContent(raw);
   assert.ok(withSig.body.endsWith(buildSignature()));
-  assert.doesNotMatch(withSig.body, /whatsapp|\+880\s*1615[- ]?753465/i);
-  assert.doesNotMatch(withSig.body, /https?:\/\/|www\./i);
+  assert.ok(withSig.body.includes('WhatsApp: +8801615753465'));
+  assert.ok(withSig.body.includes('https://nahid-yf63.onrender.com/'));
+  assert.ok(withSig.body.includes('https://github.com/Nahid625'));
 
   const withoutSig = cleanEmailContent(raw, { includeSignature: false });
   assert.ok(withoutSig.body.endsWith('Best regards,\nNahid'));
@@ -351,16 +366,17 @@ test('cleanEmailContent appends personal signature by default and honors include
 
 test('cleanEmailContent handles null or empty input with robust fallback', () => {
   const cleaned = cleanEmailContent('', { companyName: 'Delta Ltd' });
-  assert.equal(cleaned.subject, 'A quick question for Delta Ltd');
+  assert.equal(cleaned.subject, "Quick question about Delta Ltd's workflow automation");
   assert.ok(cleaned.body.includes('Delta Ltd'));
-  assert.ok(cleaned.body.includes('I came across Delta Ltd and wanted to reach out briefly.'));
-  assert.ok(cleaned.body.includes('I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.'));
-  assert.ok(cleaned.body.includes('You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.'));
-  assert.ok(cleaned.body.includes('This would cut down time on routine tasks while keeping everything organised and visible in one place.'));
-  assert.ok(cleaned.body.includes('Are you currently looking for any support or improvements with your digital systems?'));
-  assert.ok(cleaned.body.includes('I will make sure not to contact you again'));
+  assert.ok(cleaned.body.includes('I recently checked out Delta Ltd and wanted to reach out.'));
+  assert.ok(cleaned.body.includes('As an automation developer, I help businesses streamline routine communications and daily workflows.'));
+  assert.ok(cleaned.body.includes('unified dashboard to monitor operations in real time.'));
+  assert.ok(cleaned.body.includes('Are you currently exploring ways to streamline your daily operations?'));
+  assert.ok(cleaned.body.includes('and will not contact you again'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
-  assert.doesNotMatch(cleaned.body, /whatsapp|\+880\s*1615[- ]?753465/i);
+  assert.ok(cleaned.body.includes('WhatsApp: +8801615753465'));
+  assert.ok(cleaned.body.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(cleaned.body.includes('GitHub: https://github.com/Nahid625'));
 });
 
 test('generateEmail throws when company_name is missing', async () => {
@@ -425,8 +441,9 @@ test('generateEmail generates clean email using injected genAI mock', async () =
   assert.equal(result.subject, 'High-converting site for Zenith Ltd');
   assert.ok(result.body.includes('Hey Sarah,'));
   assert.ok(result.body.includes('Best regards,\nNahid'));
-  assert.doesNotMatch(result.body, /whatsapp|\+880\s*1615[- ]?753465/i);
-  assert.doesNotMatch(result.body, /https?:\/\/|www\./i);
+  assert.ok(result.body.includes('WhatsApp: +8801615753465'));
+  assert.ok(result.body.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(result.body.includes('GitHub: https://github.com/Nahid625'));
   assert.ok(result.body.endsWith(buildSignature()));
   assert.equal(result.text, `Subject: ${result.subject}\n\n${result.body}`);
 });
@@ -581,7 +598,7 @@ test('buildSignature provides Backend Developer title for tech companies', () =>
   assert.ok(customSig.includes('Staff Backend Engineer'));
 });
 
-test('buildPrompt generates developer collaboration pitch for tech companies (Persona B)', () => {
+test('buildPrompt generates client pipeline pitch for tech agencies (Track 6 Tech)', () => {
   const prompt = buildPrompt({
     company_name: 'Various Labs Ltd',
     sic_codes: '62012;62020',
@@ -590,72 +607,46 @@ test('buildPrompt generates developer collaboration pitch for tech companies (Pe
     active_directors: 'Zaki Smith'
   });
 
-  // Persona B: Developer to developer / tech agency collaboration
   assert.ok(prompt.includes('Hey Zaki,'));
-  assert.ok(prompt.includes('backend developer and business automation engineer'));
-  assert.ok(prompt.includes('Node.js, API integrations, and automation'));
-  assert.ok(prompt.includes('take on project overflow when client deadlines get tight'));
-  assert.ok(prompt.includes('collaborate with contract or remote backend developers'));
+  assert.ok(prompt.includes('backend and automation engineer'));
+  assert.ok(prompt.includes('Quick question about client pipeline workflows for Various Labs Ltd'));
+  assert.ok(prompt.includes('automated client acquisition pipelines and smart reporting systems'));
+  assert.ok(prompt.includes('structured data tracking to monitor campaign results continuously'));
+  assert.ok(prompt.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
   assert.ok(prompt.includes(TECH_SIGNATURE_TITLE));
-
-  // Must NOT pitch web design to a software studio
-  assert.doesNotMatch(prompt, /web designer and business automation specialist/i);
-  assert.doesNotMatch(prompt, /build or upgrade websites/i);
-  assert.doesNotMatch(prompt, /routine client communications or scheduling/i);
+  assert.ok(prompt.includes('WhatsApp: +8801615753465'));
 });
 
-test('buildPrompt includes tangible social media and dashboard automation for non-tech businesses (Persona A)', () => {
+test('buildPrompt generates food and hospitality pitch (Track 4 Hospitality)', () => {
   const prompt = buildPrompt({
     company_name: 'Bella Italia Dining Ltd',
     sic_codes: '56101',
     active_directors: 'Marco Rossi'
   });
 
-  // Persona A: Web design & tangible customer inquiry/social media automation
   assert.ok(prompt.includes('Hey Marco,'));
-  assert.ok(prompt.includes('web designer and business automation specialist'));
-  assert.ok(prompt.includes('I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.'));
-  assert.ok(prompt.includes('You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.'));
-  assert.ok(prompt.includes('This would cut down time on routine tasks while keeping everything organised and visible in one place.'));
-  assert.ok(prompt.includes('Keep it under 120 words before the signature.'));
-  assert.ok(prompt.includes('Web Design & Business Automation'));
-
-  // Must NOT pitch contract backend development to a restaurant
-  assert.doesNotMatch(prompt, /Node\.js, API integrations/i);
-  assert.doesNotMatch(prompt, /overflow development work/i);
+  assert.ok(prompt.includes('digital developer'));
+  assert.ok(prompt.includes('Quick question about online bookings for Bella Italia Dining Ltd'));
+  assert.ok(prompt.includes('automated guest feedback collection, seamless table or event reservations, and AI-driven seasonal announcements'));
+  assert.ok(prompt.includes('management dashboard to track guest feedback and reservations'));
+  assert.ok(prompt.includes('Are you currently exploring ways to increase customer retention and table bookings?'));
 });
 
-test('Persona A prompt and fallback email contain exact 3 natural automation sentences', () => {
-  const sentence1 = 'I can automate scheduled social media posts and stories, along with smart, personalised replies to customer enquiries across your communication channels.';
-  const sentence2 = 'You’d also have a central dashboard to monitor scheduled and published content, track incoming enquiries, and see what’s happening across your channels in real time.';
-  const sentence3 = 'This would cut down time on routine tasks while keeping everything organised and visible in one place.';
-
-  // 1. buildPrompt without website
-  const promptNoWebsite = buildPrompt({
+test('Sector-specific prompt generation and mock emails across tracks', async () => {
+  // Test general fallback
+  const promptGeneral = buildPrompt({
     company_name: 'Acme Bakery Ltd',
     sic_codes: '10710'
   });
-  assert.ok(promptNoWebsite.includes(sentence1));
-  assert.ok(promptNoWebsite.includes(sentence2));
-  assert.ok(promptNoWebsite.includes(sentence3));
-  assert.ok(promptNoWebsite.includes('Keep it under 120 words before the signature.'));
+  assert.ok(promptGeneral.includes("Quick question about Acme Bakery Ltd's workflow automation"));
+  assert.ok(promptGeneral.includes('Briefly explain that you help businesses streamline routine communications and daily workflows.'));
+  assert.ok(promptGeneral.includes('Are you currently exploring ways to streamline your daily operations?'));
 
-  // 2. buildPrompt with verified website
-  const promptWithWebsite = buildPrompt({
-    company_name: 'Acme Bakery Ltd',
-    sic_codes: '10710',
-    website_url: 'https://acmebakery.co.uk'
-  });
-  assert.ok(promptWithWebsite.includes(sentence1));
-  assert.ok(promptWithWebsite.includes(sentence2));
-  assert.ok(promptWithWebsite.includes(sentence3));
-  assert.ok(promptWithWebsite.includes('Keep it under 120 words before the signature.'));
-
-  // 3. Fallback email for non-tech business
-  const fallback = cleanEmailContent('', { companyName: 'Acme Bakery Ltd', isTech: false });
-  assert.ok(fallback.body.includes(sentence1));
-  assert.ok(fallback.body.includes(sentence2));
-  assert.ok(fallback.body.includes(sentence3));
+  // Test mock email for general
+  const mockGeneral = await generateEmail({ company_name: 'Acme Bakery Ltd', sic_codes: '10710' }, { mock: true });
+  assert.equal(mockGeneral.subject, "Quick question about Acme Bakery Ltd's workflow automation");
+  assert.ok(mockGeneral.body.includes('As an automation developer, I help businesses streamline routine communications'));
+  assert.ok(mockGeneral.body.includes('WhatsApp: +8801615753465'));
 });
 
 test('cleanEmailContent handles tech company fallback cleanly', () => {
@@ -665,14 +656,15 @@ test('cleanEmailContent handles tech company fallback cleanly', () => {
     isTech: true
   });
 
-  assert.equal(cleanedTech.subject, 'Backend developer support for Various Labs Ltd');
+  assert.equal(cleanedTech.subject, 'Quick question about client pipeline workflows for Various Labs Ltd');
   assert.ok(cleanedTech.body.includes('Hey Zaki,'));
-  assert.ok(cleanedTech.body.includes('specializing in Node.js, API integrations, and workflow automation'));
-  assert.ok(cleanedTech.body.includes('contract backend developers'));
+  assert.ok(cleanedTech.body.includes('automated client acquisition pipelines and smart reporting systems'));
+  assert.ok(cleanedTech.body.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
   assert.ok(cleanedTech.body.includes(TECH_SIGNATURE_TITLE));
+  assert.ok(cleanedTech.body.includes('WhatsApp: +8801615753465'));
 });
 
-test('generateEmail generates developer collaboration email end-to-end for software studio', async () => {
+test('generateEmail generates tech outreach email end-to-end with model', async () => {
   let capturedPrompt = '';
   const mockModel = {
     generateContent: async (prompt) => {
@@ -680,8 +672,8 @@ test('generateEmail generates developer collaboration email end-to-end for softw
       return {
         response: {
           text: () => JSON.stringify({
-            subject: 'Contract backend developer support for Various Labs Ltd',
-            body: 'Hey Zaki,\n\nI noticed your custom software and dashboard work. If your studio ever needs hands on backend Node.js APIs during project crunches, I would love to help.\n\nBest regards,\nNahid'
+            subject: 'Quick question about client pipeline workflows for Various Labs Ltd',
+            body: 'Hey Zaki,\n\nI reviewed your work at Various Labs Ltd. We deploy automated client acquisition pipelines and smart reporting systems.\n\nAre you currently exploring ways to expand your agency\'s client pipeline?\n\nBest regards,\nNahid'
           })
         }
       };
@@ -697,11 +689,12 @@ test('generateEmail generates developer collaboration email end-to-end for softw
     { model: mockModel }
   );
 
-  assert.ok(capturedPrompt.includes('backend developer and business automation engineer'));
-  assert.ok(capturedPrompt.includes('Node.js, API integrations'));
-  assert.equal(result.subject, 'Contract backend developer support for Various Labs Ltd');
+  assert.ok(capturedPrompt.includes('backend and automation engineer'));
+  assert.ok(capturedPrompt.includes('automated client acquisition pipelines'));
+  assert.equal(result.subject, 'Quick question about client pipeline workflows for Various Labs Ltd');
   assert.ok(result.body.includes('Hey Zaki,'));
   assert.ok(result.body.includes(TECH_SIGNATURE_TITLE));
+  assert.ok(result.body.includes('WhatsApp: +8801615753465'));
 });
 
 test('extractFirstName rejects corporate brands and countries, falling back to company greeting (Unit 5.20)', async () => {
@@ -741,6 +734,268 @@ test('extractFirstName rejects corporate brands and countries, falling back to c
   assert.ok(result.body.includes('Hey Beacon Consulting Ltd,'));
   assert.ok(!result.body.includes('Hey Deloitte,'));
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.24: Sector Classification Suite
+// -----------------------------------------------------------------------------
+
+test('classifySector classifies companies correctly by SIC code', () => {
+  // E-Commerce: SIC 47
+  assert.equal(classifySector({ sic_codes: '47110' }), 'ecommerce');
+  assert.equal(classifySector({ sic_codes: '47910' }), 'ecommerce');
+
+  // Healthcare: SIC 86, 87
+  assert.equal(classifySector({ sic_codes: '86210' }), 'healthcare');
+  assert.equal(classifySector({ sic_codes: '87100' }), 'healthcare');
+
+  // Local Trades: SIC 41, 42, 43, 812
+  assert.equal(classifySector({ sic_codes: '41201' }), 'trades');
+  assert.equal(classifySector({ sic_codes: '42110' }), 'trades');
+  assert.equal(classifySector({ sic_codes: '43220' }), 'trades');
+  assert.equal(classifySector({ sic_codes: '81210' }), 'trades');
+
+  // Food & Hospitality: SIC 55, 56
+  assert.equal(classifySector({ sic_codes: '55100' }), 'hospitality');
+  assert.equal(classifySector({ sic_codes: '56101' }), 'hospitality');
+  assert.equal(classifySector({ sic_codes: '56302' }), 'hospitality');
+
+  // Professional B2B: SIC 69, 70, 71, 78
+  assert.equal(classifySector({ sic_codes: '69101' }), 'b2b');
+  assert.equal(classifySector({ sic_codes: '70229' }), 'b2b');
+  assert.equal(classifySector({ sic_codes: '71111' }), 'b2b');
+  assert.equal(classifySector({ sic_codes: '78109' }), 'b2b');
+
+  // Tech & Digital: SIC 62, 63, 582, 631
+  assert.equal(classifySector({ sic_codes: '62012' }), 'tech');
+  assert.equal(classifySector({ sic_codes: '63110' }), 'tech');
+  assert.equal(classifySector({ sic_codes: '58290' }), 'tech');
+
+  // General fallback
+  assert.equal(classifySector({ sic_codes: '99999' }), 'general');
+  assert.equal(classifySector({ sic_codes: '' }), 'general');
+  assert.equal(classifySector({}), 'general');
+  assert.equal(classifySector(null), 'general');
+});
+
+test('classifySector classifies companies correctly by keywords in text fields', () => {
+  // E-Commerce
+  assert.equal(classifySector({ industry: 'online store and retail products' }), 'ecommerce');
+  assert.equal(classifySector({ company_name: 'Chic Boutique Ltd' }), 'ecommerce');
+  assert.equal(classifySector({ website_context: 'Browse our shopping cart and checkout' }), 'ecommerce');
+
+  // Healthcare
+  assert.equal(classifySector({ industry: 'dental clinic and patient care' }), 'healthcare');
+  assert.equal(classifySector({ company_name: 'Dr Smith Physio Therapy' }), 'healthcare');
+  assert.equal(classifySector({ description: 'Private medical practice' }), 'healthcare');
+
+  // Local Trades
+  assert.equal(classifySector({ industry: 'plumber and boiler repair' }), 'trades');
+  assert.equal(classifySector({ company_name: 'Fast Electrician & Contractor' }), 'trades');
+  assert.equal(classifySector({ description: 'Roof maintenance and building services' }), 'trades');
+
+  // Food & Hospitality
+  assert.equal(classifySector({ industry: 'italian restaurant and bistro' }), 'hospitality');
+  assert.equal(classifySector({ company_name: 'The Crown Pub & Lounge' }), 'hospitality');
+  assert.equal(classifySector({ description: 'Hotel and event catering services' }), 'hospitality');
+
+  // Professional B2B
+  assert.equal(classifySector({ industry: 'chartered accounting and legal advisory' }), 'b2b');
+  assert.equal(classifySector({ company_name: 'Apex Finance & Corporate Consulting' }), 'b2b');
+  assert.equal(classifySector({ description: 'Executive recruitment consultancy' }), 'b2b');
+
+  // Tech & Digital
+  assert.equal(classifySector({ industry: 'saas cloud platform and ai software' }), 'tech');
+  assert.equal(classifySector({ company_name: 'Nova Dev Agency Ltd' }), 'tech');
+  assert.equal(classifySector({ isTechOrSoftwareCompany: true }), 'tech');
+});
+
+test('classifySector respects explicit company.sector override', () => {
+  assert.equal(classifySector({ sector: 'ecommerce', sic_codes: '62012' }), 'ecommerce');
+  assert.equal(classifySector({ sector: 'healthcare', industry: 'software' }), 'healthcare');
+  assert.equal(classifySector({ sector: 'trades' }), 'trades');
+  assert.equal(classifySector({ sector: 'hospitality' }), 'hospitality');
+  assert.equal(classifySector({ sector: 'b2b' }), 'b2b');
+  assert.equal(classifySector({ sector: 'tech' }), 'tech');
+  assert.equal(classifySector({ sector: 'general' }), 'general');
+});
+
+// -----------------------------------------------------------------------------
+// Unit 5.24: Sector Prompts & Mock Generation Suites
+// -----------------------------------------------------------------------------
+
+test('buildPrompt builds targeted prompts for all 6 tracks and fallback', () => {
+  // Track 1: E-Commerce
+  const pEcom = buildPrompt({ company_name: 'Bloom Boutique Ltd', sic_codes: '47110' });
+  assert.ok(pEcom.includes("Quick question about Bloom Boutique Ltd's online store"));
+  assert.ok(pEcom.includes('e-commerce automation engineer'));
+  assert.ok(pEcom.includes('central dashboard to monitor everything in real time, plus automated follow-ups for pending checkouts'));
+  assert.ok(pEcom.includes('Are you currently exploring ways to grow your store or looking to automate daily operations?'));
+
+  // Track 2: Healthcare
+  const pHealth = buildPrompt({ company_name: 'Smile Clinic Ltd', sic_codes: '86210' });
+  assert.ok(pHealth.includes("Quick question about Smile Clinic Ltd's patient bookings"));
+  assert.ok(pHealth.includes('digital automation developer'));
+  assert.ok(pHealth.includes('24/7 digital assistant that handles appointment bookings, patient intake form completions, and scheduled reminders'));
+  assert.ok(pHealth.includes("Are you currently exploring ways to improve your clinic's daily workflow?"));
+
+  // Track 3: Local Trades
+  const pTrades = buildPrompt({ company_name: 'Apex Plumbing Ltd', sic_codes: '43220' });
+  assert.ok(pTrades.includes('Quick question about client response times for Apex Plumbing Ltd'));
+  assert.ok(pTrades.includes('automation engineer'));
+  assert.ok(pTrades.includes('rapid WhatsApp messaging assistant and automated follow-ups'));
+  assert.ok(pTrades.includes('Are you currently looking to streamline your client communication process?'));
+
+  // Track 4: Hospitality
+  const pHosp = buildPrompt({ company_name: 'Bella Bistro Ltd', sic_codes: '56101' });
+  assert.ok(pHosp.includes('Quick question about online bookings for Bella Bistro Ltd'));
+  assert.ok(pHosp.includes('digital developer'));
+  assert.ok(pHosp.includes('automated guest feedback collection, seamless table or event reservations, and AI-driven seasonal announcements'));
+  assert.ok(pHosp.includes('Are you currently exploring ways to increase customer retention and table bookings?'));
+
+  // Track 5: B2B
+  const pB2B = buildPrompt({ company_name: 'Summit Advisory Ltd', sic_codes: '70229' });
+  assert.ok(pB2B.includes('Quick question about client onboarding at Summit Advisory Ltd'));
+  assert.ok(pB2B.includes('business automation developer'));
+  assert.ok(pB2B.includes('automate client onboarding, payment tracking reminders, and pipeline management'));
+  assert.ok(pB2B.includes('Are you currently looking to automate your internal operations?'));
+
+  // Track 6: Tech
+  const pTech = buildPrompt({ company_name: 'Pixel Dev Ltd', sic_codes: '62012' });
+  assert.ok(pTech.includes('Quick question about client pipeline workflows for Pixel Dev Ltd'));
+  assert.ok(pTech.includes('backend and automation engineer'));
+  assert.ok(pTech.includes('automated client acquisition pipelines and smart reporting systems'));
+  assert.ok(pTech.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
+
+  // General fallback
+  const pGen = buildPrompt({ company_name: 'Omega Holdings Ltd', sic_codes: '99999' });
+  assert.ok(pGen.includes("Quick question about Omega Holdings Ltd's workflow automation"));
+  assert.ok(pGen.includes('Briefly explain that you help businesses streamline routine communications'));
+  assert.ok(pGen.includes('Are you currently exploring ways to streamline your daily operations?'));
+});
+
+test('generateEmail generates sector-specific mock emails across all tracks with official signature', async () => {
+  // Track 1: E-Commerce
+  const mEcom = await generateEmail({ company_name: 'Trend Shop Ltd', sic_codes: '47110', active_directors: 'Emma Watson' }, { mock: true });
+  assert.equal(mEcom.subject, "Quick question about Trend Shop Ltd's online store");
+  assert.ok(mEcom.body.includes('Hey Emma,'));
+  assert.ok(mEcom.body.includes('pending checkouts'));
+  assert.ok(mEcom.body.includes('WhatsApp: +8801615753465'));
+  assert.ok(mEcom.body.includes('https://nahid-yf63.onrender.com/'));
+  assert.ok(mEcom.body.includes('https://github.com/Nahid625'));
+
+  // Track 2: Healthcare
+  const mHealth = await generateEmail({ company_name: 'Care Dental Ltd', sic_codes: '86210', active_directors: 'Dr David' }, { mock: true });
+  assert.equal(mHealth.subject, "Quick question about Care Dental Ltd's patient bookings");
+  assert.ok(mHealth.body.includes('24/7 digital assistant'));
+  assert.ok(mHealth.body.includes('patient intake form completions'));
+
+  // Track 3: Trades
+  const mTrades = await generateEmail({ company_name: 'Rapid Gas Ltd', sic_codes: '43220', active_directors: 'John Miller' }, { mock: true });
+  assert.equal(mTrades.subject, 'Quick question about client response times for Rapid Gas Ltd');
+  assert.ok(mTrades.body.includes('rapid WhatsApp messaging assistant'));
+  assert.ok(mTrades.body.includes('centralized inbox'));
+
+  // Track 4: Hospitality
+  const mHosp = await generateEmail({ company_name: 'Cozy Cafe Ltd', sic_codes: '56101' }, { mock: true });
+  assert.equal(mHosp.subject, 'Quick question about online bookings for Cozy Cafe Ltd');
+  assert.ok(mHosp.body.includes('seasonal announcements'));
+  assert.ok(mHosp.body.includes('management dashboard to track guest feedback'));
+
+  // Track 5: B2B
+  const mB2b = await generateEmail({ company_name: 'Prime Legal Ltd', sic_codes: '69101' }, { mock: true });
+  assert.equal(mB2b.subject, 'Quick question about client onboarding at Prime Legal Ltd');
+  assert.ok(mB2b.body.includes('payment tracking reminders'));
+  assert.ok(mB2b.body.includes('pipeline management'));
+
+  // Track 6: Tech
+  const mTech = await generateEmail({ company_name: 'Cloudify Ltd', sic_codes: '62012' }, { mock: true });
+  assert.equal(mTech.subject, 'Quick question about client pipeline workflows for Cloudify Ltd');
+  assert.ok(mTech.body.includes('automated client acquisition pipelines'));
+  assert.ok(mTech.body.includes(TECH_SIGNATURE_TITLE));
+});
+
+// -----------------------------------------------------------------------------
+// Unit 5.24: Vocabulary Sanitizer & Spam Word Neutralization Suite
+// -----------------------------------------------------------------------------
+
+test('SAFE_WORD_REPLACEMENTS and applySafeWordReplacements neutralize all 12 trigger words', () => {
+  assert.equal(applySafeWordReplacements('We offer an instant quote.'), 'We offer an rapid response.');
+  assert.equal(applySafeWordReplacements('Instant quote on WhatsApp.'), 'Rapid response on WhatsApp.');
+  assert.equal(applySafeWordReplacements('We automate invoice chasing.'), 'We automate payment tracking reminders.');
+  assert.equal(applySafeWordReplacements('Send promo blasts weekly.'), 'Send seasonal announcements weekly.');
+  assert.equal(applySafeWordReplacements('Handle blasts easily.'), 'Handle seasonal announcements easily.');
+  assert.equal(applySafeWordReplacements('Recover abandoned carts.'), 'Recover pending checkouts.');
+  assert.equal(applySafeWordReplacements('Recover abandoned cart.'), 'Recover pending checkouts.');
+  assert.equal(applySafeWordReplacements('Manage all invoices.'), 'Manage payment tracking.');
+  assert.equal(applySafeWordReplacements('Get a quote today.'), 'Get a estimate today.');
+  assert.equal(applySafeWordReplacements('Regarding your online presence.'), 'About your online presence.');
+  assert.equal(applySafeWordReplacements('Review regarding workflow.'), 'Review about workflow.');
+  assert.equal(applySafeWordReplacements('Track performance.'), 'Track results.');
+  assert.equal(applySafeWordReplacements('Replied immediately.'), 'Replied promptly.');
+  assert.equal(applySafeWordReplacements('Replied instantly.'), 'Replied promptly.');
+  assert.equal(applySafeWordReplacements('Help you scale.'), 'Help you grow.');
+  assert.equal(applySafeWordReplacements("We won't spam."), 'We will not spam.');
+  assert.equal(applySafeWordReplacements('ACME ENTERPRISES LIMITED'), 'ACME ENTERPRISES Ltd');
+});
+
+test('cleanEmailContent replaces trigger words without triggering FORBIDDEN_SPAM_WORDS security blocks', () => {
+  const triggerEmail = JSON.stringify({
+    subject: 'Regarding a quote for Acme Ltd',
+    body: "Hey John,\n\nWe won't let you down. We can scale your store, stop invoice chasing, recover abandoned carts, and send promo blasts.\n\nBest regards,\nNahid"
+  });
+
+  const cleaned = cleanEmailContent(triggerEmail, { companyName: 'Acme Ltd' });
+  assert.ok(!cleaned.subject.toLowerCase().includes('regarding'));
+  assert.ok(!cleaned.subject.toLowerCase().includes('quote'));
+  assert.ok(!cleaned.body.toLowerCase().includes("won't"));
+  assert.ok(!cleaned.body.toLowerCase().includes('scale'));
+  assert.ok(!cleaned.body.toLowerCase().includes('invoice'));
+  assert.ok(!cleaned.body.toLowerCase().includes('blasts'));
+  assert.ok(!cleaned.body.toLowerCase().includes('abandoned carts'));
+  assert.ok(cleaned.body.includes('will not'));
+  assert.ok(cleaned.body.includes('grow'));
+  assert.ok(cleaned.body.includes('payment tracking reminders'));
+  assert.ok(cleaned.body.includes('pending checkouts'));
+  assert.ok(cleaned.body.includes('seasonal announcements'));
+});
+
+test('cleanEmailContent still blocks un-sanitized forbidden spam words', () => {
+  const spamWords = ['free', 'guaranteed', 'buy now', 'cheap', 'urgent', 'no obligation', 'fantastic', 'offer', 'opportunity', 'great', 'save'];
+  for (const word of spamWords) {
+    const raw = JSON.stringify({
+      subject: `Special ${word} for you`,
+      body: 'Hey Sarah,\n\nContact us today.'
+    });
+    assert.throws(
+      () => cleanEmailContent(raw),
+      new RegExp(`forbidden spam word "${word}"`, 'i'),
+      `Should have blocked spam word: ${word}`
+    );
+  }
+});
+
+// -----------------------------------------------------------------------------
+// Unit 5.24 Edge Case Test Suite
+// -----------------------------------------------------------------------------
+
+test('classifySector handles untrimmed sector, e-commerce alias, and trade SIC 45200', () => {
+  assert.equal(classifySector({ sector: ' healthcare ' }), 'healthcare');
+  assert.equal(classifySector({ sector: 'e-commerce' }), 'ecommerce');
+  assert.equal(classifySector({ sic_codes: '45200' }), 'trades');
+});
+
+test('applySafeWordReplacements handles curly apostrophe won’t', () => {
+  assert.equal(applySafeWordReplacements('We won\u2019t spam.'), 'We will not spam.');
+});
+
+test('cleanEmailContent applies TECH_SIGNATURE_TITLE when sector is tech', () => {
+  const res = cleanEmailContent(
+    JSON.stringify({ subject: 'System workflow', body: 'We build backend systems.' }),
+    { sector: 'tech' }
+  );
+  assert.ok(res.body.includes(TECH_SIGNATURE_TITLE));
+});
+
 
 
 

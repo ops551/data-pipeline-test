@@ -9,11 +9,13 @@ test.before(() => {
 const {
   DEFAULT_SMTP_PORT,
   DEFAULT_MAX_RETRIES,
+  OFFICIAL_COORDINATES,
   loadSmtpConfig,
   createTransporter,
   verifyConnection,
   normalizeRecipients,
   normalizeRecipient,
+  stripExternalLinks,
   ensureSignature,
   formatHtmlContent,
   formatEmailHtml,
@@ -193,17 +195,18 @@ test('normalizeRecipients throws on invalid email address syntax', () => {
 // C. Mandatory Personal Signature & HTML Formatting
 // -----------------------------------------------------------------------------
 
-test('ensureSignature appends mandatory personal signature when missing', () => {
+test('ensureSignature appends mandatory personal signature with official coordinates when missing', () => {
   const text = 'Hi John,\n\nWe would love to help you build a new website.';
   const signed = ensureSignature(text);
 
   assert.ok(signed.includes('Best regards,'));
   assert.ok(signed.includes('Nahid'));
-  assert.doesNotMatch(signed, /WhatsApp|\+880\s*1615[- ]?753465/i);
-  assert.doesNotMatch(signed, /https?:\/\/|www\./i);
+  assert.ok(signed.includes('WhatsApp: +8801615753465'));
+  assert.ok(signed.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
 });
 
-test('ensureSignature deduplicates and prevents repeating signature if already present', () => {
+test('ensureSignature deduplicates and preserves official coordinates signature if already present', () => {
   const existing = [
     'Hi team,',
     '',
@@ -212,16 +215,18 @@ test('ensureSignature deduplicates and prevents repeating signature if already p
     'Best regards,',
     'Nahid',
     'Web Design & Business Automation',
-    'WhatsApp: +880 1615-753465',
-    'GitHub: https://github.com/Nahid625',
-    'Portfolio: https://nahid-yf63.onrender.com/'
+    'WhatsApp: +8801615753465',
+    'Website: https://nahid-yf63.onrender.com/',
+    'GitHub: https://github.com/Nahid625'
   ].join('\n');
 
   const result = ensureSignature(existing);
-  assert.doesNotMatch(result, /WhatsApp|\+880\s*1615[- ]?753465/i);
-  assert.doesNotMatch(result, /https?:\/\/|www\./i);
-  assert.doesNotMatch(result, /GitHub:|Portfolio:/i);
+  assert.ok(result.includes('WhatsApp: +8801615753465'));
+  assert.ok(result.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(result.includes('GitHub: https://github.com/Nahid625'));
   assert.equal(result.includes('Best regards,\nNahid'), true);
+  const count = (result.match(/Best regards,/g) || []).length;
+  assert.equal(count, 1);
 });
 
 test('ensureSignature respects includeSignature false', () => {
@@ -229,14 +234,37 @@ test('ensureSignature respects includeSignature false', () => {
   assert.equal(ensureSignature(text, { includeSignature: false }), text);
 });
 
-test('formatHtmlContent removes external URLs and does not create links', () => {
+test('stripExternalLinks preserves official coordinates while stripping rogue URLs and numbers', () => {
+  const content = [
+    'Hey there, check our portfolio at https://phishing-site.com or http://scam.org.',
+    'Also visit www.badlink.co.uk or WhatsApp: +44 7925 214264.',
+    '',
+    'Best regards,',
+    'Nahid',
+    'Web Design & Business Automation',
+    'WhatsApp: +8801615753465',
+    'Website: https://nahid-yf63.onrender.com/',
+    'GitHub: https://github.com/Nahid625'
+  ].join('\n');
+
+  const cleaned = stripExternalLinks(content);
+  assert.doesNotMatch(cleaned, /https?:\/\/phishing-site\.com|http:\/\/scam\.org|www\.badlink\.co\.uk/i);
+  assert.doesNotMatch(cleaned, /\+44\s*7925\s*214264/);
+  assert.ok(cleaned.includes('WhatsApp: +8801615753465'));
+  assert.ok(cleaned.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(cleaned.includes('GitHub: https://github.com/Nahid625'));
+});
+
+test('formatHtmlContent removes rogue external URLs but preserves whitelisted signature', () => {
   const text = 'Hi,\n\nCongrats on your new venture! Visit https://example.com';
   const html = formatHtmlContent(text);
 
   assert.ok(html.includes('<!DOCTYPE html>'));
   assert.ok(html.includes('<p style="margin: 0 0 16px 0; line-height: 1.6;">Hi,</p>'));
-  assert.doesNotMatch(html, /https?:\/\/|www\.|href=/i);
-  assert.doesNotMatch(html, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.doesNotMatch(html, /https?:\/\/example\.com/i);
+  assert.ok(html.includes('WhatsApp: +8801615753465'));
+  assert.ok(html.includes('https://nahid-yf63.onrender.com/'));
+  assert.ok(html.includes('https://github.com/Nahid625'));
   // Check alias formatEmailHtml
   assert.equal(formatEmailHtml(text), html);
 });
@@ -301,25 +329,29 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
   // Parse raw JSON captured by Nodemailer's jsonTransport
   assert.ok(result.info && result.info.message);
   const parsed = JSON.parse(result.info.message);
-    assert.equal(parsed.to[0].address, 'founder@newbusiness.co.uk');
-    assert.equal(parsed.subject, 'Web design for your new UK company');
-  assert.doesNotMatch(parsed.text, /WhatsApp|\+880\s*1615[- ]?753465/i);
-  assert.doesNotMatch(parsed.text, /https?:\/\/|www\./i);
+  assert.equal(parsed.to[0].address, 'founder@newbusiness.co.uk');
+  assert.equal(parsed.subject, 'Web design for your new UK company');
+  assert.ok(parsed.text.includes('WhatsApp: +8801615753465'));
+  assert.ok(parsed.text.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(parsed.text.includes('GitHub: https://github.com/Nahid625'));
   assert.equal(parsed.html, undefined, 'outreach mail must be sent as plain text only');
 });
 
-test('sendEmail strips contact links and sends plain text only', async () => {
+test('sendEmail strips rogue contact links and sends plain text only', async () => {
   const transporter = createJsonTransporter();
   const result = await sendEmail({
     to: 'lead@example.co.uk',
     subject: 'Link-free message',
-    text: 'Contact us on WhatsApp: +880 1615-753465 or visit https://example.com and www.example.org',
+    text: 'Contact us on WhatsApp: +44 7925 214264 or visit https://example.com and www.example.org',
     html: '<p>Visit <a href="https://example.com">our site</a></p>'
   }, { transporter });
 
   const parsed = JSON.parse(result.info.message);
-  assert.doesNotMatch(parsed.text, /https?:\/\/|www\./i);
-  assert.doesNotMatch(parsed.text, /WhatsApp|\+880\s*1615[- ]?753465/i);
+  assert.doesNotMatch(parsed.text, /https?:\/\/example\.com|www\.example\.org/i);
+  assert.doesNotMatch(parsed.text, /\+44\s*7925/i);
+  assert.ok(parsed.text.includes('WhatsApp: +8801615753465'));
+  assert.ok(parsed.text.includes('https://nahid-yf63.onrender.com/'));
+  assert.ok(parsed.text.includes('https://github.com/Nahid625'));
   assert.equal(parsed.html, undefined);
 });
 
@@ -519,3 +551,25 @@ test('sendEmail fails immediately on permanent SMTP error without retrying', asy
   // Must not retry auth errors
   assert.equal(attempts, 1);
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.24 Edge Case Test Suite
+// -----------------------------------------------------------------------------
+
+test('stripExternalLinks whitelists WhatsApp coordinate when labelled WhatsApp number', () => {
+  const content = 'Contact us on WhatsApp number: +8801615753465 or visit https://badsite.com';
+  const cleaned = stripExternalLinks(content);
+  assert.ok(cleaned.includes('+8801615753465'));
+  assert.doesNotMatch(cleaned, /badsite\.com/);
+});
+
+test('ensureSignature appends official coordinates even when text has bare Best regards sign-off', () => {
+  const text = 'Hi John,\n\nWe build websites.\n\nBest regards,\nNahid';
+  const signed = ensureSignature(text);
+  assert.ok(signed.includes('WhatsApp: +8801615753465'));
+  assert.ok(signed.includes('Website: https://nahid-yf63.onrender.com/'));
+  assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
+  const count = (signed.match(/Best regards,/g) || []).length;
+  assert.equal(count, 1);
+});
+
