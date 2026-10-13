@@ -18,6 +18,7 @@ const {
   verifyConnection: defaultVerifyConnection,
   normalizeRecipient
 } = require('./email');
+const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
@@ -138,6 +139,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   const verify = deps.verifyConnection || defaultVerifyConnection;
   const sleep = deps.sleepFn || ((ms) => new Promise(resolve => setTimeout(resolve, ms)));
   const parseCsvFn = deps.parseCSV || defaultParseCSV;
+  const isValidEmail = deps.isValidEmailAddress || defaultIsValidEmailAddress;
 
   // Pre-flight connection check via verifyConnection (skip if dry-run or mock)
   if (!dryRun && !mock && !options.skipVerify) {
@@ -203,10 +205,41 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   // Iterate through leads with fault isolation
   for (let i = 0; i < leads.length; i++) {
     const lead = leads[i];
+    if (!lead || typeof lead !== 'object') {
+      logger.warn(`Skipping malformed or null lead at index ${i}`);
+      continue;
+    }
+
     processedCount++;
-    const companyNum = lead.company_number;
+    const companyNum = lead.company_number || '';
     const companyName = lead.company_name || 'Unknown Company';
     logger.log(`\n[${i + 1}/${total}] Processing ${companyName} (${companyNum})...`);
+
+    // Pre-flight Deliverability Guard
+    const rawEmails = lead.emails ? String(lead.emails).split(/[;,]/).map(e => e.trim()).filter(Boolean) : [];
+    const leadEmail = rawEmails.length > 0 ? rawEmails[0] : null;
+
+    const isInvalidStatus = String(lead.verification_status || '').trim().toLowerCase() === 'invalid';
+    let isInvalidSyntax = false;
+    let badEmailValue = leadEmail;
+
+    try {
+      if (!leadEmail || !isValidEmail(leadEmail)) {
+        isInvalidSyntax = true;
+        badEmailValue = leadEmail;
+      } else if (testEmail && !isValidEmail(String(testEmail).trim())) {
+        isInvalidSyntax = true;
+        badEmailValue = String(testEmail).trim();
+      }
+    } catch {
+      isInvalidSyntax = true;
+    }
+
+    if (isInvalidStatus || isInvalidSyntax) {
+      const reason = isInvalidStatus ? 'verification_status is invalid' : `invalid email syntax: "${badEmailValue}"`;
+      logger.warn(`Skipping lead ${companyName} (${companyNum}): ${reason}`);
+      continue;
+    }
 
     try {
       // 1. Enrich company data
@@ -244,7 +277,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       const subject = emailContent.subject || `Web Design & Business Automation for ${companyName}`;
 
       // 4. Determine destination recipient
-      const rawRecipient = testEmail || (lead.emails ? lead.emails.split(/[;,]/)[0].trim() : null);
+      const rawRecipient = (testEmail && String(testEmail).trim()) ? String(testEmail).trim() : leadEmail;
       if (!rawRecipient || !rawRecipient.trim()) {
         throw new Error(`No email address available for ${companyName} (${companyNum})`);
       }
