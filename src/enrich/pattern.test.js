@@ -14,6 +14,7 @@ const {
   verifyEmailSmtp,
   resetExhaustedKeys
 } = require('./pattern');
+const { alertedKeys, resetAlertedKeys: resetAlerts } = require('./alerts');
 
 const originalFetch = global.fetch;
 const originalEnv = { ...process.env };
@@ -21,6 +22,7 @@ const originalEnv = { ...process.env };
 function restoreEnv() {
   process.env = { ...originalEnv };
   resetExhaustedKeys();
+  resetAlerts();
   global.fetch = originalFetch;
 }
 
@@ -324,6 +326,35 @@ test('Automated quota failover: advances across provider chain on 429 and quota 
     assert.strictEqual(res.status, 'valid_domain');
     assert.strictEqual(res.reason, 'reoon');
     assert.deepEqual(calledProviders, ['qev', 'sniffmail', 'reoon']);
+  } finally {
+    restoreEnv();
+  }
+});
+
+test('verifyEmail triggers sendQuotaExhaustionAlert when provider quota is exceeded', async () => {
+  try {
+    resetAlerts();
+    process.env.SMTP_MOCK = 'true';
+    process.env.QUICK_EMAIL_VERIFICATION_API_KEY = 'quota_test_key';
+    process.env.SNIFFMAIL_API_KEY = 'sniff_quota_test_key';
+    process.env.REON_API_KEY = '';
+    process.env.ZEROBOUNCE = '';
+    delete process.env.VERIFALIA_USERNAME;
+
+    global.fetch = async (url) => {
+      if (url.includes('quickemailverification.com')) {
+        return { status: 402, json: async () => ({ message: 'quota_exceeded' }) };
+      }
+      if (url.includes('sniffmail.io')) {
+        return { status: 429, json: async () => ({ message: 'rate_limited' }) };
+      }
+      return { status: 500 };
+    };
+
+    await verifyEmail('test@invalid-nonexistent-domain-12345.com');
+
+    assert.ok(alertedKeys.has('QuickEmailVerification:quota_test_key'));
+    assert.ok(alertedKeys.has('Sniffmail:sniff_quota_test_key'));
   } finally {
     restoreEnv();
   }

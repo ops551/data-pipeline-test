@@ -813,3 +813,142 @@ test('printHelp executes without error', () => {
     console.log = originalLog;
   }
 });
+
+test('runOutreachPipeline skips lead when verification_status is invalid without sending or archiving', async () => {
+  const ws = createWorkspace();
+  try {
+    const invalidLead = {
+      ...sampleLeadsData[0],
+      company_number: '99999999',
+      verification_status: 'invalid'
+    };
+    writeCSVAtomic(ws.leadsPath, [invalidLead, sampleLeadsData[1]], LEADS_COLUMNS);
+
+    const sentRecipients = [];
+    const warnings = [];
+    const customLogger = {
+      log: () => {},
+      error: () => {},
+      warn: (msg) => { warnings.push(msg); }
+    };
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        delay: 0,
+        mock: true,
+        logger: customLogger
+      },
+      {
+        getPendingLeads: () => [invalidLead, sampleLeadsData[1]],
+        generateEmail: async () => ({ subject: 'Hello', body: `Hi\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: async (opts) => {
+          sentRecipients.push(opts.to);
+          return { success: true, messageId: 'msg-id' };
+        }
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.deepEqual(sentRecipients, [sampleLeadsData[1].emails]);
+    assert.ok(warnings.some(w => w.includes('Skipping lead') && w.includes('verification_status is invalid')));
+
+    const sentRows = fs.existsSync(ws.sentLeadsPath) ? fs.readFileSync(ws.sentLeadsPath, 'utf8') : '';
+    assert.ok(sentRows.includes(sampleLeadsData[1].company_number));
+    assert.ok(!sentRows.includes('99999999'));
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('runOutreachPipeline skips lead when email syntax is invalid without sending or archiving', async () => {
+  const ws = createWorkspace();
+  try {
+    const badEmailLead = {
+      ...sampleLeadsData[0],
+      company_number: '88888888',
+      emails: 'invalid-email-syntax'
+    };
+
+    const sentRecipients = [];
+    const warnings = [];
+    const customLogger = {
+      log: () => {},
+      error: () => {},
+      warn: (msg) => { warnings.push(msg); }
+    };
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        delay: 0,
+        mock: true,
+        logger: customLogger
+      },
+      {
+        getPendingLeads: () => [badEmailLead, sampleLeadsData[1]],
+        generateEmail: async () => ({ subject: 'Hello', body: `Hi\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: async (opts) => {
+          sentRecipients.push(opts.to);
+          return { success: true, messageId: 'msg-id' };
+        }
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.deepEqual(sentRecipients, [sampleLeadsData[1].emails]);
+    assert.ok(warnings.some(w => w.includes('Skipping lead') && w.includes('invalid email syntax')));
+
+    const sentRows = fs.existsSync(ws.sentLeadsPath) ? fs.readFileSync(ws.sentLeadsPath, 'utf8') : '';
+    assert.ok(!sentRows.includes('88888888'));
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('runOutreachPipeline skips lead when lead email syntax is invalid even when testEmail is set', async () => {
+  const ws = createWorkspace();
+  try {
+    const badEmailLead = {
+      ...sampleLeadsData[0],
+      company_number: '77777777',
+      emails: 'invalid-email-syntax'
+    };
+
+    const sentRecipients = [];
+    const warnings = [];
+    const customLogger = {
+      log: () => {},
+      error: () => {},
+      warn: (msg) => { warnings.push(msg); }
+    };
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        testEmail: 'tester@example.com',
+        delay: 0,
+        mock: true,
+        logger: customLogger
+      },
+      {
+        getPendingLeads: () => [badEmailLead, sampleLeadsData[1]],
+        generateEmail: async () => ({ subject: 'Hello', body: `Hi\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: async (opts) => {
+          sentRecipients.push(opts.to);
+          return { success: true, messageId: 'msg-id' };
+        }
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.deepEqual(sentRecipients, ['tester@example.com']);
+    assert.ok(warnings.some(w => w.includes('Skipping lead') && w.includes('invalid email syntax')));
+  } finally {
+    ws.cleanup();
+  }
+});
+

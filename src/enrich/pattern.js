@@ -3,6 +3,7 @@ const { promisify } = require('node:util');
 const net = require('node:net');
 const resolveMx = promisify(dns.resolveMx);
 const { isValidEmailAddress } = require('../emailAddress');
+const { sendQuotaExhaustionAlert } = require('./alerts');
 
 const GENERIC_PREFIXES = new Set([
   'info', 'contact', 'hello', 'sales', 'support', 'admin', 'team',
@@ -36,7 +37,7 @@ function isQuotaExceeded(status, data) {
   if (!data) return false;
 
   const text = typeof data === 'string' ? data : JSON.stringify(data);
-  const quotaRegex = /(?:quota|credit|rate\s*limit|too\s*many\s*requests|exceeded|insufficient|payment\s*required|out_of_credits)/i;
+  const quotaRegex = /(?:quota|credit|balance|rate\s*limit|too\s*many\s*requests|exceeded|insufficient|payment\s*required|out_of_credits)/i;
 
   if (quotaRegex.test(text)) {
     return true;
@@ -313,6 +314,9 @@ async function verifyEmailSmtp(email) {
   if (!isValidEmailAddress(email)) {
     return { status: 'invalid', reason: 'syntax' };
   }
+  if (process.env.SMTP_MOCK === 'true' || process.env.SMTP_MOCK === '1') {
+    return { status: 'valid_domain', reason: 'mock' };
+  }
 
   const domain = email.split('@')[1];
   let mxRecords;
@@ -418,6 +422,7 @@ async function verifyEmail(email) {
       const res = await verifyQuickEmailVerification(email, key);
       if (res.quotaExceeded) {
         exhaustedKeys.add(`qev:${key}`);
+        await sendQuotaExhaustionAlert('QuickEmailVerification', { key, reason: res.reason || 'quota_exceeded' });
         continue;
       }
       return res.isValid
@@ -437,6 +442,7 @@ async function verifyEmail(email) {
       const res = await verifySniffmail(email, key);
       if (res.quotaExceeded) {
         exhaustedKeys.add(`sniffmail:${key}`);
+        await sendQuotaExhaustionAlert('Sniffmail', { key, reason: res.reason || 'quota_exceeded' });
         continue;
       }
       return res.isValid
@@ -456,6 +462,7 @@ async function verifyEmail(email) {
       const res = await verifyReoon(email, key);
       if (res.quotaExceeded) {
         exhaustedKeys.add(`reoon:${key}`);
+        await sendQuotaExhaustionAlert('Reoon', { key, reason: res.reason || 'quota_exceeded' });
         continue;
       }
       return res.isValid
@@ -475,6 +482,7 @@ async function verifyEmail(email) {
       const res = await verifyZeroBounce(email, key);
       if (res.quotaExceeded) {
         exhaustedKeys.add(`zerobounce:${key}`);
+        await sendQuotaExhaustionAlert('ZeroBounce', { key, reason: res.reason || 'quota_exceeded' });
         continue;
       }
       return res.isValid
@@ -494,6 +502,7 @@ async function verifyEmail(email) {
       const res = await verifyVerifalia(email, vUser, vPass);
       if (res.quotaExceeded) {
         exhaustedKeys.add(`verifalia:${vUser}`);
+        await sendQuotaExhaustionAlert('Verifalia', { key: vUser, reason: 'quota_exceeded' });
       } else {
         return res.isValid
           ? { status: 'valid_domain', reason: 'verifalia' }
