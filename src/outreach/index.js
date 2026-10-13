@@ -23,7 +23,10 @@ const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAdd
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
   'Nahid',
-  'Web Design & Business Automation'
+  'Web Design & Business Automation',
+  'WhatsApp: +8801615753465',
+  'Website: https://nahid-yf63.onrender.com/',
+  'GitHub: https://github.com/Nahid625'
 ].join('\n');
 
 function parseCliArgs(argv = process.argv.slice(2)) {

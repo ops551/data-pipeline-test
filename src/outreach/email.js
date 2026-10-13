@@ -6,13 +6,50 @@ const { isValidEmailAddress } = require('../emailAddress');
 const DEFAULT_SMTP_PORT = 587;
 const DEFAULT_MAX_RETRIES = 3;
 
+const OFFICIAL_COORDINATES = Object.freeze({
+  whatsapp: '+8801615753465',
+  website: 'https://nahid-yf63.onrender.com/',
+  github: 'https://github.com/Nahid625',
+});
+
 function stripExternalLinks(content) {
-  return String(content || '')
-    .replace(/<[^>]*>/g, '')
-    .replace(/\bhttps?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi, '')
-    .replace(/(?:WhatsApp|WhatsApp number):?[^\r\n]*/gi, '')
-    .replace(/\+880\s*1615[- ]?753465/gi, '')
-    .replace(/(?:GitHub|Portfolio):[ \t]*(?=\n|$)/gi, '')
+  let str = String(content || '');
+
+  // Protect whitelisted official coordinates
+  const tokens = [];
+  const protect = (regex) => {
+    str = str.replace(regex, (match) => {
+      const token = `__WHITELIST_TOKEN_${tokens.length}__`;
+      tokens.push({ token, value: match });
+      return token;
+    });
+  };
+
+  // Protect official WhatsApp (+8801615753465 with optional label and trailing digit prevention)
+  protect(/(?:WhatsApp(?:\s+number)?:\s*)?\+880\s*1615[- ]?753465(?!\d)/gi);
+  // Protect official website (with boundary check)
+  protect(/https?:\/\/(?:www\.)?nahid-yf63\.onrender\.com(?:\/)?(?=[\s<>"'/?#]|$)/gi);
+  // Protect official GitHub (with boundary check)
+  protect(/https?:\/\/(?:www\.)?github\.com\/Nahid625(?:\/)?(?=[\s<>"'/?#]|$)/gi);
+
+  // Strip HTML tags
+  str = str.replace(/<[^>]*>/g, '');
+
+  // Strip non-whitelisted WhatsApp lines/numbers
+  str = str.replace(/(?:WhatsApp|WhatsApp number):?[^\r\n]*/gi, '');
+
+  // Strip non-whitelisted URLs and web links
+  str = str.replace(/\bhttps?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi, '');
+
+  // Strip orphaned Portfolio: label
+  str = str.replace(/(?:Portfolio):[ \t]*(?=\n|$)/gi, '');
+
+  // Restore protected whitelisted coordinates
+  for (const { token, value } of tokens) {
+    str = str.replace(token, value);
+  }
+
+  return str
     .replace(/[ \t]{2,}/g, ' ')
     .replace(/[ \t]+\n/g, '\n')
     .replace(/\n{3,}/g, '\n\n')
@@ -156,16 +193,31 @@ function ensureSignature(content, options = {}) {
     return stripExternalLinks(content);
   }
 
-  const text = stripExternalLinks(content);
-  const senderName = (
+  let text = stripExternalLinks(content);
+  const senderName = String(
     options.senderName ||
     options.name ||
     process.env.SENDER_NAME ||
-    DEFAULT_SIGNATURE.name
+    DEFAULT_SIGNATURE.name ||
+    'Nahid'
   ).trim();
-  if (text.toLowerCase().includes(`best regards,\n${senderName}`.toLowerCase())) {
+  const escapedSender = senderName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  if (
+    text.includes('+8801615753465') ||
+    text.includes('nahid-yf63.onrender.com') ||
+    (options.includeCoordinates === false &&
+      (text.toLowerCase().includes(`best regards,\n${senderName}`.toLowerCase()) ||
+        new RegExp(`best regards,[\\r\\n]+${escapedSender}`, 'i').test(text)))
+  ) {
     return text;
   }
+
+  const signoffRegex = new RegExp(
+    `(?:\\r?\\n)+(?:best regards|kind regards|warm regards|with regards|regards|cheers|sincerely)[,\\s]*[\\r\\n]*${escapedSender}\\s*$`,
+    'i'
+  );
+  text = text.replace(signoffRegex, '').trim();
 
   const signature = buildSignature(options);
   if (!text) return signature;
@@ -275,11 +327,13 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
 module.exports = {
   DEFAULT_SMTP_PORT,
   DEFAULT_MAX_RETRIES,
+  OFFICIAL_COORDINATES,
   loadSmtpConfig,
   createTransporter,
   verifyConnection,
   normalizeRecipients,
   normalizeRecipient,
+  stripExternalLinks,
   ensureSignature,
   formatHtmlContent,
   formatEmailHtml,
