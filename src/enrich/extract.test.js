@@ -585,6 +585,36 @@ test('extractPeople extracts leaders with honorific titles and tag boundaries (U
   assert.strictEqual(people4.length, 0);
 });
 
+test('extractPeople rejects corporate non-person candidate names matching company brand words unless official officer', () => {
+  const { extractPeople, isValidPersonName } = require('./extract');
+
+  // isValidPersonName rejects corporate words in BAD_NAME_TOKENS
+  assert.strictEqual(isValidPersonName('Eclat Media'), false);
+  assert.strictEqual(isValidPersonName('Alpha Labs'), false);
+  assert.strictEqual(isValidPersonName('Apex Solutions'), false);
+  assert.strictEqual(isValidPersonName('Nexus Technologies'), false);
+
+  // Eclat Media is rejected for Eclat Group Ltd because it contains brand word 'eclat' and is not an officer
+  const htmlFalseBrand = `<div><p>Eclat Media, Director</p></div>`;
+  const rejected = extractPeople(htmlFalseBrand, [], 'https://eclatgroupltd.com/', 'Eclat Group Ltd');
+  assert.strictEqual(rejected.length, 0);
+
+  // But if the person IS in the official officers list, they are accepted
+  const htmlOfficerMatch = `<div><p>Cass Consulting is led by Cass Coulston, Founder</p></div>`;
+  const officers = [{ name: 'Dr Cass Coulston', role: 'Director' }];
+  const accepted = extractPeople(htmlOfficerMatch, officers, 'https://cass.com/', 'Cass Consulting Ltd');
+  assert.strictEqual(accepted.length, 1);
+  assert.strictEqual(accepted[0].name, 'Dr Cass Coulston');
+
+  // Real human name like 'John Smith' at 'Smith Consulting Ltd' is NOT dropped
+  const htmlRealHuman = `<div><p>Smith Consulting is led by John Smith, Founder</p></div>`;
+  const acceptedHuman = extractPeople(htmlRealHuman, [], 'https://smithconsulting.co.uk/', 'Smith Consulting Ltd');
+  assert.strictEqual(acceptedHuman.length, 1);
+  assert.strictEqual(acceptedHuman[0].name, 'John Smith');
+  assert.strictEqual(acceptedHuman[0].role, 'Founder');
+});
+
+
 
 
 

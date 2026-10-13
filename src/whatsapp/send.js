@@ -47,6 +47,7 @@ async function runWhatsAppOutreach() {
                     appendSentWhatsapp({
                         company_number: lead.company_number,
                         company_name: lead.company_name,
+                        phone: lead.target_phone,
                         phone_number: lead.target_phone,
                         status: 'no_whatsapp',
                         message_preview: 'Skipped - no WhatsApp account'
@@ -68,6 +69,7 @@ async function runWhatsAppOutreach() {
                 appendSentWhatsapp({
                     company_number: lead.company_number,
                     company_name: lead.company_name,
+                    phone: lead.target_phone,
                     phone_number: lead.target_phone,
                     status: 'sent',
                     message_preview: msg.substring(0, 50) + '...'

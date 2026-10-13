@@ -767,3 +767,19 @@ test('Fix 6: Case-insensitive company number matching between leads and sent_wha
   assert.equal(candidates[0].target_phone, '+447222222222');
   ws.cleanup();
 });
+
+test('appendSentWhatsapp accepts phone_number field on item', () => {
+  const ws = createTempWorkspace();
+  appendSentWhatsapp(ws.sentWhatsappPath, {
+    company_number: '12345678',
+    company_name: 'Phone Test Ltd',
+    phone_number: '+447999888777',
+    status: 'sent'
+  });
+
+  const records = readSentWhatsapp(ws.sentWhatsappPath);
+  assert.equal(records.length, 1);
+  assert.equal(records[0].phone, '+447999888777');
+  ws.cleanup();
+});
+

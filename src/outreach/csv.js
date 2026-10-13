@@ -203,8 +203,30 @@ function appendSentLeads(arg1, arg2) {
     fs.mkdirSync(dir, { recursive: true });
   }
 
+  // Deduplicate items against existing records in sentLeadsPath on (company_number, sent_to)
+  const existingRecords = fs.existsSync(sentLeadsPath) ? parseCSV(sentLeadsPath) : [];
+  const existingKeys = new Set();
+  for (const r of existingRecords) {
+    const num = String(r.company_number || '').trim().toUpperCase();
+    const email = String(r.sent_to || '').trim().toLowerCase();
+    existingKeys.add(`${num}:${email}`);
+  }
+
+  const uniqueItems = [];
+  for (const item of items) {
+    const num = String(item.company_number || '').trim().toUpperCase();
+    const email = String(item.sent_to || '').trim().toLowerCase();
+    const key = `${num}:${email}`;
+    if (!existingKeys.has(key)) {
+      existingKeys.add(key);
+      uniqueItems.push(item);
+    }
+  }
+
+  if (uniqueItems.length === 0) return 0;
+
   const defaultSentAt = new Date().toISOString();
-  const records = items.map(item => ({
+  const records = uniqueItems.map(item => ({
     ...item,
     sent_at: item.sent_at || defaultSentAt
   }));
@@ -213,10 +235,9 @@ function appendSentLeads(arg1, arg2) {
   if (!needsHeader) {
     const header = fs.readFileSync(sentLeadsPath, 'utf8').split(/\r?\n/, 1)[0];
     if (header !== SENT_LEADS_COLUMNS.join(',')) {
-      const existingSentLeads = parseCSV(sentLeadsPath);
       writeCSVAtomic(
         sentLeadsPath,
-        [...existingSentLeads, ...records],
+        [...existingRecords, ...records],
         SENT_LEADS_COLUMNS
       );
       return records.length;
@@ -229,7 +250,14 @@ function appendSentLeads(arg1, arg2) {
     const lines = records.map(record =>
       SENT_LEADS_COLUMNS.map(col => formatField(record[col])).join(',')
     );
-    fs.appendFileSync(sentLeadsPath, lines.join('\n') + '\n', 'utf8');
+    let prefix = '';
+    try {
+      const content = fs.readFileSync(sentLeadsPath, 'utf8');
+      if (content.length > 0 && !content.endsWith('\n')) {
+        prefix = '\n';
+      }
+    } catch {}
+    fs.appendFileSync(sentLeadsPath, prefix + lines.join('\n') + '\n', 'utf8');
   }
 
   return records.length;

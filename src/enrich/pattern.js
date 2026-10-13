@@ -176,6 +176,9 @@ async function verifyQuickEmailVerification(email, apiKey) {
   }
   const data = await res.json().catch(() => null);
   if (!data) {
+    if (res.status === 200) {
+      return { success: false, isValid: false, reason: 'qev_malformed_response' };
+    }
     return { quotaExceeded: res.status >= 400 };
   }
   if (isQuotaExceeded(res.status, data)) {
@@ -209,6 +212,9 @@ async function verifySniffmail(email, apiKey) {
   }
   const data = await res.json().catch(() => null);
   if (!data) {
+    if (res.status === 200) {
+      return { success: false, isValid: false, reason: 'sniffmail_malformed_response' };
+    }
     return { quotaExceeded: res.status >= 400 };
   }
   if (isQuotaExceeded(res.status, data)) {
@@ -232,6 +238,9 @@ async function verifyReoon(email, apiKey) {
   }
   const data = await res.json().catch(() => null);
   if (!data) {
+    if (res.status === 200) {
+      return { success: false, isValid: false, reason: 'reoon_malformed_response' };
+    }
     return { quotaExceeded: res.status >= 400 };
   }
   if (isQuotaExceeded(res.status, data)) {
@@ -255,6 +264,9 @@ async function verifyZeroBounce(email, apiKey) {
   }
   const data = await res.json().catch(() => null);
   if (!data) {
+    if (res.status === 200) {
+      return { success: false, isValid: false, reason: 'zerobounce_malformed_response' };
+    }
     return { quotaExceeded: res.status >= 400 };
   }
   if (isQuotaExceeded(res.status, data)) {
@@ -285,6 +297,9 @@ async function verifyVerifalia(email, username, password) {
   }
   const data = await res.json().catch(() => null);
   if (!data) {
+    if (res.status === 200) {
+      return { success: false, isValid: false, reason: 'verifalia_malformed_response' };
+    }
     return { quotaExceeded: res.status >= 400 };
   }
   if (isQuotaExceeded(res.status, data)) {
@@ -420,9 +435,12 @@ async function verifyEmail(email) {
     if (exhaustedKeys.has(`qev:${key}`)) continue;
     try {
       const res = await verifyQuickEmailVerification(email, key);
-      if (res.quotaExceeded) {
+      if (res && res.quotaExceeded) {
         exhaustedKeys.add(`qev:${key}`);
         await sendQuotaExhaustionAlert('QuickEmailVerification', { key, reason: res.reason || 'quota_exceeded' });
+        continue;
+      }
+      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
         continue;
       }
       return res.isValid
@@ -440,9 +458,12 @@ async function verifyEmail(email) {
     if (exhaustedKeys.has(`sniffmail:${key}`)) continue;
     try {
       const res = await verifySniffmail(email, key);
-      if (res.quotaExceeded) {
+      if (res && res.quotaExceeded) {
         exhaustedKeys.add(`sniffmail:${key}`);
         await sendQuotaExhaustionAlert('Sniffmail', { key, reason: res.reason || 'quota_exceeded' });
+        continue;
+      }
+      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
         continue;
       }
       return res.isValid
@@ -460,9 +481,12 @@ async function verifyEmail(email) {
     if (exhaustedKeys.has(`reoon:${key}`)) continue;
     try {
       const res = await verifyReoon(email, key);
-      if (res.quotaExceeded) {
+      if (res && res.quotaExceeded) {
         exhaustedKeys.add(`reoon:${key}`);
         await sendQuotaExhaustionAlert('Reoon', { key, reason: res.reason || 'quota_exceeded' });
+        continue;
+      }
+      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
         continue;
       }
       return res.isValid
@@ -480,9 +504,12 @@ async function verifyEmail(email) {
     if (exhaustedKeys.has(`zerobounce:${key}`)) continue;
     try {
       const res = await verifyZeroBounce(email, key);
-      if (res.quotaExceeded) {
+      if (res && res.quotaExceeded) {
         exhaustedKeys.add(`zerobounce:${key}`);
         await sendQuotaExhaustionAlert('ZeroBounce', { key, reason: res.reason || 'quota_exceeded' });
+        continue;
+      }
+      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
         continue;
       }
       return res.isValid
@@ -500,9 +527,11 @@ async function verifyEmail(email) {
   if (vUser && vPass && !exhaustedKeys.has(`verifalia:${vUser}`)) {
     try {
       const res = await verifyVerifalia(email, vUser, vPass);
-      if (res.quotaExceeded) {
+      if (res && res.quotaExceeded) {
         exhaustedKeys.add(`verifalia:${vUser}`);
         await sendQuotaExhaustionAlert('Verifalia', { key: vUser, reason: 'quota_exceeded' });
+      } else if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
+        // treat as non-fatal and proceed
       } else {
         return res.isValid
           ? { status: 'valid_domain', reason: 'verifalia' }

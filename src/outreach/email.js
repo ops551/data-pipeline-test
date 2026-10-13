@@ -28,15 +28,18 @@ function stripExternalLinks(content) {
   // Protect official WhatsApp (+8801615753465 with optional label and trailing digit prevention)
   protect(/(?:WhatsApp(?:\s+number)?:\s*)?\+880\s*1615[- ]?753465(?!\d)/gi);
   // Protect official website (with boundary check)
-  protect(/https?:\/\/(?:www\.)?nahid-yf63\.onrender\.com(?:\/)?(?=[\s<>"'/?#]|$)/gi);
+  protect(/https?:\/\/(?:www\.)?nahid-yf63\.onrender\.com(?:\/)?(?=[\s<>"'/?#\)]|$)/gi);
   // Protect official GitHub (with boundary check)
-  protect(/https?:\/\/(?:www\.)?github\.com\/Nahid625(?:\/)?(?=[\s<>"'/?#]|$)/gi);
+  protect(/https?:\/\/(?:www\.)?github\.com\/Nahid625(?:\/)?(?=[\s<>"'/?#\)]|$)/gi);
 
   // Strip HTML tags
   str = str.replace(/<[^>]*>/g, '');
 
   // Strip non-whitelisted WhatsApp lines/numbers
   str = str.replace(/(?:WhatsApp|WhatsApp number):?[^\r\n]*/gi, '');
+
+  // Replace markdown links with link text before stripping bare URLs
+  str = str.replace(/\[([^\]]+)\]\((?:https?:\/\/[^\s)]+|www\.[^\s)]+)\)/gi, '$1');
 
   // Strip non-whitelisted URLs and web links
   str = str.replace(/\bhttps?:\/\/[^\s<>"']+|www\.[^\s<>"']+/gi, '');

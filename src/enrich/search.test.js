@@ -21,6 +21,16 @@ test('isSocialOrDirectory identifies known domains', (t) => {
   assert.strictEqual(isSocialOrDirectory('twitter.com'), true);
   assert.strictEqual(isSocialOrDirectory('yell.com'), true);
   assert.strictEqual(isSocialOrDirectory('random-business.co.uk'), false);
+  assert.strictEqual(isSocialOrDirectory('infotech.co.uk'), false);
+  assert.strictEqual(isSocialOrDirectory('datasolutions.com'), false);
+  assert.strictEqual(isSocialOrDirectory('apexcompany.co.uk'), false);
+  assert.strictEqual(isSocialOrDirectory('technobiz.co.uk'), false);
+  assert.strictEqual(isSocialOrDirectory('companydirectory.com'), true);
+  assert.strictEqual(isSocialOrDirectory('directory-services.co.uk'), true);
+  assert.strictEqual(isSocialOrDirectory('DIRECTORY-SERVICES.CO.UK'), true);
+  assert.strictEqual(isSocialOrDirectory(null), false);
+  assert.strictEqual(isSocialOrDirectory(undefined), false);
+  assert.strictEqual(isSocialOrDirectory(''), false);
 });
 
 test('searchCompany separates website from social URLs', async (t) => {

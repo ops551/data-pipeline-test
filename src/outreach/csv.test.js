@@ -557,3 +557,45 @@ test('moveLeadToSent moves only targeted decision-maker row for multi-person com
   assert.strictEqual(sentLeads[0].sent_to, 'lauren@whatshesaid.uk');
 });
 
+test('appendSentLeads deduplicates items on (company_number, sent_to) against existing records and intra-batch', () => {
+  const { sentLeadsPath } = createTempWorkspace();
+  const row1 = {
+    ...sampleLeads[0],
+    company_number: '12345678',
+    sent_to: 'contact@alpha.co.uk'
+  };
+  const count1 = appendSentLeads(sentLeadsPath, [row1]);
+  assert.equal(count1, 1);
+
+  // Appending the exact same (company_number, sent_to) again is ignored
+  const count2 = appendSentLeads(sentLeadsPath, [row1]);
+  assert.equal(count2, 0);
+
+  // Appending another person/sent_to under the same company is allowed
+  const row2 = {
+    ...sampleLeads[0],
+    company_number: '12345678',
+    sent_to: 'sales@alpha.co.uk'
+  };
+  const count3 = appendSentLeads(sentLeadsPath, [row2]);
+  assert.equal(count3, 1);
+
+  // Intra-batch duplicates are filtered
+  const count4 = appendSentLeads(sentLeadsPath, [
+    { ...sampleLeads[0], company_number: '88888888', sent_to: 'ceo@test.com' },
+    { ...sampleLeads[0], company_number: '88888888', sent_to: 'ceo@test.com' }
+  ]);
+  assert.equal(count4, 1);
+
+  // Case-insensitive company_number (e.g. sc123456 vs SC123456)
+  const count5 = appendSentLeads(sentLeadsPath, [
+    { ...sampleLeads[0], company_number: 'sc123456', sent_to: 'director@scottish.co.uk' }
+  ]);
+  assert.equal(count5, 1);
+  const count6 = appendSentLeads(sentLeadsPath, [
+    { ...sampleLeads[0], company_number: 'SC123456', sent_to: 'director@scottish.co.uk' }
+  ]);
+  assert.equal(count6, 0);
+});
+
+
