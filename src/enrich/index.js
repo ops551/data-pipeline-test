@@ -402,8 +402,8 @@ async function runEnrichment() {
          
          if (bestGeneric) {
            const v = await verifyEmail(bestGeneric);
-           if (v.status === 'invalid') {
-             console.log(`  Extracted generic email ${bestGeneric} is invalid (${v.reason}). Discarding.`);
+           if (v.status !== 'valid_domain') {
+             console.log(`  Extracted generic email ${bestGeneric} is not verified (${v.status}: ${v.reason}). Discarding.`);
              bestGeneric = '';
              vStatus = '';
            }

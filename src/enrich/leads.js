@@ -39,7 +39,7 @@ function formatLead(company, extractedData, sources, website = {}) {
   const whatsapp_candidate = hasMobile ? 'yes' : 'no';
   
   const hasEmail = emails.length > 0;
-  const status = (hasEmail || hasMobile) ? 'lead' : 'no_contact';
+  const status = hasEmail ? 'lead' : 'no_contact';
   
   return {
     company_number: company.company_number,

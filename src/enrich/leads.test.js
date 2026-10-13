@@ -75,7 +75,7 @@ test('formatLead formats correctly based on extracted data', (t) => {
   assert.strictEqual(websiteLead.website_context, 'Page title: Test company');
   
   const whatsappLead = formatLead(company, { emails: [], phones: ['07123 456789'] }, ['ig']);
-  assert.strictEqual(whatsappLead.status, 'lead'); // has mobile
+  assert.strictEqual(whatsappLead.status, 'no_contact'); // email is required for lead status; phone-only is no_contact
   assert.strictEqual(whatsappLead.whatsapp_candidate, 'yes');
   assert.strictEqual(whatsappLead.phones, '+447123456789');
 });
