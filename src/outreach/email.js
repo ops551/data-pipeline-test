@@ -72,27 +72,26 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
   const isMock = Boolean(
     overrides.mock ||
     overrides.jsonTransport ||
-    env.SMTP_MOCK === 'true' ||
-    env.SMTP_MOCK === '1'
+    (env && (env.SMTP_MOCK === 'true' || env.SMTP_MOCK === '1'))
   );
 
-  const rawHost = overrides.host !== undefined ? overrides.host : env.SMTP_HOST;
+  const rawHost = overrides.host !== undefined ? overrides.host : (env ? env.SMTP_HOST : undefined);
   const host = (rawHost || '').trim();
   if (!isMock && host === 'your_smtp_host') {
     throw new Error('SMTP_HOST contains a placeholder value. Please set a valid SMTP host.');
   }
 
-  const rawUser = overrides.user !== undefined ? overrides.user : env.SMTP_USER;
+  const rawUser = overrides.user !== undefined ? overrides.user : (env ? env.SMTP_USER : undefined);
   const user = (rawUser || '').trim();
 
-  const rawPass = overrides.pass !== undefined ? overrides.pass : env.SMTP_PASS;
+  const rawPass = overrides.pass !== undefined ? overrides.pass : (env ? env.SMTP_PASS : undefined);
   const pass = (rawPass || '').trim();
 
-  const rawPort = overrides.port !== undefined ? overrides.port : env.SMTP_PORT;
+  const rawPort = overrides.port !== undefined ? overrides.port : (env ? env.SMTP_PORT : undefined);
   const port = parsePort(rawPort);
 
   let secure;
-  const rawSecure = overrides.secure !== undefined ? overrides.secure : env.SMTP_SECURE;
+  const rawSecure = overrides.secure !== undefined ? overrides.secure : (env ? env.SMTP_SECURE : undefined);
   if (rawSecure !== undefined && rawSecure !== '') {
     secure = rawSecure === true || rawSecure === 'true' || rawSecure === '1';
   } else {
@@ -113,10 +112,174 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     port,
     secure,
     auth: (user || pass) ? { user, pass } : undefined,
-    from: overrides.from || env.EMAIL_FROM || env.SMTP_FROM || user,
-    replyTo: overrides.replyTo || env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM || user,
+    user,
+    pass,
+    from: overrides.from || (env ? (env.EMAIL_FROM || env.SMTP_FROM) : undefined) || user,
+    replyTo: overrides.replyTo || (env ? (env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM) : undefined) || user,
     isMock
   };
+}
+
+const exhaustedSmtpAccounts = new Set();
+
+function resetExhaustedSmtpAccounts() {
+  exhaustedSmtpAccounts.clear();
+}
+
+function getAccountKey(config) {
+  if (!config) return ':::';
+  const host = config.host || '';
+  const user = config.user !== undefined ? config.user : ((config.auth && config.auth.user) || '');
+  const pass = config.pass !== undefined ? config.pass : ((config.auth && config.auth.pass) || '');
+  return `${host}:${user}:${pass}`;
+}
+
+function isSmtpQuotaExceeded(err) {
+  if (!err) return false;
+  const quotaRegex = /(?:quota|rate\s*limit|too\s*many|daily\s*limit|monthly\s*limit|exceeded|credit|balance|payment\s*required|\b429\b|\b454\b)/i;
+
+  if (typeof err === 'number') {
+    return [429, 454, 554, 450].includes(err);
+  }
+
+  if (typeof err === 'string') {
+    if (/^\d{3}$/.test(err.trim())) {
+      return [429, 454, 554, 450].includes(Number(err.trim()));
+    }
+    return quotaRegex.test(err);
+  }
+
+  if (err.cause && isSmtpQuotaExceeded(err.cause)) {
+    return true;
+  }
+
+  const text = [
+    err.message,
+    err.response,
+    err.responseCode,
+    err.code,
+    err.reason
+  ].filter(Boolean).join(' ');
+
+  // Recipient-side mailbox full, storage full, message size limits, or invalid user
+  // are recipient errors, NOT sender quota exhaustion.
+  if (/mailbox|storage|size\s*exceed|hop\s*count|user\s*unknown|no\s*such\s*user|recipient\s*rejected/i.test(text)) {
+    return false;
+  }
+
+  if (quotaRegex.test(text)) {
+    return true;
+  }
+
+  const rawCode = err.responseCode || err.status || err.statusCode;
+  const numCode = Number(rawCode || (typeof err.code === 'number' || /^\d{3}$/.test(err.code) ? err.code : null));
+  if ([429, 454, 554, 450].includes(numCode)) {
+    return true;
+  }
+
+  return false;
+}
+
+function parseSmtpPool(env = process.env, overrides = {}) {
+  const mergedOverrides = { ...overrides, ...(overrides.smtp || {}) };
+
+  // Mode a: SMTP_CONFIGS json array in env or overrides
+  const rawConfigs = mergedOverrides.configs ||
+    mergedOverrides.smtpConfigs ||
+    mergedOverrides.SMTP_CONFIGS ||
+    (env && env.SMTP_CONFIGS);
+
+  if (rawConfigs) {
+    let list = rawConfigs;
+    if (typeof list === 'string') {
+      const trimmed = list.trim();
+      if (!trimmed) {
+        list = null;
+      } else {
+        try {
+          list = JSON.parse(trimmed);
+        } catch (e) {
+          throw new Error(`Invalid JSON in SMTP_CONFIGS: ${e.message}`);
+        }
+      }
+    }
+    if (list) {
+      if (typeof list === 'object' && !Array.isArray(list)) {
+        list = [list];
+      }
+      if (Array.isArray(list)) {
+        if (list.length === 0) {
+          throw new Error('SMTP_CONFIGS array cannot be empty');
+        }
+        const cleanOverrides = { ...mergedOverrides };
+        delete cleanOverrides.configs;
+        delete cleanOverrides.smtpConfigs;
+        delete cleanOverrides.SMTP_CONFIGS;
+        delete cleanOverrides.smtp;
+        return list.map(item => loadSmtpConfig(env, { ...cleanOverrides, ...item }));
+      }
+    }
+  }
+
+  const splitCsv = (val) => {
+    if (typeof val !== 'string') return (val !== undefined && val !== null) ? [val] : [];
+    return val.split(',').map(s => s.trim()).filter(Boolean);
+  };
+
+  const rawPass = mergedOverrides.pass !== undefined ? mergedOverrides.pass : (env ? env.SMTP_PASS : undefined);
+  const rawHost = mergedOverrides.host !== undefined ? mergedOverrides.host : (env ? env.SMTP_HOST : undefined);
+  const rawUser = mergedOverrides.user !== undefined ? mergedOverrides.user : (env ? env.SMTP_USER : undefined);
+  const rawPort = mergedOverrides.port !== undefined ? mergedOverrides.port : (env ? env.SMTP_PORT : undefined);
+  const rawSecure = mergedOverrides.secure !== undefined ? mergedOverrides.secure : (env ? env.SMTP_SECURE : undefined);
+  const rawFrom = mergedOverrides.from !== undefined ? mergedOverrides.from : (env ? (env.EMAIL_FROM || env.SMTP_FROM) : undefined);
+  const rawReplyTo = mergedOverrides.replyTo !== undefined ? mergedOverrides.replyTo : (env ? (env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM) : undefined);
+
+  const hasCommas = (typeof rawPass === 'string' && rawPass.includes(',')) ||
+                    (typeof rawHost === 'string' && rawHost.includes(',')) ||
+                    (typeof rawUser === 'string' && rawUser.includes(','));
+
+  if (hasCommas) {
+    const passes = splitCsv(rawPass);
+    const hosts = splitCsv(rawHost);
+    const users = splitCsv(rawUser);
+    const ports = splitCsv(rawPort);
+    const secures = splitCsv(rawSecure);
+    const froms = splitCsv(rawFrom);
+    const replyTos = splitCsv(rawReplyTo);
+
+    const count = Math.max(passes.length, hosts.length, users.length);
+    if (count > 0) {
+      const pool = [];
+      const cleanOverrides = { ...mergedOverrides };
+      delete cleanOverrides.smtp;
+
+      const pick = (arr, i) => {
+        if (!arr || arr.length === 0) return undefined;
+        if (arr.length > 1) {
+          return arr[i] !== undefined ? arr[i] : arr[0];
+        }
+        return arr[0];
+      };
+
+      for (let i = 0; i < count; i++) {
+        const itemOverride = {
+          ...cleanOverrides,
+          host: pick(hosts, i),
+          user: pick(users, i),
+          pass: pick(passes, i),
+          port: pick(ports, i),
+          secure: pick(secures, i),
+          from: pick(froms, i),
+          replyTo: pick(replyTos, i)
+        };
+        pool.push(loadSmtpConfig(env, itemOverride));
+      }
+      return pool;
+    }
+  }
+
+  // Mode d: Fallback to single account
+  return [loadSmtpConfig(env, mergedOverrides)];
 }
 
 function createTransporter(options = {}, deps = {}) {
@@ -125,7 +288,9 @@ function createTransporter(options = {}, deps = {}) {
 
   const isMock = Boolean(
     options.mock ||
+    options.isMock ||
     options.jsonTransport ||
+    (options.env && (options.env.SMTP_MOCK === 'true' || options.env.SMTP_MOCK === '1')) ||
     process.env.SMTP_MOCK === 'true' ||
     process.env.SMTP_MOCK === '1'
   );
@@ -157,10 +322,71 @@ function createTransporter(options = {}, deps = {}) {
 }
 
 async function verifyConnection(transporter, options = {}, deps = {}) {
-  const client = transporter || createTransporter(options, deps);
-  if (typeof client.verify === 'function') {
-    return await client.verify();
+  if (transporter) {
+    if (typeof transporter.verify === 'function') {
+      return await transporter.verify();
+    }
+    return true;
   }
+
+  const isMock = Boolean(
+    options.mock ||
+    options.jsonTransport ||
+    (options.env && (options.env.SMTP_MOCK === 'true' || options.env.SMTP_MOCK === '1')) ||
+    process.env.SMTP_MOCK === 'true' ||
+    process.env.SMTP_MOCK === '1'
+  );
+
+  if (isMock) {
+    return true;
+  }
+
+  let pool;
+  try {
+    pool = parseSmtpPool(options.env || process.env, options.smtp || options);
+  } catch {
+    const client = (deps.createTransporter || createTransporter)(options, deps);
+    if (typeof client.verify === 'function') {
+      return await client.verify();
+    }
+    return true;
+  }
+
+  if (!pool || pool.length <= 1) {
+    const config = (pool && pool[0]) || options;
+    const client = (deps.createTransporter || createTransporter)({ ...options, ...config }, deps);
+    if (typeof client.verify === 'function') {
+      return await client.verify();
+    }
+    return true;
+  }
+
+  const logger = options.logger || deps.logger || console;
+  let verifiedCount = 0;
+  let lastErr = null;
+
+  for (const cfg of pool) {
+    if (exhaustedSmtpAccounts.has(getAccountKey(cfg))) {
+      continue;
+    }
+
+    try {
+      const client = (deps.createTransporter || createTransporter)({ ...options, ...cfg }, deps);
+      if (typeof client.verify === 'function') {
+        await client.verify();
+      }
+      verifiedCount++;
+    } catch (err) {
+      lastErr = err;
+      exhaustedSmtpAccounts.add(getAccountKey(cfg));
+      logger.warn(`[SMTP Pool Verification] Account ${cfg.host} (${cfg.user || 'anonymous'}) failed verification: ${err.message}`);
+    }
+  }
+
+  if (verifiedCount === 0) {
+    throw lastErr || new Error('All SMTP accounts in pool failed pre-flight verification');
+  }
+
   return true;
 }
 
@@ -270,61 +496,207 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
 
   const text = ensureSignature(rawContent, combined);
 
-  const transporter = combined.transporter || allDeps.transporter || createTransporter(combined, allDeps);
+  const maxRetries = typeof combined.maxRetries === 'number' ? combined.maxRetries : DEFAULT_MAX_RETRIES;
+  const sleepFn = allDeps.sleepFn || combined.sleepFn || ((ms) => new Promise(res => setTimeout(res, ms)));
+  const logger = combined.logger || allDeps.logger || console;
 
-  const isMockOrInjected = Boolean(
-    combined.transporter ||
-    allDeps.transporter ||
+  // Backward compatibility: If direct transporter is provided, use it directly
+  const directTransporter = combined.transporter || allDeps.transporter;
+  if (directTransporter) {
+    const isMockOrInjected = Boolean(
+      directTransporter ||
+      combined.mock ||
+      combined.jsonTransport ||
+      (combined.env && (combined.env.SMTP_MOCK === 'true' || combined.env.SMTP_MOCK === '1')) ||
+      process.env.SMTP_MOCK === 'true' ||
+      process.env.SMTP_MOCK === '1'
+    );
+
+    const config = loadSmtpConfig(
+      combined.env || process.env,
+      { mock: isMockOrInjected, ...(combined.smtp || combined) }
+    );
+
+    const payload = {
+      from: config.from,
+      to: normalizedTo,
+      subject,
+      text,
+      replyTo: config.replyTo
+    };
+
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const info = await directTransporter.sendMail(payload);
+        const safeInfo = info || {};
+        return {
+          success: true,
+          messageId: safeInfo.messageId,
+          previewUrl: nodemailer.getTestMessageUrl(safeInfo) || undefined,
+          to: normalizedTo,
+          from: payload.from,
+          subject,
+          accepted: safeInfo.accepted || [normalizedTo],
+          rejected: safeInfo.rejected || [],
+          response: safeInfo.response,
+          envelope: safeInfo.envelope,
+          info: safeInfo,
+          config: { host: config.host, user: config.user }
+        };
+      } catch (err) {
+        const isTransient = /ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|ESOCKET|421|451|temporary/i.test(err.message || '') ||
+                            err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED';
+
+        if (isTransient && attempt <= maxRetries) {
+          const waitMs = 500 * Math.pow(2, attempt - 1);
+          await sleepFn(waitMs);
+          continue;
+        }
+        throw err;
+      }
+    }
+  }
+
+  // Multi-Account SMTP Rotation & Quota Failover Engine
+  const isMock = Boolean(
     combined.mock ||
     combined.jsonTransport ||
+    (combined.env && (combined.env.SMTP_MOCK === 'true' || combined.env.SMTP_MOCK === '1')) ||
     process.env.SMTP_MOCK === 'true' ||
     process.env.SMTP_MOCK === '1'
   );
 
-  const config = loadSmtpConfig(
+  const pool = parseSmtpPool(
     combined.env || process.env,
-    { mock: isMockOrInjected, ...(combined.smtp || combined) }
+    { mock: isMock, ...(combined.smtp || combined) }
   );
 
-  const payload = {
-    from: config.from,
-    to: normalizedTo,
-    subject,
-    text,
-    replyTo: config.replyTo
-  };
+  let availableConfigs = pool.filter(cfg => !exhaustedSmtpAccounts.has(getAccountKey(cfg)));
 
-  const maxRetries = typeof combined.maxRetries === 'number' ? combined.maxRetries : DEFAULT_MAX_RETRIES;
-  const sleepFn = allDeps.sleepFn || combined.sleepFn || ((ms) => new Promise(res => setTimeout(res, ms)));
-
-  for (let attempt = 1; ; attempt++) {
-    try {
-      const info = await transporter.sendMail(payload);
-      return {
-        success: true,
-        messageId: info.messageId,
-        previewUrl: nodemailer.getTestMessageUrl(info) || undefined,
-        to: normalizedTo,
-        from: payload.from,
-        subject,
-        accepted: info.accepted || [normalizedTo],
-        rejected: info.rejected || [],
-        response: info.response,
-        envelope: info.envelope,
-        info
-      };
-    } catch (err) {
-      const isTransient = /ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|ESOCKET|421|451|temporary/i.test(err.message || '') ||
-                          err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED';
-
-      if (isTransient && attempt <= maxRetries) {
-        const waitMs = 500 * Math.pow(2, attempt - 1);
-        await sleepFn(waitMs);
-        continue;
-      }
-      throw err;
+  if (availableConfigs.length === 0) {
+    if (combined.resetIfExhausted) {
+      resetExhaustedSmtpAccounts();
+      availableConfigs = [...pool];
+    } else {
+      throw new Error('All SMTP accounts in pool are exhausted (quota exceeded)');
     }
   }
+
+  let transporterIndex = 0;
+  const mockTransportersList = combined.transporters || allDeps.transporters;
+  const createTransporterFn = Array.isArray(mockTransportersList)
+    ? () => mockTransportersList[transporterIndex++]
+    : (allDeps.createTransporter || combined.createTransporter || createTransporter);
+
+  let lastQuotaErr = null;
+
+  for (const config of availableConfigs) {
+    const transporter = createTransporterFn({ ...combined, ...config }, allDeps);
+    const payload = {
+      from: config.from,
+      to: normalizedTo,
+      subject,
+      text,
+      replyTo: config.replyTo
+    };
+
+    let lastErr = null;
+    for (let attempt = 1; ; attempt++) {
+      try {
+        const info = await transporter.sendMail(payload);
+        const safeInfo = info || {};
+        return {
+          success: true,
+          messageId: safeInfo.messageId,
+          previewUrl: nodemailer.getTestMessageUrl(safeInfo) || undefined,
+          to: normalizedTo,
+          from: payload.from,
+          subject,
+          accepted: safeInfo.accepted || [normalizedTo],
+          rejected: safeInfo.rejected || [],
+          response: safeInfo.response,
+          envelope: safeInfo.envelope,
+          info: safeInfo,
+          config: { host: config.host, user: config.user }
+        };
+      } catch (err) {
+        lastErr = err;
+
+        // If quota exceeded, do not retry transiently on this account
+        if (isSmtpQuotaExceeded(err)) {
+          break;
+        }
+
+        const isTransient = /ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|ESOCKET|421|451|temporary/i.test(err.message || '') ||
+                            err.code === 'ETIMEDOUT' || err.code === 'ECONNRESET' || err.code === 'ECONNREFUSED';
+
+        if (isTransient && attempt <= maxRetries) {
+          const waitMs = 500 * Math.pow(2, attempt - 1);
+          await sleepFn(waitMs);
+          continue;
+        }
+        break;
+      }
+    }
+
+    // Check if error was quota exceeded
+    if (isSmtpQuotaExceeded(lastErr)) {
+      lastQuotaErr = lastErr;
+      const accountKey = getAccountKey(config);
+      const isFirstExhaustion = !exhaustedSmtpAccounts.has(accountKey);
+      exhaustedSmtpAccounts.add(accountKey);
+      logger.warn(`[SMTP Rotation] Quota exceeded for account ${config.host} (${config.user || 'anonymous'}). Switching to next account in pool.`);
+
+      if (isFirstExhaustion && !combined.isAlert && !combined.skipAlert) {
+        const alertFn = allDeps.sendQuotaExhaustionAlert || combined.sendQuotaExhaustionAlert || (function() {
+          try {
+            return require('../enrich/alerts').sendQuotaExhaustionAlert;
+          } catch {
+            return null;
+          }
+        })();
+
+        if (typeof alertFn === 'function') {
+          try {
+            await alertFn('SMTP', {
+              key: config.user || config.host,
+              reason: lastErr.message || 'SMTP quota exceeded',
+              host: config.host
+            }, {
+              ...combined,
+              deps: allDeps,
+              isAlert: true,
+              skipAlert: true
+            });
+          } catch (alertErr) {
+            logger.error('[SMTP Rotation] Failed to send quota alert:', alertErr.message);
+          }
+        }
+      }
+
+      continue; // Switch to next config in availableConfigs
+    }
+
+    // Check if error was persistent transient network failure across all retries.
+    // If backup accounts exist in the pool, fail over to the next account.
+    const isTransientFailure = /ETIMEDOUT|ECONNRESET|ECONNREFUSED|ENOTFOUND|ESOCKET|421|451|temporary/i.test((lastErr && lastErr.message) || '') ||
+                               (lastErr && (lastErr.code === 'ETIMEDOUT' || lastErr.code === 'ECONNRESET' || lastErr.code === 'ECONNREFUSED'));
+    if (isTransientFailure && availableConfigs.indexOf(config) < availableConfigs.length - 1) {
+      logger.warn(`[SMTP Rotation] Connection to account ${config.host} failed after ${maxRetries} retries (${(lastErr && (lastErr.message || lastErr.code)) || 'network error'}). Falling back to next account in pool.`);
+      continue;
+    }
+
+    // Permanent non-quota error: throw immediately
+    throw lastErr;
+  }
+
+  const exhaustionErr = new Error(
+    `All SMTP accounts in pool are exhausted (quota exceeded)${lastQuotaErr ? `: ${lastQuotaErr.message}` : ''}`
+  );
+  if (lastQuotaErr) {
+    exhaustionErr.cause = lastQuotaErr;
+  }
+  throw exhaustionErr;
 }
 
 module.exports = {
@@ -332,6 +704,10 @@ module.exports = {
   DEFAULT_MAX_RETRIES,
   OFFICIAL_COORDINATES,
   loadSmtpConfig,
+  parseSmtpPool,
+  isSmtpQuotaExceeded,
+  exhaustedSmtpAccounts,
+  resetExhaustedSmtpAccounts,
   createTransporter,
   verifyConnection,
   normalizeRecipients,
