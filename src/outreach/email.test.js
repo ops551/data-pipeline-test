@@ -11,6 +11,10 @@ const {
   DEFAULT_MAX_RETRIES,
   OFFICIAL_COORDINATES,
   loadSmtpConfig,
+  parseSmtpPool,
+  isSmtpQuotaExceeded,
+  exhaustedSmtpAccounts,
+  resetExhaustedSmtpAccounts,
   createTransporter,
   verifyConnection,
   normalizeRecipients,
@@ -587,4 +591,597 @@ test('ensureSignature appends official coordinates even when text has bare Best 
   const count = (signed.match(/Best regards,/g) || []).length;
   assert.equal(count, 1);
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.26: Multi-Account SMTP Rotation & Quota Failover Engine Test Suite
+// -----------------------------------------------------------------------------
+
+test('parseSmtpPool returns single config for standard environment without commas or array', () => {
+  const env = {
+    SMTP_HOST: 'smtp.gmail.com',
+    SMTP_USER: 'user@gmail.com',
+    SMTP_PASS: 'secret_app_pw',
+    SMTP_PORT: '587'
+  };
+
+  const pool = parseSmtpPool(env);
+  assert.equal(pool.length, 1);
+  assert.equal(pool[0].host, 'smtp.gmail.com');
+  assert.equal(pool[0].user, 'user@gmail.com');
+  assert.equal(pool[0].pass, 'secret_app_pw');
+  assert.equal(pool[0].port, 587);
+  assert.equal(pool[0].secure, false);
+});
+
+test('parseSmtpPool splits comma-separated SMTP_PASS into multiple accounts sharing host/user/port', () => {
+  const env = {
+    SMTP_HOST: 'smtp.resend.com',
+    SMTP_USER: 'resend',
+    SMTP_PASS: 're_key1, re_key2, re_key3',
+    SMTP_PORT: '587'
+  };
+
+  const pool = parseSmtpPool(env);
+  assert.equal(pool.length, 3);
+
+  assert.equal(pool[0].host, 'smtp.resend.com');
+  assert.equal(pool[0].user, 'resend');
+  assert.equal(pool[0].pass, 're_key1');
+  assert.equal(pool[0].port, 587);
+
+  assert.equal(pool[1].host, 'smtp.resend.com');
+  assert.equal(pool[1].user, 'resend');
+  assert.equal(pool[1].pass, 're_key2');
+  assert.equal(pool[1].port, 587);
+
+  assert.equal(pool[2].host, 'smtp.resend.com');
+  assert.equal(pool[2].user, 'resend');
+  assert.equal(pool[2].pass, 're_key3');
+  assert.equal(pool[2].port, 587);
+});
+
+test('parseSmtpPool splits comma-separated host, user, pass, and port into distinct provider configs', () => {
+  const env = {
+    SMTP_HOST: 'smtp.resend.com, smtp-relay.brevo.com',
+    SMTP_USER: 'resend, brevo_user@example.com',
+    SMTP_PASS: 're_key1, xsmtp_key2',
+    SMTP_PORT: '587, 465'
+  };
+
+  const pool = parseSmtpPool(env);
+  assert.equal(pool.length, 2);
+
+  assert.equal(pool[0].host, 'smtp.resend.com');
+  assert.equal(pool[0].user, 'resend');
+  assert.equal(pool[0].pass, 're_key1');
+  assert.equal(pool[0].port, 587);
+  assert.equal(pool[0].secure, false);
+
+  assert.equal(pool[1].host, 'smtp-relay.brevo.com');
+  assert.equal(pool[1].user, 'brevo_user@example.com');
+  assert.equal(pool[1].pass, 'xsmtp_key2');
+  assert.equal(pool[1].port, 465);
+  assert.equal(pool[1].secure, true);
+});
+
+test('parseSmtpPool parses SMTP_CONFIGS JSON array from env and overrides', () => {
+  const jsonEnv = {
+    SMTP_CONFIGS: JSON.stringify([
+      { host: 'smtp1.example.com', user: 'u1', pass: 'p1', port: 587 },
+      { host: 'smtp2.example.com', user: 'u2', pass: 'p2', port: 465 }
+    ])
+  };
+
+  const poolFromEnv = parseSmtpPool(jsonEnv);
+  assert.equal(poolFromEnv.length, 2);
+  assert.equal(poolFromEnv[0].host, 'smtp1.example.com');
+  assert.equal(poolFromEnv[0].user, 'u1');
+  assert.equal(poolFromEnv[1].host, 'smtp2.example.com');
+  assert.equal(poolFromEnv[1].port, 465);
+  assert.equal(poolFromEnv[1].secure, true);
+
+  // Overrides array object
+  const poolFromOverrides = parseSmtpPool({}, {
+    configs: [
+      { host: 'smtp3.example.com', user: 'u3', pass: 'p3' }
+    ]
+  });
+  assert.equal(poolFromOverrides.length, 1);
+  assert.equal(poolFromOverrides[0].host, 'smtp3.example.com');
+  assert.equal(poolFromOverrides[0].pass, 'p3');
+});
+
+test('parseSmtpPool throws on malformed SMTP_CONFIGS JSON', () => {
+  assert.throws(
+    () => parseSmtpPool({ SMTP_CONFIGS: '{ invalid json ]' }),
+    /Invalid JSON in SMTP_CONFIGS/
+  );
+});
+
+test('isSmtpQuotaExceeded correctly detects SMTP status codes 429, 454, 554, 450', () => {
+  assert.equal(isSmtpQuotaExceeded({ responseCode: 429 }), true);
+  assert.equal(isSmtpQuotaExceeded({ responseCode: 454 }), true);
+  assert.equal(isSmtpQuotaExceeded({ responseCode: 554 }), true);
+  assert.equal(isSmtpQuotaExceeded({ statusCode: 450 }), true);
+  assert.equal(isSmtpQuotaExceeded({ status: 429 }), true);
+  assert.equal(isSmtpQuotaExceeded({ code: 429 }), true);
+  assert.equal(isSmtpQuotaExceeded({ code: '454' }), true);
+});
+
+test('isSmtpQuotaExceeded correctly detects quota and rate limit keywords in error message and response', () => {
+  assert.equal(isSmtpQuotaExceeded(new Error('Daily quota exceeded for this account')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Rate limit exceeded: too many messages sent')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Too many requests per minute')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Daily limit reached')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Sending credit exhausted')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Account balance zero')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('Payment required to continue sending email')), true);
+  assert.equal(isSmtpQuotaExceeded({ response: '554 5.7.1 Sending quota exceeded' }), true);
+});
+
+test('isSmtpQuotaExceeded returns false for non-quota errors, network transients, and falsy values', () => {
+  assert.equal(isSmtpQuotaExceeded(null), false);
+  assert.equal(isSmtpQuotaExceeded(undefined), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('ECONNREFUSED: Connection refused')), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('ETIMEDOUT: Connection timed out')), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('535 5.7.8 Authentication credentials invalid')), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('Invalid recipient address: lead@invalid')), false);
+});
+
+test('sendEmail automatically fails over from exhausted account 1 to healthy account 2 in pool', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com',
+    SMTP_USER: 'resend',
+    SMTP_PASS: 'key_exhausted_1, key_healthy_2',
+    SMTP_PORT: '587'
+  };
+
+  const sentTransporters = [];
+  const alertCalls = [];
+
+  const transporter1 = {
+    sendMail: async () => {
+      sentTransporters.push('transporter1');
+      const err = new Error('554 5.7.1 Daily sending quota exceeded');
+      err.responseCode = 554;
+      throw err;
+    }
+  };
+
+  const transporter2 = {
+    sendMail: async (payload) => {
+      sentTransporters.push('transporter2');
+      return {
+        messageId: 'failover-success-msg-456',
+        accepted: [payload.to],
+        rejected: []
+      };
+    }
+  };
+
+  const mockSleep = async () => {};
+  const mockAlertFn = async (provider, details) => {
+    alertCalls.push({ provider, details });
+  };
+
+  const result = await sendEmail(
+    { to: 'client@example.com', subject: 'Failover Test', text: 'Testing rotation' },
+    {
+      env: mockEnv,
+      transporters: [transporter1, transporter2],
+      sleepFn: mockSleep,
+      sendQuotaExhaustionAlert: mockAlertFn
+    }
+  );
+
+  assert.equal(result.success, true);
+  assert.equal(result.messageId, 'failover-success-msg-456');
+  assert.deepEqual(sentTransporters, ['transporter1', 'transporter2']);
+
+  // Account 1 must be recorded as exhausted
+  assert.ok(exhaustedSmtpAccounts.has('smtp.resend.com:resend:key_exhausted_1'));
+  assert.equal(exhaustedSmtpAccounts.has('smtp.resend.com:resend:key_healthy_2'), false);
+
+  // Quota alert notification must be dispatched
+  assert.equal(alertCalls.length, 1);
+  assert.equal(alertCalls[0].provider, 'SMTP');
+  assert.equal(alertCalls[0].details.key, 'resend');
+  assert.ok(alertCalls[0].details.reason.includes('Daily sending quota exceeded'));
+
+  // On subsequent sendEmail, Account 1 must be skipped entirely
+  sentTransporters.length = 0;
+  const secondResult = await sendEmail(
+    { to: 'client2@example.com', subject: 'Second Test', text: 'Account 1 should be skipped' },
+    {
+      env: mockEnv,
+      transporters: [transporter2],
+      sleepFn: mockSleep
+    }
+  );
+
+  assert.equal(secondResult.success, true);
+  assert.deepEqual(sentTransporters, ['transporter2']);
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('sendEmail throws descriptive error when all SMTP accounts in pool are exhausted', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com',
+    SMTP_USER: 'resend',
+    SMTP_PASS: 'key_fail_1, key_fail_2',
+    SMTP_PORT: '587'
+  };
+
+  const transporterFail1 = {
+    sendMail: async () => {
+      const err = new Error('Daily quota exceeded');
+      err.responseCode = 429;
+      throw err;
+    }
+  };
+  const transporterFail2 = {
+    sendMail: async () => {
+      const err = new Error('Rate limit exceeded');
+      err.responseCode = 429;
+      throw err;
+    }
+  };
+
+  await assert.rejects(
+    () => sendEmail(
+      { to: 'client@example.com', subject: 'All Fail', text: 'All accounts out of quota' },
+      {
+        env: mockEnv,
+        transporters: [transporterFail1, transporterFail2],
+        sleepFn: async () => {}
+      }
+    ),
+    /All SMTP accounts in pool are exhausted/
+  );
+
+  assert.ok(exhaustedSmtpAccounts.has('smtp.resend.com:resend:key_fail_1'));
+  assert.ok(exhaustedSmtpAccounts.has('smtp.resend.com:resend:key_fail_2'));
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('sendEmail fails fast without rotating on non-quota permanent errors', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com',
+    SMTP_USER: 'resend',
+    SMTP_PASS: 'key_1, key_2',
+    SMTP_PORT: '587'
+  };
+
+  let attempts = 0;
+  const mockCreateTransporter = () => ({
+    sendMail: async () => {
+      attempts++;
+      const err = new Error('535 5.7.8 Authentication credentials invalid');
+      err.responseCode = 535;
+      throw err;
+    }
+  });
+
+  await assert.rejects(
+    () => sendEmail(
+      { to: 'client@example.com', subject: 'Auth Error', text: 'Invalid auth' },
+      {
+        env: mockEnv,
+        createTransporter: mockCreateTransporter,
+        sleepFn: async () => {}
+      }
+    ),
+    /535 5.7.8 Authentication credentials invalid/
+  );
+
+  // Must fail immediately on permanent auth error without attempting rotation
+  assert.equal(attempts, 1);
+  assert.equal(exhaustedSmtpAccounts.size, 0);
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('verifyConnection handles pool verification gracefully when one account fails quota', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com',
+    SMTP_USER: 'resend',
+    SMTP_PASS: 'key_quota_fail, key_verified_ok',
+    SMTP_PORT: '587'
+  };
+
+  let callCount = 0;
+  const mockCreateTransporter = () => {
+    callCount++;
+    if (callCount === 1) {
+      return {
+        verify: async () => {
+          const err = new Error('454 4.7.0 Rate limit exceeded');
+          err.responseCode = 454;
+          throw err;
+        }
+      };
+    }
+    return {
+      verify: async () => true
+    };
+  };
+
+  const verified = await verifyConnection(null, { env: mockEnv }, { createTransporter: mockCreateTransporter });
+  assert.equal(verified, true);
+  assert.ok(exhaustedSmtpAccounts.has('smtp.resend.com:resend:key_quota_fail'));
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('isSmtpQuotaExceeded handles raw numbers, numeric strings, nested causes, and embedded error codes', () => {
+  // Numeric and string codes
+  assert.equal(isSmtpQuotaExceeded(429), true);
+  assert.equal(isSmtpQuotaExceeded('429'), true);
+  assert.equal(isSmtpQuotaExceeded(454), true);
+  assert.equal(isSmtpQuotaExceeded('454'), true);
+  assert.equal(isSmtpQuotaExceeded(554), true);
+  assert.equal(isSmtpQuotaExceeded('554'), true);
+  assert.equal(isSmtpQuotaExceeded(450), true);
+  assert.equal(isSmtpQuotaExceeded('450'), true);
+
+  // Embedded codes in messages
+  assert.equal(isSmtpQuotaExceeded(new Error('SMTP error 429')), true);
+  assert.equal(isSmtpQuotaExceeded(new Error('SMTP error 454')), true);
+
+  // Nested causes
+  const wrappedErr = new Error('Outreach sendEmail failed');
+  wrappedErr.cause = new Error('Daily limit reached');
+  assert.equal(isSmtpQuotaExceeded(wrappedErr), true);
+
+  // Non-quota errors should return false
+  assert.equal(isSmtpQuotaExceeded(500), false);
+  assert.equal(isSmtpQuotaExceeded('500'), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('500 Internal server error')), false);
+  assert.equal(isSmtpQuotaExceeded(new Error('ECONNRESET: Socket closed')), false);
+});
+
+test('parseSmtpPool handles single object, whitespace SMTP_CONFIGS, and empty array rejection', () => {
+  // Whitespace-only SMTP_CONFIGS should be ignored gracefully
+  const poolWhitespace = parseSmtpPool({
+    SMTP_CONFIGS: '   ',
+    SMTP_HOST: 'smtp.gmail.com',
+    SMTP_USER: 'user@gmail.com',
+    SMTP_PASS: 'secret',
+    SMTP_PORT: '587'
+  });
+  assert.equal(poolWhitespace.length, 1);
+  assert.equal(poolWhitespace[0].host, 'smtp.gmail.com');
+
+  // Single object SMTP_CONFIGS should be wrapped and parsed
+  const poolSingleObj = parseSmtpPool({
+    SMTP_CONFIGS: JSON.stringify({ host: 'smtp.resend.com', user: 'resend', pass: 're_123', port: 587 })
+  });
+  assert.equal(poolSingleObj.length, 1);
+  assert.equal(poolSingleObj[0].host, 'smtp.resend.com');
+  assert.equal(poolSingleObj[0].pass, 're_123');
+
+  // Empty array SMTP_CONFIGS should throw descriptive error
+  assert.throws(
+    () => parseSmtpPool({ SMTP_CONFIGS: '[]' }),
+    /SMTP_CONFIGS array cannot be empty/
+  );
+});
+
+test('parseSmtpPool splits comma-separated SMTP_REPLY_TO along with EMAIL_FROM', () => {
+  const env = {
+    SMTP_HOST: 'smtp.resend.com, smtp-relay.brevo.com',
+    SMTP_USER: 'resend, brevo_user',
+    SMTP_PASS: 'key1, key2',
+    EMAIL_FROM: 'from1@example.com, from2@example.com',
+    SMTP_REPLY_TO: 'reply1@example.com, reply2@example.com'
+  };
+
+  const pool = parseSmtpPool(env);
+  assert.equal(pool.length, 2);
+  assert.equal(pool[0].from, 'from1@example.com');
+  assert.equal(pool[0].replyTo, 'reply1@example.com');
+  assert.equal(pool[1].from, 'from2@example.com');
+  assert.equal(pool[1].replyTo, 'reply2@example.com');
+});
+
+test('createTransporter creates jsonTransport when env.SMTP_MOCK=true or options.isMock=true', () => {
+  const tEnv = createTransporter({ env: { SMTP_MOCK: 'true' } });
+  assert.ok(tEnv);
+  assert.equal(tEnv.transporter ? tEnv.transporter.name : undefined, 'JSONTransport');
+
+  const tIsMock = createTransporter({ isMock: true });
+  assert.ok(tIsMock);
+  assert.equal(tIsMock.transporter ? tIsMock.transporter.name : undefined, 'JSONTransport');
+});
+
+test('verifyConnection marks broken accounts in exhaustedSmtpAccounts enabling fail-proof sendEmail on healthy accounts', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com, smtp-relay.brevo.com',
+    SMTP_USER: 'resend, brevo_user',
+    SMTP_PASS: 'bad_auth_key, healthy_key',
+    SMTP_PORT: '587, 587'
+  };
+
+  const createTransporterFn = (options) => {
+    if (options.pass === 'bad_auth_key') {
+      return {
+        verify: async () => {
+          const err = new Error('535 5.7.8 Authentication credentials invalid');
+          err.responseCode = 535;
+          throw err;
+        },
+        sendMail: async () => {
+          const err = new Error('535 5.7.8 Authentication credentials invalid');
+          err.responseCode = 535;
+          throw err;
+        }
+      };
+    }
+    return {
+      verify: async () => true,
+      sendMail: async (payload) => ({
+        messageId: 'brevo-healthy-msg-999',
+        accepted: [payload.to],
+        rejected: []
+      })
+    };
+  };
+
+  const verified = await verifyConnection(
+    null,
+    { env: mockEnv, logger: { warn: () => {}, log: () => {} } },
+    { createTransporter: createTransporterFn }
+  );
+
+  assert.equal(verified, true);
+  // Broken account must be added to exhausted set so sendEmail skips it
+  assert.ok(exhaustedSmtpAccounts.has('smtp.resend.com:resend:bad_auth_key'));
+
+  const sendResult = await sendEmail(
+    { to: 'client@example.com', subject: 'Pool Test', text: 'Should route to healthy account' },
+    { env: mockEnv, createTransporter: createTransporterFn, sleepFn: async () => {} }
+  );
+
+  assert.equal(sendResult.success, true);
+  assert.equal(sendResult.messageId, 'brevo-healthy-msg-999');
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('verifyConnection throws when all accounts in pool fail verification', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com, smtp-relay.brevo.com',
+    SMTP_USER: 'resend, brevo_user',
+    SMTP_PASS: 'bad1, bad2',
+    SMTP_PORT: '587, 587'
+  };
+
+  const createTransporterFn = () => ({
+    verify: async () => {
+      throw new Error('Connection refused by remote host');
+    }
+  });
+
+  await assert.rejects(
+    () => verifyConnection(
+      null,
+      { env: mockEnv, logger: { warn: () => {}, log: () => {} } },
+      { createTransporter: createTransporterFn }
+    ),
+    /Connection refused by remote host/
+  );
+
+  resetExhaustedSmtpAccounts();
+});
+
+test('sendEmail handles undefined or partial info from mock transporter safely', async () => {
+  const directTransporter = {
+    sendMail: async () => undefined
+  };
+
+  const resDirect = await sendEmail(
+    { to: 'target@example.com', subject: 'Partial Info', text: 'Direct test' },
+    { transporter: directTransporter }
+  );
+  assert.equal(resDirect.success, true);
+  assert.deepEqual(resDirect.accepted, ['target@example.com']);
+
+  const poolTransporter = {
+    sendMail: async () => ({ messageId: 'partial-msg-1' })
+  };
+
+  const resPool = await sendEmail(
+    { to: 'target@example.com', subject: 'Pool Partial Info', text: 'Pool test' },
+    {
+      env: { SMTP_HOST: 'smtp.resend.com', SMTP_USER: 'resend', SMTP_PASS: 'k1' },
+      transporters: [poolTransporter]
+    }
+  );
+  assert.equal(resPool.success, true);
+  assert.equal(resPool.messageId, 'partial-msg-1');
+  assert.deepEqual(resPool.accepted, ['target@example.com']);
+});
+
+test('isSmtpQuotaExceeded ignores recipient mailbox full, storage limits, and message size errors', () => {
+  // Recipient mailbox full / quota exceeded
+  const mailboxErr1 = new Error('552 5.2.2 Mailbox quota exceeded');
+  mailboxErr1.responseCode = 552;
+  assert.equal(isSmtpQuotaExceeded(mailboxErr1), false);
+
+  const mailboxErr2 = new Error('User mailbox storage limit exceeded');
+  assert.equal(isSmtpQuotaExceeded(mailboxErr2), false);
+
+  // Message size limit exceeded
+  const sizeErr = new Error('552 5.3.4 Message size exceeds fixed maximum message size');
+  assert.equal(isSmtpQuotaExceeded(sizeErr), false);
+
+  // Hop count exceeded
+  const hopErr = new Error('554 5.4.6 Hop count exceeded - possible mail loop');
+  assert.equal(isSmtpQuotaExceeded(hopErr), false);
+
+  // Recipient rejected
+  const rejectErr = new Error('550 5.1.1 Recipient rejected: User unknown');
+  assert.equal(isSmtpQuotaExceeded(rejectErr), false);
+});
+
+test('sendEmail fails over to backup account in pool when primary account exhausts transient network retries', async () => {
+  resetExhaustedSmtpAccounts();
+
+  const mockEnv = {
+    SMTP_HOST: 'smtp.resend.com, smtp-relay.brevo.com',
+    SMTP_USER: 'resend, brevo_user',
+    SMTP_PASS: 'key1, key2',
+    SMTP_PORT: '587, 587'
+  };
+
+  let t1Attempts = 0;
+  const transporter1 = {
+    sendMail: async () => {
+      t1Attempts++;
+      const err = new Error('ETIMEDOUT: Connection timed out');
+      err.code = 'ETIMEDOUT';
+      throw err;
+    }
+  };
+
+  const transporter2 = {
+    sendMail: async (payload) => ({
+      messageId: 'backup-delivered-msg-789',
+      accepted: [payload.to],
+      rejected: []
+    })
+  };
+
+  const res = await sendEmail(
+    { to: 'lead@example.com', subject: 'Network Failover', text: 'Testing network failover' },
+    {
+      env: mockEnv,
+      transporters: [transporter1, transporter2],
+      maxRetries: 2,
+      sleepFn: async () => {}
+    }
+  );
+
+  assert.equal(res.success, true);
+  assert.equal(res.messageId, 'backup-delivered-msg-789');
+  assert.equal(t1Attempts, 3); // 1 initial + 2 retries
+
+  resetExhaustedSmtpAccounts();
+});
+
+
 

@@ -148,7 +148,17 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   if (!dryRun && !mock && !options.skipVerify) {
     try {
       logger.log('Performing pre-flight SMTP connection verification...');
-      await verify(options.transporter, { ...options.emailOptions, mock }, deps);
+      await verify(
+        options.transporter,
+        {
+          logger,
+          env: options.env || process.env,
+          mock,
+          ...(options.smtp ? { smtp: options.smtp } : {}),
+          ...(options.emailOptions || {})
+        },
+        deps
+      );
       logger.log('SMTP connection verified successfully.');
     } catch (verifyErr) {
       logger.error('Pre-flight SMTP connection verification failed:', verifyErr.message);
@@ -299,6 +309,10 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         };
         const emailOptions = {
           mock,
+          logger,
+          env: options.env || process.env,
+          ...(options.smtp ? { smtp: options.smtp } : {}),
+          ...(options.transporter ? { transporter: options.transporter } : {}),
           ...(options.emailOptions || {})
         };
         const sendResult = await send(mailOptions, emailOptions, deps);
@@ -359,6 +373,10 @@ async function runOutreachPipeline(options = {}, deps = {}) {
 
             await send(alertOptions, {
               mock,
+              logger,
+              env: options.env || process.env,
+              ...(options.smtp ? { smtp: options.smtp } : {}),
+              ...(options.transporter ? { transporter: options.transporter } : {}),
               ...(options.emailOptions || {})
             }, deps);
             logger.log(`Spam block alert sent for ${companyName} to ${alertRecipient}.`);
