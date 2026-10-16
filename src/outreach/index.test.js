@@ -48,7 +48,8 @@ const sampleLeadsData = [
     phones: '+447111111111',
     whatsapp_candidate: 'yes',
     status: 'lead',
-    sources: 'officers_api; web_scrape'
+    sources: 'officers_api; web_scrape',
+    verification_status: 'exact_match'
   },
   {
     company_number: '22222222',
@@ -58,7 +59,8 @@ const sampleLeadsData = [
     phones: '+447222222222',
     whatsapp_candidate: 'yes',
     status: 'lead',
-    sources: 'web_scrape'
+    sources: 'web_scrape',
+    verification_status: 'exact_match'
   },
   {
     company_number: '33333333',
@@ -68,7 +70,8 @@ const sampleLeadsData = [
     phones: '+447333333333',
     whatsapp_candidate: 'yes',
     status: 'lead',
-    sources: 'web_scrape'
+    sources: 'web_scrape',
+    verification_status: 'exact_match'
   },
   {
     company_number: '44444444',
@@ -78,7 +81,8 @@ const sampleLeadsData = [
     phones: '+447444444444',
     whatsapp_candidate: 'no',
     status: 'has_website',
-    sources: 'web_scrape'
+    sources: 'web_scrape',
+    verification_status: 'exact_match'
   }
 ];
 

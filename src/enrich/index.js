@@ -406,15 +406,8 @@ async function runEnrichment() {
              console.log(`  Extracted generic email ${bestGeneric} is not verified (${v.status}: ${v.reason}). Discarding.`);
              bestGeneric = '';
              vStatus = '';
-           }
-         }
-         
-         if (!bestGeneric && domain) {
-           const fallbackEmail = `info@${domain}`;
-           const v = await verifyEmail(fallbackEmail);
-           if (v.status === 'valid_domain' && (!isCatchAll || v.reason !== 'smtp_250')) {
-             bestGeneric = fallbackEmail;
-             vStatus = 'inferred_fallback';
+           } else {
+             vStatus = v.reason || 'verified';
            }
          }
          

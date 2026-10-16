@@ -278,14 +278,14 @@ test('runOutreachPipeline pre-flight guard handles uppercase emails, whitespace,
         company_number: '11111111',
         company_name: 'Whitespace Uppercase Ltd',
         emails: '   FOUNDER@MYCOMPANY.CO.UK   ',
-        verification_status: 'valid_domain',
+        verification_status: 'exact_match',
         status: 'lead'
       },
       {
         company_number: '22222222',
         company_name: 'Leading Semicolon Ltd',
         emails: '  ;  HELLO@TEST-VENTURES.COM  ',
-        verification_status: 'valid_domain',
+        verification_status: 'exact_match',
         status: 'lead'
       }
     ];
@@ -328,7 +328,7 @@ test('runOutreachPipeline pre-flight guard safely handles null leads and throwin
         company_number: '33333333',
         company_name: 'Valid Surviving Lead Ltd',
         emails: 'director@survivor.co.uk',
-        verification_status: 'valid_domain',
+        verification_status: 'exact_match',
         status: 'lead'
       }
     ];
@@ -424,7 +424,7 @@ test('runOutreachPipeline pre-flight guard gracefully catches throwing isValidEm
       company_number: '66666666',
       company_name: 'Regex Bomb Ltd',
       emails: 'crash@domain.co.uk',
-      verification_status: 'valid_domain',
+      verification_status: 'exact_match',
       status: 'lead'
     };
 

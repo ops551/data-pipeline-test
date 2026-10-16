@@ -1,7 +1,51 @@
-const alertedKeys = new Set();
+const fs = require('node:fs');
+const path = require('node:path');
 
-function resetAlertedKeys() {
+const alertedKeys = new Set();
+const ALERT_COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+function getDefaultCachePath() {
+  return process.env.ALERTS_CACHE_PATH || path.join(process.cwd(), '.alerts_cache.json');
+}
+
+function loadAlertCache(cachePath) {
+  try {
+    if (!cachePath || !fs.existsSync(cachePath)) {
+      return {};
+    }
+    const content = fs.readFileSync(cachePath, 'utf8');
+    const parsed = JSON.parse(content);
+    return (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveAlertCache(cachePath, data) {
+  try {
+    if (!cachePath) return;
+    const dir = path.dirname(cachePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    const tmpPath = `${cachePath}.tmp.${Date.now()}.${Math.random().toString(36).substring(2, 8)}`;
+    fs.writeFileSync(tmpPath, JSON.stringify(data, null, 2), 'utf8');
+    fs.renameSync(tmpPath, cachePath);
+  } catch {
+    try {
+      fs.writeFileSync(cachePath, JSON.stringify(data, null, 2), 'utf8');
+    } catch {}
+  }
+}
+
+function resetAlertedKeys(customCachePath) {
   alertedKeys.clear();
+  const target = customCachePath || getDefaultCachePath();
+  if (target && fs.existsSync(target)) {
+    try {
+      fs.unlinkSync(target);
+    } catch {}
+  }
 }
 
 function maskApiKey(key) {
@@ -32,8 +76,20 @@ async function sendQuotaExhaustionAlert(providerName, details = {}, options = {}
 
     const dedupeKey = `${provider}:${keyId}`;
 
+    // 1. In-memory check
     if (alertedKeys.has(dedupeKey)) {
       return { skipped: true, reason: 'already_alerted' };
+    }
+
+    // 2. Persistent disk cache check (24h cooldown)
+    const cachePath = safeOptions.cachePath || getDefaultCachePath();
+    const cacheData = loadAlertCache(cachePath);
+    if (cacheData[dedupeKey]) {
+      const lastAlertTime = new Date(cacheData[dedupeKey]).getTime();
+      if (!isNaN(lastAlertTime) && (Date.now() - lastAlertTime < ALERT_COOLDOWN_MS)) {
+        alertedKeys.add(dedupeKey);
+        return { skipped: true, reason: 'already_alerted' };
+      }
     }
 
     // Atomically claim dedupe key to prevent race conditions during concurrent exhaustion
@@ -103,6 +159,11 @@ async function sendQuotaExhaustionAlert(providerName, details = {}, options = {}
       }
     );
 
+    // Save successful alert timestamp to disk cache
+    const nowIso = new Date().toISOString();
+    cacheData[dedupeKey] = nowIso;
+    saveAlertCache(cachePath, cacheData);
+
     return {
       sent: true,
       recipient: alertEmail,
@@ -134,5 +195,6 @@ module.exports = {
   sendQuotaExhaustionAlert,
   resetAlertedKeys,
   alertedKeys,
-  maskApiKey
+  maskApiKey,
+  ALERT_COOLDOWN_MS
 };

@@ -3,3 +3,5 @@ node_modules/
 .agents/teamwork
 .wwebjs_auth/
 .wwebjs_cache/
+.alerts_cache.json
+*.tmp.*
