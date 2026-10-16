@@ -32,13 +32,69 @@ function parseLine(line) {
   return row;
 }
 
+function countQuotes(str) {
+  let count = 0;
+  for (let i = 0; i < str.length; i++) {
+    if (str[i] === '"') {
+      if (i + 1 < str.length && str[i + 1] === '"') {
+        i++; // skip escaped quote ""
+      } else {
+        count++;
+      }
+    }
+  }
+  return count;
+}
+
+function splitRecords(content) {
+  const rawLines = content.split(/\r?\n/);
+  const records = [];
+  let pending = [];
+  let pendingQuoteCount = 0;
+
+  for (let i = 0; i < rawLines.length; i++) {
+    const line = rawLines[i];
+    if (pending.length === 0 && line.trim().length === 0) {
+      continue;
+    }
+
+    pending.push(line);
+    pendingQuoteCount += countQuotes(line);
+
+    if (pendingQuoteCount % 2 === 0) {
+      const record = pending.join('\n');
+      if (record.trim().length > 0) {
+        records.push(record);
+      }
+      pending = [];
+      pendingQuoteCount = 0;
+    } else if (pending.length > 25) {
+      // Safety cutoff for runaway unclosed quotes: flush lines individually
+      for (const pl of pending) {
+        if (pl.trim().length > 0) records.push(pl);
+      }
+      pending = [];
+      pendingQuoteCount = 0;
+    }
+  }
+
+  // If EOF reached and quotes never closed, flush buffered lines individually so subsequent valid records survive
+  if (pending.length > 0) {
+    for (const pl of pending) {
+      if (pl.trim().length > 0) records.push(pl);
+    }
+  }
+
+  return records;
+}
+
 function parseCSV(filePath) {
   if (!fs.existsSync(filePath)) return [];
   let content = fs.readFileSync(filePath, 'utf8');
   if (content.charCodeAt(0) === 0xFEFF) {
     content = content.slice(1);
   }
-  const lines = content.split(/\r?\n/).filter(line => line.trim().length > 0);
+  const lines = splitRecords(content);
   if (lines.length === 0) return [];
   const headers = parseLine(lines[0]).map(h => (h ? h.replace(/^\uFEFF/, '').trim() : h));
   return lines.slice(1).map(line => {
@@ -67,4 +123,4 @@ function writeCSV(filePath, data, columns) {
   fs.writeFileSync(filePath, lines.join('\n') + '\n');
 }
 
-module.exports = { parseCSV, writeCSV };
+module.exports = { parseCSV, writeCSV, parseLine, splitRecords };

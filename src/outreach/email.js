@@ -116,7 +116,8 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
     pass,
     from: overrides.from || (env ? (env.EMAIL_FROM || env.SMTP_FROM) : undefined) || user,
     replyTo: overrides.replyTo || (env ? (env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM) : undefined) || user,
-    isMock
+    isMock,
+    ...(overrides._fromKey ? { _fromKey: overrides._fromKey } : {})
   };
 }
 
@@ -131,6 +132,9 @@ function getAccountKey(config) {
   const host = config.host || '';
   const user = config.user !== undefined ? config.user : ((config.auth && config.auth.user) || '');
   const pass = config.pass !== undefined ? config.pass : ((config.auth && config.auth.pass) || '');
+  if (config._fromKey) {
+    return `${host}:${user}:${pass}:${config._fromKey}`;
+  }
   return `${host}:${user}:${pass}`;
 }
 
@@ -180,6 +184,37 @@ function isSmtpQuotaExceeded(err) {
   return false;
 }
 
+function splitCsv(val) {
+  if (typeof val !== 'string') return (val !== undefined && val !== null) ? [val] : [];
+  const parts = [];
+  let current = '';
+  let inQuotes = false;
+  let angleDepth = 0;
+
+  for (let i = 0; i < val.length; i++) {
+    const char = val[i];
+    if (char === '"') {
+      inQuotes = !inQuotes;
+      current += char;
+    } else if (char === '<') {
+      angleDepth++;
+      current += char;
+    } else if (char === '>') {
+      if (angleDepth > 0) angleDepth--;
+      current += char;
+    } else if (char === ',' && !inQuotes && angleDepth === 0) {
+      const trimmed = current.trim();
+      if (trimmed) parts.push(trimmed);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+  const last = current.trim();
+  if (last) parts.push(last);
+  return parts;
+}
+
 function parseSmtpPool(env = process.env, overrides = {}) {
   const mergedOverrides = { ...overrides, ...(overrides.smtp || {}) };
 
@@ -221,11 +256,6 @@ function parseSmtpPool(env = process.env, overrides = {}) {
     }
   }
 
-  const splitCsv = (val) => {
-    if (typeof val !== 'string') return (val !== undefined && val !== null) ? [val] : [];
-    return val.split(',').map(s => s.trim()).filter(Boolean);
-  };
-
   const rawPass = mergedOverrides.pass !== undefined ? mergedOverrides.pass : (env ? env.SMTP_PASS : undefined);
   const rawHost = mergedOverrides.host !== undefined ? mergedOverrides.host : (env ? env.SMTP_HOST : undefined);
   const rawUser = mergedOverrides.user !== undefined ? mergedOverrides.user : (env ? env.SMTP_USER : undefined);
@@ -234,9 +264,11 @@ function parseSmtpPool(env = process.env, overrides = {}) {
   const rawFrom = mergedOverrides.from !== undefined ? mergedOverrides.from : (env ? (env.EMAIL_FROM || env.SMTP_FROM) : undefined);
   const rawReplyTo = mergedOverrides.replyTo !== undefined ? mergedOverrides.replyTo : (env ? (env.SMTP_REPLY_TO || env.EMAIL_FROM || env.SMTP_FROM) : undefined);
 
+  const splitFrom = splitCsv(rawFrom);
   const hasCommas = (typeof rawPass === 'string' && rawPass.includes(',')) ||
                     (typeof rawHost === 'string' && rawHost.includes(',')) ||
-                    (typeof rawUser === 'string' && rawUser.includes(','));
+                    (typeof rawUser === 'string' && rawUser.includes(',')) ||
+                    splitFrom.length > 1;
 
   if (hasCommas) {
     const passes = splitCsv(rawPass);
@@ -244,10 +276,10 @@ function parseSmtpPool(env = process.env, overrides = {}) {
     const users = splitCsv(rawUser);
     const ports = splitCsv(rawPort);
     const secures = splitCsv(rawSecure);
-    const froms = splitCsv(rawFrom);
+    const froms = splitFrom;
     const replyTos = splitCsv(rawReplyTo);
 
-    const count = Math.max(passes.length, hosts.length, users.length);
+    const count = Math.max(passes.length, hosts.length, users.length, froms.length);
     if (count > 0) {
       const pool = [];
       const cleanOverrides = { ...mergedOverrides };
@@ -272,6 +304,9 @@ function parseSmtpPool(env = process.env, overrides = {}) {
           from: pick(froms, i),
           replyTo: pick(replyTos, i)
         };
+        if (froms.length > 1 && passes.length <= 1 && users.length <= 1) {
+          itemOverride._fromKey = pick(froms, i);
+        }
         pool.push(loadSmtpConfig(env, itemOverride));
       }
       return pool;
@@ -716,5 +751,7 @@ module.exports = {
   ensureSignature,
   formatHtmlContent,
   formatEmailHtml,
-  sendEmail
+  sendEmail,
+  splitCsv,
+  getAccountKey
 };
