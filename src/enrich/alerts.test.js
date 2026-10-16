@@ -9,6 +9,7 @@ const {
 
 test.beforeEach(() => {
   resetAlertedKeys();
+  process.env.SMTP_MOCK = 'true';
 });
 
 test('maskApiKey handles various key lengths and empty inputs', () => {
