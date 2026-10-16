@@ -29,6 +29,15 @@ const DEFAULT_SIGNATURE_STRING = [
   'GitHub: https://github.com/Nahid625'
 ].join('\n');
 
+const TRUSTED_DELIVERABILITY_STATUSES = new Set([
+  'quickemailverification',
+  'sniffmail',
+  'reoon',
+  'zerobounce',
+  'verifalia',
+  'exact_match'
+]);
+
 function parseCliArgs(argv = process.argv.slice(2)) {
   const options = {};
   for (let i = 0; i < argv.length; i++) {
@@ -232,7 +241,9 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     const rawEmails = lead.emails ? String(lead.emails).split(/[;,]/).map(e => e.trim()).filter(Boolean) : [];
     const leadEmail = rawEmails.length > 0 ? rawEmails[0] : null;
 
-    const isInvalidStatus = String(lead.verification_status || '').trim().toLowerCase() === 'invalid';
+    const leadStatusRaw = String(lead.verification_status || '').trim().toLowerCase();
+    const isInvalidStatus = leadStatusRaw === 'invalid';
+    const isUntrustedStatus = !TRUSTED_DELIVERABILITY_STATUSES.has(leadStatusRaw);
     let isInvalidSyntax = false;
     let badEmailValue = leadEmail;
 
@@ -248,8 +259,12 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       isInvalidSyntax = true;
     }
 
-    if (isInvalidStatus || isInvalidSyntax) {
-      const reason = isInvalidStatus ? 'verification_status is invalid' : `invalid email syntax: "${badEmailValue}"`;
+    if (isInvalidSyntax || isInvalidStatus || isUntrustedStatus) {
+      const reason = isInvalidSyntax
+        ? `invalid email syntax: "${badEmailValue}"`
+        : isInvalidStatus
+          ? 'verification_status is invalid'
+          : `unverified deliverability status ("${lead.verification_status || ''}")`;
       logger.warn(`Skipping lead ${companyName} (${companyNum}): ${reason}`);
       continue;
     }
@@ -449,5 +464,6 @@ module.exports = {
   runOutreachPipeline,
   parseCliArgs,
   printHelp,
-  DEFAULT_SIGNATURE_STRING
+  DEFAULT_SIGNATURE_STRING,
+  TRUSTED_DELIVERABILITY_STATUSES
 };

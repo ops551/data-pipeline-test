@@ -330,7 +330,7 @@ async function verifyEmailSmtp(email) {
     return { status: 'invalid', reason: 'syntax' };
   }
   if (process.env.SMTP_MOCK === 'true' || process.env.SMTP_MOCK === '1') {
-    return { status: 'valid_domain', reason: 'mock' };
+    return { status: 'unverified', reason: 'mock_smtp' };
   }
 
   const domain = email.split('@')[1];
@@ -406,7 +406,7 @@ async function verifyEmailSmtp(email) {
       } else if (step === 3) {
         if (code === 250 || code === 251) {
           socket.write('QUIT\r\n');
-          finish({ status: 'valid_domain', reason: 'smtp_250' });
+          finish({ status: 'unverified', reason: 'smtp_250' });
         } else if (code >= 500) {
           socket.write('QUIT\r\n');
           const isIpBlocked = /5\.7\.1|spamhaus|blacklist|rbl|barracuda|proofpoint|dnsbl/i.test(msg);
@@ -542,8 +542,8 @@ async function verifyEmail(email) {
     }
   }
 
-  // Priority 6: Raw SMTP Fallback
-  return await verifyEmailSmtp(email);
+  // All configured verification APIs are exhausted or not configured
+  return { status: 'unverified', reason: 'all_apis_exhausted' };
 }
 
 async function checkCatchAll(domain) {
@@ -551,7 +551,7 @@ async function checkCatchAll(domain) {
   const fakeEmail = `fake_${Date.now()}_test@${domain}`;
   const v = await verifyEmailSmtp(fakeEmail);
   return {
-    isCatchAll: v.status === 'valid_domain',
+    isCatchAll: v.status === 'valid_domain' || v.reason === 'smtp_250',
     unknown: v.status === 'unknown'
   };
 }
@@ -590,7 +590,13 @@ async function resolvePersonEmail({
     for (const candidate of inferred) {
       try {
         const v = await verifyEmailFn(candidate);
-        if (v && v.status === 'valid_domain') {
+        if (
+          v &&
+          v.status === 'valid_domain' &&
+          v.reason !== 'smtp_250' &&
+          v.reason !== 'mock_smtp' &&
+          v.status !== 'unverified'
+        ) {
           return {
             email: candidate,
             emailSource: 'inferred',
@@ -636,7 +642,13 @@ async function resolvePersonEmail({
     // On catch-all domains, raw SMTP (smtp_250) is unreliable because catch-all servers
     // (Google Workspace, Microsoft 365, cPanel) accept any recipient during SMTP handshake and bounce later.
     // Inferred emails on catch-all domains MUST be verified by a dedicated verification API (Sniffmail, QEV, Reoon, etc.).
-    if (v && v.status === 'valid_domain' && v.reason !== 'smtp_250') {
+    if (
+      v &&
+      v.status === 'valid_domain' &&
+      v.reason !== 'smtp_250' &&
+      v.reason !== 'mock_smtp' &&
+      v.status !== 'unverified'
+    ) {
       return {
         email: candidate,
         emailSource: 'inferred_catch_all',

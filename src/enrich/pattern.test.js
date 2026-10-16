@@ -76,18 +76,15 @@ test('verifyEmail flags invalid syntax', async () => {
   assert.equal(res.reason, 'syntax');
 });
 
-test('verifyEmail checks MX records on raw SMTP fallback', async () => {
+test('verifyEmail returns all_apis_exhausted when no verification APIs are configured (Unit 5.27)', async () => {
   restoreEnv();
   const res = await verifyEmail('test@google.com');
-  assert.ok(['valid_domain', 'unknown'].includes(res.status));
-  if (res.status === 'valid_domain') {
-    assert.equal(res.reason, 'smtp_250');
-  }
+  assert.deepEqual(res, { status: 'unverified', reason: 'all_apis_exhausted' });
 });
 
-test('verifyEmail handles missing MX domain on raw SMTP fallback', async () => {
+test('verifyEmailSmtp handles missing MX domain on raw SMTP', async () => {
   restoreEnv();
-  const res = await verifyEmail('test@thisdomainwillnevereverexist12345.com');
+  const res = await verifyEmailSmtp('test@thisdomainwillnevereverexist12345.com');
   assert.equal(res.status, 'invalid');
   assert.equal(res.reason, 'dns_error');
 });
@@ -742,7 +739,7 @@ test('Unit 5.22: verifyEmailSmtp strips angle brackets from EMAIL_FROM and SMTP_
     };
 
     const res = await verifyEmailSmtp('target@example.com');
-    assert.strictEqual(res.status, 'valid_domain');
+    assert.strictEqual(res.status, 'unverified');
     assert.strictEqual(res.reason, 'smtp_250');
     return written;
   }
