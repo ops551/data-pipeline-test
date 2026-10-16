@@ -1,54 +1,4 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17478919,4UBARBERSHOPLIMITED LTD,2026-09-24,active,ltd,01110,"3 Alexandra Drive, Normanton, WF6 1JT, England",no
-SC903795,AWW CONSULTANCY LTD,2026-09-24,active,ltd,62020;70229,"4 Earls Court, Earls Gate Park, Grangemouth, FK3 8ZE, Scotland",no
-17478972,THIRDEYE PRODUCTIONS MEDIA UK LIMITED,2026-09-24,active,ltd,59112;59120;74209,"200 Winsford Avenue, Coventry, CV5 9NB, England",no
-17478975,LRS BIO CONSULTING LTD,2026-09-24,active,ltd,72110,"82, Suite A James Carter Road, Mildenhall, IP28 7DE, United Kingdom",no
-17478976,BOBOFRESH LTD,2026-09-24,active,ltd,81210,"57 Stour Way, Upminster, RM14 1QQ, England",no
-17478973,CLEAN-ESPACE LTD,2026-09-24,active,ltd,81210;81222,"21 Surrey Street, Wallasey, CH44 5SY, United Kingdom",no
-17478997,ZFNF LIMITED,2026-09-24,active,ltd,47910,"14 Monmouth Road, Northampton, NN5 7EF, England",no
-17478998,BISGIN LTD,2026-09-24,active,ltd,56102,"70-72 High Street, Gillingham, Kent, ME7 1AY, England",no
-17478999,UTIA LTD,2026-09-24,active,ltd,78109,"50 Spital Street, Dartford, Kent, DA1 2DT, England",no
-17479010,MALPAS HIGH STREET LTD,2026-09-24,active,ltd,47110,"41-43 High Street, Malpas, SY14 8NR, United Kingdom",no
-17479009,BIG BOYZ LONDON LTD,2026-09-24,active,ltd,56102,"211 West Hendon Broadway, London, NW9 7DE, United Kingdom",no
-17479002,WORDN LTD,2026-09-24,active,ltd,93110,"82 St. John Street, London, EC1M 4JN, England",no
-17479004,SI FRANCIS PLUMBING LTD,2026-09-24,active,ltd,43220,"14 Goldfinch Way, South Wonston, Winchester, SO21 3SH, England",no
-17479003,RUSTIBLADE LIMITED,2026-09-24,active,private-limited-guarant-nsc,96020,"19 Rowlands Road, Worthing, BN11 3JJ, England",no
-SC903804,XPRESS BAZAR LTD,2026-09-24,active,ltd,47910,"6 Niddrie Mill Avenue, Edinburgh, EH15 3EN, Scotland",no
-17479062,HTIS INTERNATIONAL LTD,2026-09-24,active,ltd,62020,"167 - 169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
-17479067,CLEARKEY PRIVATE LTD,2026-09-24,active,ltd,70229,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17479063,MIRAAL COURIERS LTD,2026-09-24,active,ltd,52290,"62 Pickles Lane, Bradford, BD7 4DN, United Kingdom",no
-17479053,KINSHIP CARE & SUPPORT LIMITED,2026-09-24,active,ltd,47910,"28 West Park Street, Dewsbury, WF13 4LD, England",no
-17479058,SARMED LIMITED,2026-09-24,active,ltd,86101;86210;86220,"91 Chapel Lane, Longton, Preston, PR4 5WA, England",no
-17479257,FIRCA LTD,2026-09-24,active,ltd,47910;58290,"Suite 11254 5 Brayford Square, London, E1 0SG, United Kingdom",no
-17479249,COMPASS WORLDWIDE FREIGHT LTD,2026-09-24,active,ltd,49410;50200;51210,"12 Briery Vale Road, Sunderland, SR2 7HE, England",no
-17479274,AVERON TECHNOLOGIES LIMITED,2026-09-24,active,ltd,62012,"Unit C Piccadilly Business Centre, Aldow Enterprise Park, Manchester, M12 6AE, United Kingdom",no
-17479258,CARER4CARERS LTD,2026-09-24,active,ltd,70229;86900,"66 Peregrine Drive, Brentwood, CM13 3GW, England",no
-17479270,MONEY MAPS LIMITED,2026-09-24,active,ltd,62020;62090,"Unit 82a James Carter Road, Mildenhall, Bury St. Edmunds, IP28 7DE, England",yes
-17479323,GOLDCREST TRAVEL & TOURS LTD,2026-09-24,active,ltd,79110;79909;82190,"26 Pasture Road, Leeds, LS8 4JJ, England",no
-SC903833,WEE WONDERS SCOTLAND CIC,2026-09-24,active,private-limited-guarant-nsc,85520;90010;90020,"11 Chapelton Drive, Largs, KA30 8RD, Scotland",no
-17479327,PRO-LAY CONSTRUCTION LTD,2026-09-24,active,ltd,41202,"6 Solway, East Tilbury, Tilbury, RM18 8RQ, England",no
-17479333,AXIOMARK LIMITED,2026-09-24,active,ltd,63990,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17479314,AGIS OPERATING SOFTWARE LTD,2026-09-24,active,ltd,96090,"6 Portland Business Centre, Manor House Lane, Datchet, SL3 9EG, England",no
-17479311,XONTRA LTD,2026-09-24,active,ltd,49390,"142 Camden Street, London, NW1 9PF, England",no
-17479384,AIRSOFT SIGHTLINE LTD,2026-09-24,active,ltd,47990,"Flat 1706 222 Marsh Wall, London, E14 9EN, England",no
-17479394,JHR COMMERCE LIMITED,2026-09-24,active,ltd,47910,"12 Hebden Grove, Birmingham, B28 0SY, England",no
-17479421,HAIRBY PARADISO LTD,2026-09-24,active,ltd,96020,"52 Copperfield Drive, London, N15 4UF, England",no
-17479422,GREEK PANICOS MARPLE LTD,2026-09-24,active,ltd,56103,"31 Stockport Road, Stockport, Cheshire, SK6 6BD, England",no
-17479427,MINI MOMENTS LIMITED,2026-09-24,active,ltd,82302;88910;96090,"207 Regent Street, London, W1B 3HH, United Kingdom",no
-17479477,IMAGO OPERATIONS LIMITED,2026-09-24,active,ltd,62090,"Highland House Mayflower Close, Chandlers Ford, Eastleigh, SO53 4AR, England",no
-17479460,ZHUQUI MART LTD,2026-09-24,active,ltd,46900;47190;47789;47910,"112 Loughborough House, 2 Honour Gardens, London, RM8 2GJ, United Kingdom",no
-17479465,TEMPEYY LTD,2026-09-24,active,ltd,47910,"7 Malthouse Drive, London, W4 2NR, England",no
-17479565,ANUSHKA GROUP LTD,2026-09-24,active,ltd,70229,"2 Burlington Place, Woodford Green, Essex, IG8 0PX, England",no
-SC903856,THE NEXT CHAPTER SCOTLAND CIC,2026-09-24,active,private-limited-guarant-nsc,86900,"5 Church Street, Hamilton, ML3 6BA, Scotland",no
-NI744022,SONAS PLAY NI LTD,2026-09-24,active,ltd,93290,"5 Rathlin Avenue, Ballycastle, BT54 6DQ, Northern Ireland",no
-17479585,TTS SUPPLY CHAIN LTD,2026-09-24,active,ltd,52103,"P R House, Hortonwood 30, Telford, TF1 7ET, England",no
-17479570,JAY & CO INTERNATIONAL LTD,2026-09-24,active,ltd,59111;70229;74201,"Flat 6 Carlton Chapel House, 1 Arctic Street, London, NW5 4DJ, England",no
-SC903857,AER INTERNATIONAL CONSULTING LIMITED,2026-09-24,active,ltd,69201;70221;70229;73200,"100 West George Street, Glasgow, G2 1PP, Scotland",no
-17479578,DP BIM SPECIALIST LIMITED,2026-09-24,active,ltd,71122,"33 Warrender Way, Ruislip, HA4 8EB, England",no
-17479576,ASIM STORE UK LIMITED,2026-09-24,active,ltd,47910,"Office 10454 321-323 High Road, Chadwell Heath, Essex, RM6 6AX, United Kingdom",no
-17479574,EVERWOOD FURNITURE LIMITED,2026-09-24,active,ltd,47599,"Office 21097 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
-17479587,WE ALMIGHTY LIMITED,2026-09-24,active,ltd,70229;85590,"5 High Street, Windsor, Berkshire, SL4 1LD, England",no
-17480428,SEOKWON GAMES LTD,2026-09-25,active,ltd,58210;62011,"Flat 38 Southey House, Browning Street, London, SE17 1DE, England",no
 17480431,HSDIRECTUK LTD,2026-09-25,active,ltd,47910;49320,"31 Cumberland Way, Wokingham, RG41 3AY, England",no
 SC903906,TAZ STORES LTD,2026-09-25,active,ltd,47990,"200 Dover Drive, Dunfermline, KY11 8HB, Scotland",no
 17480427,AHMDFLIPS LTD,2026-09-25,active,ltd,47910,"21 Haslewood Drive, Leeds, LS9 7PS, United Kingdom",no
@@ -15389,3 +15339,11 @@ SC903548,WILD HARMONY LTD,2026-09-22,active,ltd,86900,"Upyonda, Mosshill, Brora,
 17474241,FIDWEN LTD,2026-09-22,active,ltd,62012;62020;62090;70229,"9 Oxford Court, Manchester, M2 3WQ, England",no
 17468859,TAHSOOKE LTD,2026-09-19,active,ltd,62012;63120,"56 Smithy Carr Lane, Brighouse, HD6 4BG, England",no
 17474783,WEFTIDE LTD,2026-09-22,active,ltd,47910,"27 Old Gloucester Street, Holborn, London, WC1N 3AX, England",no
+17470697,JOVIAL WORKS LTD,2026-09-21,active,ltd,73110;90030,"167-169 Great Portland Street, London, W1W 5PF, England",yes
+17474060,NANOSEQ LTD,2026-09-22,active,ltd,62012;62020;62090;63110,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17478264,SUNRISE LANDSCAPING LTD,2026-09-24,active,ltd,81300,"4, Eastbrookend The Chase, Romford, RM7 0SS, United Kingdom",no
+17479908,LABELCORE LTD,2026-09-24,active,ltd,47910,"3 Baker Avenue, Bilston, WV14 9BT, England",no
+17476502,CONTENTRA UK LIMITED,2026-09-23,active,ltd,58190;85590;85600,"Fulford House, Newbold Terrace, Leamington Spa, CV32 4EA, England",no
+17464544,STUDIO BETH JOHNSON LIMITED,2026-09-17,active,ltd,71111;74100,"1st Floor 446a Green Lanes, Palmers Green, London, N13 5XD, England",no
+17475857,OAKLEY MORTGAGES & PROTECTION LTD,2026-09-23,active,ltd,66220,"Unit 1 Woodgate Stables, Crawley Lane, Kings Bromley, DE13 7JF, England",no
+17468811,TALKSHAK LTD,2026-09-19,active,ltd,58290,"17468811 - COMPANIES HOUSE DEFAULT ADDRESS, Cardiff, CF14 8LH",no
