@@ -2,7 +2,7 @@ require("dotenv").config({ quiet: true });
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const DEFAULT_MODEL = "gemini-1.5-flash";
-const FALLBACK_MODELS = ["gemini-3.5-flash-lite", "gemini-flash-latest"];
+const FALLBACK_MODELS = ["gemini-2.0-flash-lite", "gemini-1.5-flash-8b", "gemini-1.5-pro"];
 const DEFAULT_SENDER_NAME = "Nahid";
 const DEFAULT_MAX_RETRIES = 3;
 const FORBIDDEN_SPAM_WORDS = Object.freeze([
@@ -1206,4 +1206,5 @@ module.exports = {
   buildPrompt,
   cleanEmailContent,
   generateEmail,
+  FALLBACK_MODELS,
 };
