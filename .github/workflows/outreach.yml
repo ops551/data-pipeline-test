@@ -68,6 +68,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Restore Alerts Cache
+        uses: actions/cache@v4
+        with:
+          path: .alerts_cache.json
+          key: alerts-cache-${{ github.run_id }}
+          restore-keys: |
+            alerts-cache-
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:

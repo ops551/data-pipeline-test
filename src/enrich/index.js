@@ -9,6 +9,7 @@ const { searchCompany, searchCompanyLeadership, extractWebsiteContext, DIRECTORY
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
 const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
+const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
 
 const PUBLIC_EMAIL_PROVIDERS = new Set([
   'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com',
@@ -310,7 +311,10 @@ async function runEnrichment() {
            verifyEmailFn: verifyEmail
          });
          
-         if (resolved && resolved.email) {
+         const isTrusted = resolved && resolved.verificationStatus &&
+           TRUSTED_DELIVERABILITY_STATUSES.has(String(resolved.verificationStatus).trim().toLowerCase());
+
+         if (resolved && resolved.email && isTrusted) {
             personLeads.push({
                ...person,
                email: resolved.email,
@@ -322,6 +326,8 @@ async function runEnrichment() {
                fallback_used: 'no',
                contact_type: 'person'
             });
+         } else if (resolved && resolved.email) {
+            console.log(`  Skipping person email ${resolved.email} with untrusted verification status "${resolved.verificationStatus}".`);
          }
       }
 
@@ -402,8 +408,10 @@ async function runEnrichment() {
          
          if (bestGeneric) {
            const v = await verifyEmail(bestGeneric);
-           if (v.status !== 'valid_domain') {
-             console.log(`  Extracted generic email ${bestGeneric} is not verified (${v.status}: ${v.reason}). Discarding.`);
+           const isDeliverable = v.status === 'valid_domain' &&
+             TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase());
+           if (!isDeliverable) {
+             console.log(`  Extracted generic email ${bestGeneric} is not deliverable (${v.status}: ${v.reason}). Discarding.`);
              bestGeneric = '';
              vStatus = '';
            } else {
