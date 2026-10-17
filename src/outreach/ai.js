@@ -1,8 +1,13 @@
 require("dotenv").config({ quiet: true });
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
-const DEFAULT_MODEL = "gemini-1.5-flash";
-const FALLBACK_MODELS = ["gemini-2.0-flash-lite", "gemini-1.5-flash-8b", "gemini-1.5-pro"];
+const DEFAULT_MODEL = "gemini-3.5-flash-lite";
+const FALLBACK_MODELS = [
+  "gemini-flash-latest",
+  "gemini-3.8-flash",
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
+];
 const DEFAULT_SENDER_NAME = "Nahid";
 const DEFAULT_MAX_RETRIES = 3;
 const FORBIDDEN_SPAM_WORDS = Object.freeze([
@@ -1150,8 +1155,8 @@ async function generateEmail(company, options = {}) {
 
         // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model
         const isModelUnsupported =
-          err.status === 404 &&
-          /not found|no longer available|is not supported/i.test(
+          (err.status === 404 || /\[404 Not Found\]|\b404\b/i.test(err.message || "")) &&
+          /not found|no longer available|is not supported|no longer available to new users/i.test(
             err.message || "",
           );
         if (isModelUnsupported && mIndex < candidateModels.length - 1) {
@@ -1179,6 +1184,12 @@ async function generateEmail(company, options = {}) {
           await sleepFn(waitMs);
           continue;
         }
+
+        // If retries failed on rate limit or server error, failover to next candidate model if available
+        if ((isRateLimit || isServerError) && mIndex < candidateModels.length - 1) {
+          break;
+        }
+
         throw err;
       }
     }

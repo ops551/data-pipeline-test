@@ -17,7 +17,7 @@ async function generateWhatsAppMessage(data, mock = false) {
     return `Saw you just registered ${data.companyName}. I build modern websites and business automation tools to help startups get clients faster. Would you be open to a quick 2-min chat on how we can collaborate?`;
   }
 
-  const candidateModels = ['gemini-1.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-pro'];
+  const candidateModels = ['gemini-3.5-flash-lite', 'gemini-flash-latest', 'gemini-3.8-flash', 'gemini-3.5-flash'];
   let model = null;
   let text = '';
   let aiSuccess = false;

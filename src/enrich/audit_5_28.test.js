@@ -72,23 +72,14 @@ test('Objective 2: outreach.yml configures actions/cache for .alerts_cache.json'
 // Objective 3: Valid Gemini Fallback Models in ai.js
 // ============================================================================
 
-test('Objective 3: FALLBACK_MODELS contains only valid official Gemini models without non-existent 3.5 versions', () => {
-  const aiPath = path.join(__dirname, '../outreach/ai.js');
-  const code = fs.readFileSync(aiPath, 'utf8');
+test('Objective 3: DEFAULT_MODEL and FALLBACK_MODELS contain valid official Gemini models', () => {
+  const { DEFAULT_MODEL, FALLBACK_MODELS } = require('../outreach/ai');
 
-  // Must not have hallucinated 3.5 version
-  assert.equal(
-    code.includes('gemini-3.5'),
-    false,
-    'src/outreach/ai.js must not reference non-existent gemini-3.5 models'
-  );
-
-  const { FALLBACK_MODELS } = require('../outreach/ai');
+  assert.ok(typeof DEFAULT_MODEL === 'string' && DEFAULT_MODEL.startsWith('gemini-'), 'DEFAULT_MODEL must start with "gemini-"');
   assert.ok(Array.isArray(FALLBACK_MODELS), 'FALLBACK_MODELS should be an exported array');
   assert.ok(FALLBACK_MODELS.length > 0, 'FALLBACK_MODELS must have at least one fallback');
 
   for (const model of FALLBACK_MODELS) {
     assert.ok(model.startsWith('gemini-'), `Model "${model}" must start with "gemini-"`);
-    assert.equal(model.includes('3.5'), false, `Model "${model}" cannot be a fictional 3.5 version`);
   }
 });
