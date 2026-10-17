@@ -22,7 +22,7 @@ const {
 } = require('./ai');
 
 test('constants are correctly configured', () => {
-  assert.equal(DEFAULT_MODEL, 'gemini-1.5-flash');
+  assert.equal(DEFAULT_MODEL, 'gemini-3.5-flash-lite');
   assert.equal(DEFAULT_SENDER_NAME, 'Nahid');
   assert.equal(DEFAULT_SIGNATURE.name, 'Nahid');
   assert.equal(DEFAULT_SIGNATURE.title, 'Web Design & Business Automation');
@@ -435,7 +435,7 @@ test('generateEmail generates clean email using injected genAI mock', async () =
     { genAI: mockGenAI, apiKey: 'test_key' }
   );
 
-  assert.equal(capturedModelName, 'gemini-1.5-flash');
+  assert.equal(capturedModelName, 'gemini-3.5-flash-lite');
   assert.ok(capturedPrompt.includes('Zenith Ltd'));
   assert.ok(capturedPrompt.includes('construction and trades'));
   assert.equal(result.subject, 'High-converting site for Zenith Ltd');
