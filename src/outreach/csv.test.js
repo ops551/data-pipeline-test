@@ -76,7 +76,7 @@ function seedLeadsFile(filePath, leads = sampleLeads) {
 }
 
 test('SENT_LEADS_COLUMNS includes lead fields, sent_at, and the actual recipient', () => {
-  assert.deepEqual(SENT_LEADS_COLUMNS, [...LEADS_COLUMNS, 'sent_at', 'sent_to']);
+  assert.deepEqual(SENT_LEADS_COLUMNS, [...LEADS_COLUMNS, 'sent_at', 'sent_to', 'message_id']);
 });
 
 test('appendSentLeads migrates existing sent rows to include website context columns', () => {

@@ -357,7 +357,8 @@ async function runOutreachPipeline(options = {}, deps = {}) {
             sentLeadsPath,
             extraFields: {
               sent_at: new Date().toISOString(),
-              sent_to: recipient
+              sent_to: recipient,
+              message_id: sendResult && sendResult.messageId ? sendResult.messageId : ''
             }
           });
 
