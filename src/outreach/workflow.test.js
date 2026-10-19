@@ -117,21 +117,9 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
       smtpValidation.if.includes('inputs.dry_run != true'),
       'SMTP credentials must not be required for manual dry runs'
     );
+    assert.strictEqual(outreachJob['timeout-minutes'], 15, 'outreach job must configure timeout-minutes: 15');
     const autoReplenish = steps.find((step) => step.name === 'Auto-Replenish Leads (if empty)');
-    assert.ok(autoReplenish, 'auto-replenish step must be present');
-    assert.ok(
-      autoReplenish.if.includes('inputs.dry_run != true'),
-      'manual dry runs must skip auto-replenishment to avoid CSV changes'
-    );
-    assert.ok(
-      autoReplenish.run.includes("require('./src/outreach/csv')") &&
-        autoReplenish.run.includes("getPendingLeads({ channel: 'email' }).length"),
-      'auto-replenishment must count the same eligible leads as outreach'
-    );
-    assert.ok(
-      !autoReplenish.run.includes("filter(l=>l.includes(',lead,')"),
-      'auto-replenishment must not use a rough CSV line count'
-    );
+    assert.strictEqual(autoReplenish, undefined, 'auto-replenish step must be removed to avoid dual-puppeteer concurrency crashes');
     assert.ok(!rawYaml.includes('TEST_SMTP_'), 'workflow must not require unconfigured TEST_SMTP secrets');
     assert.ok(
       env.OUTREACH_DRY_RUN.includes('inputs.dry_run'),

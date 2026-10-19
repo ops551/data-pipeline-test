@@ -2,6 +2,7 @@ const { isValidEmailAddress } = require('../emailAddress');
 
 const EMAIL_REGEX = /([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z]{2,})/gi;
 const PHONE_REGEX = /(?:(?:\+44\s?|0)7\d{3}\s?\d{6}|(?:\+44\s?|0)7\d{4}\s?\d{5})/g;
+const MAX_EXTRACT_SIZE = 1_500_000;
 const GENERIC_COMPANY_TERMS = new Set([
   'advice',
   'financial',
@@ -84,7 +85,8 @@ const UK_GEO_WORDS = new Set([
 
 function extractEmails(text) {
   if (!text) return [];
-  const matches = text.match(EMAIL_REGEX) || [];
+  const targetText = typeof text === 'string' && text.length > MAX_EXTRACT_SIZE ? text.slice(0, MAX_EXTRACT_SIZE) : text;
+  const matches = targetText.match(EMAIL_REGEX) || [];
   
   // Clean up glued text like .comwebsite before filtering
   const cleanedMatches = matches.map(e => {
@@ -127,7 +129,8 @@ function extractEmails(text) {
 
 function extractPhones(text) {
   if (!text) return [];
-  const cleanText = text.replace(/[\(\)-]/g, ' ');
+  const targetText = typeof text === 'string' && text.length > MAX_EXTRACT_SIZE ? text.slice(0, MAX_EXTRACT_SIZE) : text;
+  const cleanText = targetText.replace(/[\(\)-]/g, ' ');
   const matches = cleanText.match(PHONE_REGEX) || [];
   
   const formatted = matches.map(m => {
@@ -484,11 +487,15 @@ function stripTitlePrefix(name) {
 
 function extractPeople(html, officers = [], sourceUrl = '', companyName = '') {
   if (!html) return [];
+  const targetHtml = typeof html === 'string' && html.length > MAX_EXTRACT_SIZE ? html.slice(0, MAX_EXTRACT_SIZE) : html;
 
-  const cleanedHtml = stripTestimonialsAndReviews(html);
+  const cleanedHtml = stripTestimonialsAndReviews(targetHtml);
   // Replace block closing tags and breaks with punctuation/newlines to prevent bleed
   const withBoundaries = cleanedHtml.replace(/<\/(?:p|div|section|article|li|h[1-6]|td|tr)>|<br\s*\/?>/gi, '.\n ');
-  const text = withBoundaries.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  let text = withBoundaries.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
+  if (text.length > MAX_EXTRACT_SIZE) {
+    text = text.slice(0, MAX_EXTRACT_SIZE);
+  }
   const found = [];
   const textLower = text.toLowerCase();
   const foundNames = new Set();

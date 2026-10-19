@@ -141,7 +141,8 @@ async function runEnrichment() {
             // Crawl high-value contact & team subpages
             try {
               const origin = new URL(page.finalUrl || searchRes.websiteUrl).origin;
-              const linkMatches = [...page.html.matchAll(/href=["']([^"'#\s>]+)["']/gi)].map(m => m[1]);
+              const htmlSource = page.html.length > 1_500_000 ? page.html.slice(0, 1_500_000) : page.html;
+              const linkMatches = [...htmlSource.matchAll(/href=["']([^"'#\s>]+)["']/gi)].map(m => m[1]);
               const subpageLinks = new Set();
               for (const rawHref of linkMatches) {
                 try {

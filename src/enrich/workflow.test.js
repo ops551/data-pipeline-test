@@ -79,6 +79,7 @@ test('Unit 5.18: GitHub Actions Enrichment Workflow', async (t) => {
     const enrichJob = jobs.enrich;
     assert.ok(enrichJob, 'enrich job must be defined');
     assert.strictEqual(enrichJob['runs-on'], 'ubuntu-latest', 'runner must be ubuntu-latest');
+    assert.strictEqual(enrichJob['timeout-minutes'], 25, 'runner timeout must be 25 minutes');
     assert.ok(
       enrichJob.if &&
       enrichJob.if.includes("github.repository == 'ops551/data-pipeline-test'") &&

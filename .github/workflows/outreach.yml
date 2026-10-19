@@ -38,6 +38,7 @@ jobs:
     name: Run Outreach and Auto-Merge
     if: github.repository == 'ops551/data-pipeline-test' || github.repository == 'Nahid625/Recent-uk-Companys'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
@@ -98,20 +99,6 @@ jobs:
           if [ -z "$SMTP_HOST" ] || [ -z "$SMTP_USER" ] || [ -z "$SMTP_PASS" ]; then
             echo "::error::Set SMTP_HOST, SMTP_USER, and SMTP_PASS repository secrets before running manually."
             exit 1
-          fi
-
-      - name: Auto-Replenish Leads (if empty)
-        if: github.event_name != 'workflow_dispatch' || inputs.dry_run != true
-        run: |
-          LEADS_COUNT=$(node -e "const { getPendingLeads } = require('./src/outreach/csv'); console.log(getPendingLeads({ channel: 'email' }).length);")
-          echo "Current eligible pending leads: $LEADS_COUNT"
-          if [ "$LEADS_COUNT" -lt 5 ]; then
-            echo "Queue is running very low! Auto-scraping new companies..."
-            npm start
-            echo "Enriching new companies with Puppeteer..."
-            npm run enrich
-          else
-            echo "Sufficient leads in queue. Skipping scraping phase."
           fi
 
       - name: Run outreach
