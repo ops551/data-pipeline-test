@@ -72,7 +72,10 @@ async function runEnrichment() {
 
   // 1. Filter candidates
   console.log('Filtering candidates...');
-  const count = filterCandidates(companiesFile, enrichedFile, candidatesFile);
+  const count = filterCandidates(companiesFile, enrichedFile, candidatesFile, {
+    leadsFile,
+    sentLeadsFile: path.join(baseDir, 'sent_leads.csv')
+  });
   console.log(`Found ${count} candidates to enrich.`);
 
   if (count === 0) {

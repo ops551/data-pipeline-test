@@ -470,6 +470,7 @@ function ensureSignature(content, options = {}) {
   if (
     text.includes('+8801615753465') ||
     text.includes('nahid-yf63.onrender.com') ||
+    text.includes('github.com/Nahid625') ||
     (options.includeCoordinates === false &&
       (text.toLowerCase().includes(`best regards,\n${senderName}`.toLowerCase()) ||
         new RegExp(`best regards,[\\r\\n]+${escapedSender}`, 'i').test(text)))
@@ -557,7 +558,18 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       to: normalizedTo,
       subject,
       text,
-      replyTo: config.replyTo
+      replyTo: config.replyTo,
+      ...(combined.enableHtml || process.env.ENABLE_HTML_EMAIL === 'true'
+        ? { html: formatHtmlContent(text, combined) }
+        : {}),
+      ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),
+      ...(mailOptions.references || combined.references ? { references: mailOptions.references || combined.references } : {}),
+      headers: {
+        ...(mailOptions.headers || {}),
+        ...(combined.headers || {}),
+        ...(mailOptions.inReplyTo || combined.inReplyTo ? { 'In-Reply-To': mailOptions.inReplyTo || combined.inReplyTo } : {}),
+        ...(mailOptions.references || combined.references ? { 'References': mailOptions.references || combined.references } : {})
+      }
     };
 
     for (let attempt = 1; ; attempt++) {
@@ -632,7 +644,18 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       to: normalizedTo,
       subject,
       text,
-      replyTo: config.replyTo
+      replyTo: config.replyTo,
+      ...(combined.enableHtml || process.env.ENABLE_HTML_EMAIL === 'true'
+        ? { html: formatHtmlContent(text, combined) }
+        : {}),
+      ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),
+      ...(mailOptions.references || combined.references ? { references: mailOptions.references || combined.references } : {}),
+      headers: {
+        ...(mailOptions.headers || {}),
+        ...(combined.headers || {}),
+        ...(mailOptions.inReplyTo || combined.inReplyTo ? { 'In-Reply-To': mailOptions.inReplyTo || combined.inReplyTo } : {}),
+        ...(mailOptions.references || combined.references ? { 'References': mailOptions.references || combined.references } : {})
+      }
     };
 
     let lastErr = null;

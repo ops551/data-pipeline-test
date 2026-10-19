@@ -34,18 +34,25 @@ const DEFAULT_SIGNATURE = Object.freeze({
   name: "Nahid",
   title: "Web Design & Business Automation",
   service: "Web Design & Business Automation",
-  whatsapp: "+8801615753465",
+  whatsapp: undefined,
   website: "https://nahid-yf63.onrender.com/",
   github: "https://github.com/Nahid625",
   toString() {
-    return [
+    const lines = [
       "Best regards,",
       this.name,
       this.title,
-      `WhatsApp: ${this.whatsapp}`,
-      `Website: ${this.website}`,
-      `GitHub: ${this.github}`,
-    ].join("\n");
+    ];
+    if (this.whatsapp) {
+      lines.push(`WhatsApp: ${this.whatsapp}`);
+    }
+    if (this.website) {
+      lines.push(`Website: ${this.website}`);
+    }
+    if (this.github) {
+      lines.push(`GitHub: ${this.github}`);
+    }
+    return lines.join("\n");
   },
   includes(sub) {
     return this.toString().includes(sub);
@@ -211,8 +218,29 @@ function mapSicToIndustry(sicCodes) {
   return "small business";
 }
 
+function formatCleanCompanyName(rawName) {
+  if (!rawName || typeof rawName !== "string") return "";
+  let name = rawName.trim();
+  if (!name) return "";
+
+  // 1. Remove legal suffixes (case-insensitive)
+  name = name.replace(/\b(?:ltd\.?|limited|cic\.?|llp\.?|plc\.?|inc\.?)\b/gi, "").trim();
+
+  // 2. Strip trailing punctuation/dashes
+  name = name.replace(/[-–—,;:.]\s*$/g, "").trim();
+
+  // 3. Convert ALL-CAPS to Title Case
+  const lettersOnly = name.replace(/[^a-zA-Z]/g, "");
+  if (lettersOnly.length > 2 && lettersOnly === lettersOnly.toUpperCase()) {
+    name = name.toLowerCase().replace(/(^|[\s\-\/\(\[\.])([a-z])/g, (_, boundary, char) => boundary + char.toUpperCase());
+    name = name.replace(/\b(uk)\b/gi, "UK");
+  }
+
+  return name.trim();
+}
+
 function getEmailCompanyName(companyName) {
-  return companyName.replace(/\bLIMITED$/i, "Ltd");
+  return formatCleanCompanyName(companyName);
 }
 
 function isTechOrSoftwareCompany(company = {}) {
@@ -873,6 +901,8 @@ function cleanEmailContent(rawText, options = {}) {
   const emailCompanyPattern = new RegExp(escapedCompanyName, "gi");
   subject = subject.replace(emailCompanyPattern, emailCompanyName);
   body = body.replace(emailCompanyPattern, emailCompanyName);
+  // Also strip residual legal entity suffixes from subject
+  subject = subject.replace(/\b(?:ltd\.?|limited|cic\.?|llp\.?|plc\.?|inc\.?)\b/gi, "").replace(/\s{2,}/g, " ").trim();
 
   body = body
     .replace(
@@ -1218,4 +1248,6 @@ module.exports = {
   cleanEmailContent,
   generateEmail,
   FALLBACK_MODELS,
+  formatCleanCompanyName,
+  getEmailCompanyName,
 };

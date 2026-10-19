@@ -5,13 +5,15 @@ const { parseCSV: defaultParseCSV } = require('../enrich/csvParser');
 const {
   getPendingLeads: defaultGetPendingLeads,
   moveLeadToSent: defaultMoveLeadToSent,
+  purgeSentFromLeads: defaultPurgeSentFromLeads,
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH
 } = require('./csv');
 const {
   generateEmail: defaultGenerateEmail,
   buildSignature,
-  DEFAULT_SIGNATURE
+  DEFAULT_SIGNATURE,
+  formatCleanCompanyName
 } = require('./ai');
 const {
   sendEmail: defaultSendEmail,
@@ -24,7 +26,6 @@ const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
   'Nahid',
   'Web Design & Business Automation',
-  'WhatsApp: +8801615753465',
   'Website: https://nahid-yf63.onrender.com/',
   'GitHub: https://github.com/Nahid625'
 ].join('\n');
@@ -175,6 +176,15 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     }
   }
 
+  // Auto-purge any already-sent leads before fetching pending leads
+  const purgeSent = deps.purgeSentFromLeads || defaultPurgeSentFromLeads;
+  if (typeof purgeSent === 'function') {
+    const purgeResult = purgeSent(leadsPath, sentLeadsPath, { dryRun });
+    if (purgeResult && purgeResult.purgedCount > 0) {
+      logger.log(`Purged ${purgeResult.purgedCount} already-sent lead(s) from ${path.basename(leadsPath)}.`);
+    }
+  }
+
   // Read pending leads using getPendingLeads({ leadsPath, sentLeadsPath, channel: 'email', limit })
   const leads = getLeads({
     leadsPath,
@@ -302,7 +312,8 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         body = `${body.trim()}\n\n${sig}`;
       }
 
-      const subject = emailContent.subject || `Web Design & Business Automation for ${companyName}`;
+      const cleanName = typeof formatCleanCompanyName === 'function' ? formatCleanCompanyName(companyName) : companyName;
+      const subject = emailContent.subject || `Web Design & Business Automation for ${cleanName}`;
 
       // 4. Determine destination recipient
       const rawRecipient = (testEmail && String(testEmail).trim()) ? String(testEmail).trim() : leadEmail;

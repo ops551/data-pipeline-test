@@ -17,7 +17,8 @@ const {
   removeLeads,
   moveLeadToSent,
   moveLeadsToSent,
-  writeCSVAtomic
+  writeCSVAtomic,
+  purgeSentFromLeads
 } = require('./csv');
 
 function createTempWorkspace() {
@@ -598,4 +599,36 @@ test('appendSentLeads deduplicates items on (company_number, sent_to) against ex
   assert.equal(count6, 0);
 });
 
+// -----------------------------------------------------------------------------
+// Unit 5.32: Purge Sent From Leads Suite
+// -----------------------------------------------------------------------------
 
+test('purgeSentFromLeads purges already sent leads and preserves unsent ones', () => {
+  const { leadsPath, sentLeadsPath } = createTempWorkspace();
+
+  const leads = [
+    { ...sampleLeads[0], company_number: '11111111', emails: 'sent@alpha.com', person_name: 'Lead 1' },
+    { ...sampleLeads[0], company_number: '22222222', emails: 'unsent@beta.com', person_name: 'Lead 2' },
+    { ...sampleLeads[0], company_number: '33333333', emails: 'founder1@gamma.com', person_name: 'Founder 1' },
+    { ...sampleLeads[0], company_number: '33333333', emails: 'founder2@gamma.com', person_name: 'Founder 2' }
+  ];
+  writeCSVAtomic(leadsPath, leads, LEADS_COLUMNS);
+
+  const sent = [
+    { ...sampleLeads[0], company_number: '11111111', sent_to: 'sent@alpha.com' },
+    { ...sampleLeads[0], company_number: '33333333', sent_to: 'founder1@gamma.com' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sent, SENT_LEADS_COLUMNS);
+
+  const res = purgeSentFromLeads(leadsPath, sentLeadsPath);
+  assert.equal(res.purgedCount, 2);
+
+  const remaining = readLeads(leadsPath);
+  assert.equal(remaining.length, 2);
+  assert.equal(remaining[0].emails, 'unsent@beta.com');
+  assert.equal(remaining[1].emails, 'founder2@gamma.com');
+
+  // Purging again when already clean returns 0
+  const repeatPurge = purgeSentFromLeads(leadsPath, sentLeadsPath);
+  assert.equal(repeatPurge.purgedCount, 0);
+});

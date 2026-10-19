@@ -13,11 +13,41 @@ function getDaysOld(creationDateStr) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-function filterCandidates(companiesFile, enrichedFile, candidatesFile) {
+function filterCandidates(
+  companiesFile,
+  enrichedFile,
+  candidatesFile,
+  optionsOrLeadsFile = {},
+  maybeSentLeadsFile = null
+) {
+  const options = typeof optionsOrLeadsFile === 'string'
+    ? { leadsFile: optionsOrLeadsFile, sentLeadsFile: maybeSentLeadsFile }
+    : (optionsOrLeadsFile || {});
+
   const allCompanies = parseCSV(companiesFile);
-  const enriched = parseCSV(enrichedFile);
+  const enriched = fs.existsSync(enrichedFile) ? parseCSV(enrichedFile) : [];
   
-  const enrichedNumbers = new Set(enriched.map(r => r.company_number));
+  const excludedNumbers = new Set(
+    enriched
+      .map(r => String(r.company_number || '').trim())
+      .filter(Boolean)
+  );
+
+  const leadsFile = options.leadsFile || null;
+  if (leadsFile && fs.existsSync(leadsFile)) {
+    const leads = parseCSV(leadsFile);
+    for (const r of leads) {
+      if (r.company_number) excludedNumbers.add(String(r.company_number).trim());
+    }
+  }
+
+  const sentLeadsFile = options.sentLeadsFile || null;
+  if (sentLeadsFile && fs.existsSync(sentLeadsFile)) {
+    const sentLeads = parseCSV(sentLeadsFile);
+    for (const r of sentLeads) {
+      if (r.company_number) excludedNumbers.add(String(r.company_number).trim());
+    }
+  }
 
   // Count addresses to detect formation agents
   const addressCounts = {};
@@ -31,7 +61,8 @@ function filterCandidates(companiesFile, enrichedFile, candidatesFile) {
   const candidates = [];
 
   for (const company of allCompanies) {
-    if (enrichedNumbers.has(company.company_number)) continue;
+    const compNum = String(company.company_number || '').trim();
+    if (!compNum || excludedNumbers.has(compNum)) continue;
 
     const daysOld = getDaysOld(company.date_of_creation);
     if (daysOld < 0 || daysOld > 60) continue;
