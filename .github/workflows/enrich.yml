@@ -27,6 +27,7 @@ jobs:
     name: Auto-Collect and Enrich Leads
     if: github.repository == 'ops551/data-pipeline-test' || github.repository == 'Nahid625/Recent-uk-Companys'
     runs-on: ubuntu-latest
+    timeout-minutes: 25
 
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}

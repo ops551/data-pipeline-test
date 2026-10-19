@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert');
-const { extractEmails, extractPhones, rankEmailsByCompanyName } = require('./extract');
+const { extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
 
 test('extractEmails ignores image extensions', (t) => {
   const text = 'Contact us at info@test.com or image@test.png, also hello@test.co.uk';
@@ -613,6 +613,27 @@ test('extractPeople rejects corporate non-person candidate names matching compan
   assert.strictEqual(acceptedHuman[0].name, 'John Smith');
   assert.strictEqual(acceptedHuman[0].role, 'Founder');
 });
+
+test('extractEmails, extractPhones, and extractPeople handle giant inputs safely', () => {
+  const emailPrefix = 'Contact info@testcompany.co.uk or 07123456789. ';
+  const peoplePrefix = '<div><p>Cass Coulston, Founder</p></div>';
+  const padding = ' '.repeat(1_600_000);
+
+  const giantTextForEmails = emailPrefix + padding;
+  const emails = extractEmails(giantTextForEmails);
+  assert.deepStrictEqual(emails, ['info@testcompany.co.uk']);
+
+  const giantTextForPhones = emailPrefix + padding;
+  const phones = extractPhones(giantTextForPhones);
+  assert.ok(phones.includes('07123456789'));
+
+  const giantHtmlForPeople = peoplePrefix + padding;
+  const people = extractPeople(giantHtmlForPeople, [], 'https://testcompany.co.uk', 'Test Company Ltd');
+  assert.strictEqual(people.length, 1);
+  assert.strictEqual(people[0].name, 'Cass Coulston');
+  assert.strictEqual(people[0].role, 'Founder');
+});
+
 
 
 

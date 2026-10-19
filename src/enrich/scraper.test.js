@@ -5,6 +5,8 @@ const {
   createScraper,
   DEFAULT_LAUNCH_ARGS,
   BLOCKED_RESOURCE_TYPES,
+  DEFAULT_USER_AGENT,
+  MAX_HTML_SIZE,
   resolveExecutablePath,
   decodeSearchUrl,
   extractLinksFromHtml
@@ -280,3 +282,79 @@ test('live search queries DuckDuckGo endpoint and returns html and links', {
     await scraper.close();
   }
 });
+
+test('MAX_HTML_SIZE is defined as 1_500_000', () => {
+  assert.equal(MAX_HTML_SIZE, 1_500_000);
+});
+
+test('fetchHtml truncates HTML exceeding MAX_HTML_SIZE and logs warning', async () => {
+  const giantContent = '<!DOCTYPE html><html><body>' + 'a'.repeat(1_600_000) + '</body></html>';
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(giantContent);
+  });
+
+  await new Promise((resolve) => server.listen(0, resolve));
+  const port = server.address().port;
+  const url = `http://127.0.0.1:${port}/giant`;
+
+  const warnings = [];
+  const originalWarn = console.warn;
+  console.warn = (...args) => warnings.push(args.join(' '));
+
+  const scraper = await createScraper();
+  try {
+    const result = await scraper.fetchHtml(url);
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.html.length, MAX_HTML_SIZE);
+    assert.ok(warnings.some(w => w.includes('exceeded 1500000 bytes') && w.includes('Truncating to prevent event-loop freeze')));
+  } finally {
+    console.warn = originalWarn;
+    await scraper.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('fetchHtml respects custom maxHtmlSize option', async () => {
+  const content = '<!DOCTYPE html><html><body>' + 'b'.repeat(1000) + '</body></html>';
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(content);
+  });
+
+  await new Promise((resolve) => server.listen(0, resolve));
+  const port = server.address().port;
+  const url = `http://127.0.0.1:${port}/custom-cap`;
+
+  const scraper = await createScraper();
+  try {
+    const result = await scraper.fetchHtml(url, { maxHtmlSize: 200 });
+    assert.equal(result.statusCode, 200);
+    assert.equal(result.html.length, 200);
+  } finally {
+    await scraper.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test('fetchHtml automatically dismisses javascript dialogs without freezing', async () => {
+  const server = http.createServer((req, res) => {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end('<!DOCTYPE html><html><body><script>alert("test alert"); confirm("test confirm");</script><h1>Dialog Page</h1></body></html>');
+  });
+
+  await new Promise((resolve) => server.listen(0, resolve));
+  const port = server.address().port;
+  const url = `http://127.0.0.1:${port}/dialog`;
+
+  const scraper = await createScraper();
+  try {
+    const result = await scraper.fetchHtml(url, { timeout: 5000 });
+    assert.equal(result.statusCode, 200);
+    assert.ok(result.html.includes('Dialog Page'));
+  } finally {
+    await scraper.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+

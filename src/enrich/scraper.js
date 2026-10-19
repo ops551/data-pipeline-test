@@ -21,6 +21,8 @@ const BLOCKED_RESOURCE_TYPES = new Set(['image', 'media', 'font', 'stylesheet'])
 const DEFAULT_USER_AGENT =
   'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36';
 
+const MAX_HTML_SIZE = 1_500_000;
+
 function resolveExecutablePath(customPath) {
   if (customPath) return customPath;
   if (process.env.PUPPETEER_EXECUTABLE_PATH) return process.env.PUPPETEER_EXECUTABLE_PATH;
@@ -138,6 +140,9 @@ async function createScraper(options = {}) {
     let page;
     try {
       page = await browser.newPage();
+      page.on('dialog', async (dialog) => {
+        await dialog.dismiss().catch(() => {});
+      });
       await page.setUserAgent(fetchOptions.userAgent || defaultUserAgent);
 
       if (fetchOptions.blockResources !== false) {
@@ -158,7 +163,13 @@ async function createScraper(options = {}) {
       const response = await page.goto(url, { timeout, waitUntil });
       const statusCode = response ? response.status() : 200;
       const finalUrl = page.url();
-      const html = await page.content();
+      let html = await page.content();
+
+      const maxHtmlSize = fetchOptions.maxHtmlSize !== undefined ? fetchOptions.maxHtmlSize : MAX_HTML_SIZE;
+      if (typeof html === 'string' && html.length > maxHtmlSize) {
+        console.warn(`Page HTML from ${url} exceeded ${maxHtmlSize} bytes (${html.length} bytes). Truncating to prevent event-loop freeze.`);
+        html = html.slice(0, maxHtmlSize);
+      }
 
       return { html, finalUrl, statusCode };
     } catch (err) {
@@ -246,6 +257,7 @@ module.exports = {
   DEFAULT_LAUNCH_ARGS,
   BLOCKED_RESOURCE_TYPES,
   DEFAULT_USER_AGENT,
+  MAX_HTML_SIZE,
   resolveExecutablePath,
   decodeSearchUrl,
   extractLinksFromHtml
