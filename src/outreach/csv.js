@@ -6,12 +6,25 @@ const { isValidEmailAddress } = require('../emailAddress');
 
 const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'leads.csv');
 const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
+const DEFAULT_FOLLOWUPS_PATH = path.join(process.cwd(), 'follow_ups.csv');
 
 const SENT_LEADS_COLUMNS = [
   ...LEADS_COLUMNS,
   'sent_at',
-  'sent_to'
+  'sent_to',
+  'message_id'
 ];
+
+const FOLLOWUPS_COLUMNS = Object.freeze([
+  'company_number',
+  'sent_to',
+  'followup_number',
+  'sent_at',
+  'message_id',
+  'in_reply_to',
+  'sender_account',
+  'status'
+]);
 
 function formatField(value) {
   const text = String(value ?? '').replace(/\r?\n/g, ' ');
@@ -466,11 +479,83 @@ function purgeSentFromLeads(
   };
 }
 
+function readFollowUps(filePath = DEFAULT_FOLLOWUPS_PATH) {
+  if (!fs.existsSync(filePath)) return [];
+  const rows = parseCSV(filePath);
+  return rows.map(r => ({
+    company_number: String(r.company_number || '').trim(),
+    sent_to: String(r.sent_to || '').trim(),
+    followup_number: Number(r.followup_number || 1),
+    sent_at: r.sent_at || '',
+    message_id: r.message_id || '',
+    in_reply_to: r.in_reply_to || '',
+    sender_account: r.sender_account || '',
+    status: r.status || 'sent'
+  }));
+}
+
+function appendFollowUps(filePath = DEFAULT_FOLLOWUPS_PATH, followups = []) {
+  if (!Array.isArray(followups) || followups.length === 0) return 0;
+
+  const existing = readFollowUps(filePath);
+  const existingKeys = new Set(
+    existing.map(f => `${f.company_number}:${f.sent_to.toLowerCase()}:${f.followup_number}`)
+  );
+
+  const toAppend = [];
+  for (const f of followups) {
+    if (!f || !f.company_number || !f.sent_to) continue;
+    const compNum = String(f.company_number).trim();
+    const sentTo = String(f.sent_to).trim();
+    const fupNum = Number(f.followup_number || 1);
+    const key = `${compNum}:${sentTo.toLowerCase()}:${fupNum}`;
+    if (!existingKeys.has(key)) {
+      existingKeys.add(key);
+      toAppend.push({
+        company_number: compNum,
+        sent_to: sentTo,
+        followup_number: String(fupNum),
+        sent_at: f.sent_at || new Date().toISOString(),
+        message_id: f.message_id || '',
+        in_reply_to: f.in_reply_to || '',
+        sender_account: f.sender_account || 'account_2',
+        status: f.status || 'sent'
+      });
+    }
+  }
+
+  if (toAppend.length === 0) return 0;
+
+  const dir = path.dirname(filePath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+
+  const fileExists = fs.existsSync(filePath) && fs.statSync(filePath).size > 0;
+  const lines = [];
+  if (!fileExists) {
+    lines.push(FOLLOWUPS_COLUMNS.join(','));
+  }
+  for (const item of toAppend) {
+    const row = FOLLOWUPS_COLUMNS.map(col => formatField(item[col] || ''));
+    lines.push(row.join(','));
+  }
+
+  fs.appendFileSync(filePath, lines.join('\n') + '\n', 'utf8');
+  return toAppend.length;
+}
+
+function appendFollowUp(filePath, followup) {
+  return appendFollowUps(filePath, [followup]);
+}
+
 module.exports = {
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
+  DEFAULT_FOLLOWUPS_PATH,
   LEADS_COLUMNS,
   SENT_LEADS_COLUMNS,
+  FOLLOWUPS_COLUMNS,
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,
@@ -478,6 +563,9 @@ module.exports = {
   readSentCompanyEmails,
   appendSentLead,
   appendSentLeads,
+  readFollowUps,
+  appendFollowUp,
+  appendFollowUps,
   removeLead,
   removeLeads,
   moveLeadToSent,

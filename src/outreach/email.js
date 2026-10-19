@@ -121,6 +121,69 @@ function loadSmtpConfig(env = process.env, overrides = {}) {
   };
 }
 
+function loadFollowUpSmtpConfig(env = process.env, overrides = {}) {
+  const isMock = Boolean(
+    overrides.mock ||
+    overrides.jsonTransport ||
+    (env && (env.SMTP_MOCK === 'true' || env.SMTP_MOCK === '1' || env.FOLLOWUP_SMTP_MOCK === 'true'))
+  );
+
+  const rawPass = overrides.pass !== undefined
+    ? overrides.pass
+    : (env ? (env.FOLLOWUP_RESEND_API_KEY || env.FOLLOWUP_SMTP_PASS || env.RESEND_API_KEY_FOLLOWUP) : undefined);
+  const pass = (rawPass || '').trim();
+
+  const rawFrom = overrides.from !== undefined
+    ? overrides.from
+    : (env ? (env.FOLLOWUP_EMAIL_FROM || env.FOLLOWUP_FROM) : undefined);
+  const from = (rawFrom || '').trim();
+
+  // If Account 2 credentials are not configured and not mock:
+  if (!isMock && (!pass || !from)) {
+    return {
+      enabled: false,
+      reason: !pass ? 'missing_followup_api_key' : 'missing_followup_email_from'
+    };
+  }
+
+  const rawHost = overrides.host !== undefined
+    ? overrides.host
+    : (env ? (env.FOLLOWUP_SMTP_HOST || env.SMTP_HOST || 'smtp.resend.com') : 'smtp.resend.com');
+  const host = (rawHost || '').trim();
+
+  const rawUser = overrides.user !== undefined
+    ? overrides.user
+    : (env ? (env.FOLLOWUP_SMTP_USER || env.SMTP_USER || 'resend') : 'resend');
+  const user = (rawUser || '').trim();
+
+  const rawPort = overrides.port !== undefined
+    ? overrides.port
+    : (env ? (env.FOLLOWUP_SMTP_PORT || env.SMTP_PORT) : undefined);
+  const port = parsePort(rawPort, DEFAULT_SMTP_PORT);
+
+  const rawReplyTo = overrides.replyTo !== undefined
+    ? overrides.replyTo
+    : (env ? (env.SMTP_REPLY_TO || env.FOLLOWUP_REPLY_TO || env.EMAIL_FROM) : undefined);
+  const replyTo = (rawReplyTo || from || user).trim();
+
+  const config = loadSmtpConfig(env, {
+    host,
+    port,
+    user,
+    pass,
+    from,
+    replyTo,
+    mock: isMock,
+    jsonTransport: isMock,
+    ...overrides
+  });
+
+  return {
+    enabled: true,
+    config
+  };
+}
+
 const exhaustedSmtpAccounts = new Set();
 
 function resetExhaustedSmtpAccounts() {
@@ -762,6 +825,7 @@ module.exports = {
   DEFAULT_MAX_RETRIES,
   OFFICIAL_COORDINATES,
   loadSmtpConfig,
+  loadFollowUpSmtpConfig,
   parseSmtpPool,
   isSmtpQuotaExceeded,
   exhaustedSmtpAccounts,
