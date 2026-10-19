@@ -387,6 +387,85 @@ function moveLeadToSent(companyNumber, options = {}) {
   };
 }
 
+function purgeSentFromLeads(
+  leadsPath = DEFAULT_LEADS_PATH,
+  sentLeadsPath = DEFAULT_SENT_LEADS_PATH,
+  options = {}
+) {
+  if (!fs.existsSync(leadsPath)) {
+    return { success: true, purgedCount: 0, modifiedCount: 0, remainingCount: 0 };
+  }
+  if (!fs.existsSync(sentLeadsPath)) {
+    const existing = readLeads(leadsPath);
+    return { success: true, purgedCount: 0, modifiedCount: 0, remainingCount: existing.length };
+  }
+
+  const leads = readLeads(leadsPath);
+  if (leads.length === 0) {
+    return { success: true, purgedCount: 0, modifiedCount: 0, remainingCount: 0 };
+  }
+
+  const sentCompanyNumbers = readSentCompanyNumbers(sentLeadsPath);
+  const sentCompanyEmails = readSentCompanyEmails(sentLeadsPath);
+  const sentRecipients = readSentRecipients(sentLeadsPath);
+
+  const remainingLeads = [];
+  let purgedCount = 0;
+  let modifiedCount = 0;
+
+  for (const lead of leads) {
+    const compNum = String(lead.company_number || '').trim();
+    const hasLegacy = sentCompanyEmails.has(`${compNum}:__legacy_no_email__`);
+
+    if (hasLegacy) {
+      purgedCount++;
+      continue;
+    }
+
+    const emails = String(lead.emails || '')
+      .split(/[;,]/)
+      .map(e => e.trim())
+      .filter(Boolean);
+
+    if (emails.length === 0) {
+      if (sentCompanyNumbers.has(compNum)) {
+        purgedCount++;
+      } else {
+        remainingLeads.push(lead);
+      }
+      continue;
+    }
+
+    const availableEmails = emails.filter(email => {
+      const lower = email.toLowerCase();
+      return !sentCompanyEmails.has(`${compNum}:${lower}`) && !sentRecipients.has(lower);
+    });
+
+    if (availableEmails.length === 0) {
+      purgedCount++;
+    } else if (availableEmails.length < emails.length) {
+      modifiedCount++;
+      remainingLeads.push({
+        ...lead,
+        emails: availableEmails.join('; ')
+      });
+    } else {
+      remainingLeads.push(lead);
+    }
+  }
+
+  if (!options.dryRun && (purgedCount > 0 || modifiedCount > 0)) {
+    writeCSVAtomic(leadsPath, remainingLeads, LEADS_COLUMNS);
+  }
+
+  return {
+    success: true,
+    purgedCount,
+    modifiedCount,
+    remainingCount: remainingLeads.length
+  };
+}
+
 module.exports = {
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
@@ -396,11 +475,13 @@ module.exports = {
   getPendingLeads,
   readSentCompanyNumbers,
   readSentRecipients,
+  readSentCompanyEmails,
   appendSentLead,
   appendSentLeads,
   removeLead,
   removeLeads,
   moveLeadToSent,
   moveLeadsToSent,
+  purgeSentFromLeads,
   writeCSVAtomic
 };

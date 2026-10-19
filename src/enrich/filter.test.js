@@ -68,3 +68,44 @@ test('filterCandidates', (t) => {
   fs.unlinkSync(tmpEnriched);
   fs.unlinkSync(tmpCandidates);
 });
+
+test('filterCandidates excludes companies present in leadsFile and sentLeadsFile', (t) => {
+  const tmpCompanies = path.join(__dirname, 'tmp_comp_2.csv');
+  const tmpEnriched = path.join(__dirname, 'tmp_enr_2.csv');
+  const tmpCandidates = path.join(__dirname, 'tmp_cand_2.csv');
+  const tmpLeads = path.join(__dirname, 'tmp_leads_2.csv');
+  const tmpSentLeads = path.join(__dirname, 'tmp_sent_2.csv');
+
+  const now = new Date();
+  const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
+10,IN LEADS,${past30},45200,Add10
+20,IN SENT,${past30},45200,Add20
+30,FRESH LEAD,${past30},45200,Add30
+`;
+
+  fs.writeFileSync(tmpCompanies, companiesContent);
+  fs.writeFileSync(tmpEnriched, 'company_number\n');
+  fs.writeFileSync(tmpLeads, 'company_number,company_name\n10,IN LEADS\n');
+  fs.writeFileSync(tmpSentLeads, 'company_number,sent_to\n20,test@sent.com\n');
+
+  try {
+    const count = filterCandidates(tmpCompanies, tmpEnriched, tmpCandidates, {
+      leadsFile: tmpLeads,
+      sentLeadsFile: tmpSentLeads
+    });
+
+    assert.strictEqual(count, 1, 'Only 1 fresh candidate should be output');
+    const candidatesData = fs.readFileSync(tmpCandidates, 'utf8');
+    assert.ok(candidatesData.includes('30,FRESH LEAD'));
+    assert.ok(!candidatesData.includes('10,IN LEADS'));
+    assert.ok(!candidatesData.includes('20,IN SENT'));
+  } finally {
+    if (fs.existsSync(tmpCompanies)) fs.unlinkSync(tmpCompanies);
+    if (fs.existsSync(tmpEnriched)) fs.unlinkSync(tmpEnriched);
+    if (fs.existsSync(tmpCandidates)) fs.unlinkSync(tmpCandidates);
+    if (fs.existsSync(tmpLeads)) fs.unlinkSync(tmpLeads);
+    if (fs.existsSync(tmpSentLeads)) fs.unlinkSync(tmpSentLeads);
+  }
+});

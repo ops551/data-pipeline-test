@@ -686,7 +686,7 @@ test('runOutreachPipeline enforces mandatory personal signature even if AI outpu
     );
 
     assert.equal(result.sent, 1);
-    assert.match(sentBody, /WhatsApp: \+8801615753465/i);
+    assert.doesNotMatch(sentBody, /WhatsApp: \+8801615753465/i);
     assert.match(sentBody, /https:\/\/nahid-yf63\.onrender\.com\//i);
     assert.match(sentBody, /https:\/\/github\.com\/Nahid625/i);
     assert.ok(sentBody.includes('Best regards'), 'Body must include sign-off');
