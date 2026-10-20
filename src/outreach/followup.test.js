@@ -241,13 +241,15 @@ test('getEligibleFollowUps prioritizes freshest leads first and enforces daily l
       company_number: '30000001',
       company_name: 'Five Days Old Ltd',
       sent_to: 'five@test.com',
-      sent_at: past5Days
+      sent_at: past5Days,
+      message_id: '<msg_five_30001@test.com>'
     },
     {
       company_number: '30000002',
       company_name: 'Three Days Old Ltd',
       sent_to: 'three@test.com',
-      sent_at: past3Days
+      sent_at: past3Days,
+      message_id: '<msg_three_30002@test.com>'
     }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
@@ -271,14 +273,16 @@ test('getEligibleFollowUps isolates multi-person decision makers under the same 
       company_name: 'Co-Founders Studio Ltd',
       person_name: 'Founder One',
       sent_to: 'founder1@studio.co.uk',
-      sent_at: past4Days
+      sent_at: past4Days,
+      message_id: '<msg_f1_40001@studio.co.uk>'
     },
     {
       company_number: '40000001',
       company_name: 'Co-Founders Studio Ltd',
       person_name: 'Founder Two',
       sent_to: 'founder2@studio.co.uk',
-      sent_at: past4Days
+      sent_at: past4Days,
+      message_id: '<msg_f2_40001@studio.co.uk>'
     }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
@@ -591,13 +595,15 @@ test('runFollowUpPipeline isolates errors when an individual email fails', async
       company_number: '80000001',
       company_name: 'Failing Corp Ltd',
       sent_to: 'fail@fail.co.uk',
-      sent_at: past3Days
+      sent_at: past3Days,
+      message_id: '<msg_fail_80001@fail.co.uk>'
     },
     {
       company_number: '80000002',
       company_name: 'Succeeding Corp Ltd',
       sent_to: 'success@pass.co.uk',
-      sent_at: past3Days
+      sent_at: past3Days,
+      message_id: '<msg_success_80002@pass.co.uk>'
     }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
@@ -663,8 +669,8 @@ test('runFollowUpPipeline automatically rotates to next account in pool on quota
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '11000001', company_name: 'Lead One', sent_to: 'lead1@test.co.uk', sent_at: past3Days },
-    { company_number: '11000002', company_name: 'Lead Two', sent_to: 'lead2@test.co.uk', sent_at: past3Days }
+    { company_number: '11000001', company_name: 'Lead One', sent_to: 'lead1@test.co.uk', sent_at: past3Days, message_id: '<msg_l1_11000001@test.co.uk>' },
+    { company_number: '11000002', company_name: 'Lead Two', sent_to: 'lead2@test.co.uk', sent_at: past3Days, message_id: '<msg_l2_11000002@test.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -718,9 +724,9 @@ test('runFollowUpPipeline cleanly breaks when all accounts in pool hit quota', a
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '12000001', company_name: 'Lead One', sent_to: 'lead1@test.co.uk', sent_at: past3Days },
-    { company_number: '12000002', company_name: 'Lead Two', sent_to: 'lead2@test.co.uk', sent_at: past3Days },
-    { company_number: '12000003', company_name: 'Lead Three', sent_to: 'lead3@test.co.uk', sent_at: past3Days }
+    { company_number: '12000001', company_name: 'Lead One', sent_to: 'lead1@test.co.uk', sent_at: past3Days, message_id: '<msg_12001@test.co.uk>' },
+    { company_number: '12000002', company_name: 'Lead Two', sent_to: 'lead2@test.co.uk', sent_at: past3Days, message_id: '<msg_12002@test.co.uk>' },
+    { company_number: '12000003', company_name: 'Lead Three', sent_to: 'lead3@test.co.uk', sent_at: past3Days, message_id: '<msg_12003@test.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
