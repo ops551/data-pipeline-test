@@ -131,56 +131,84 @@ function loadFollowUpSmtpConfig(env = process.env, overrides = {}) {
   const rawPass = overrides.pass !== undefined
     ? overrides.pass
     : (env ? (env.FOLLOWUP_RESEND_API_KEY || env.FOLLOWUP_SMTP_PASS || env.RESEND_API_KEY_FOLLOWUP) : undefined);
-  const pass = (rawPass || '').trim();
 
   const rawFrom = overrides.from !== undefined
     ? overrides.from
     : (env ? (env.FOLLOWUP_EMAIL_FROM || env.FOLLOWUP_FROM) : undefined);
-  const from = (rawFrom || '').trim();
+
+  const passList = splitCsv(rawPass);
+  const fromList = splitCsv(rawFrom);
 
   // If Account 2 credentials are not configured and not mock:
-  if (!isMock && (!pass || !from)) {
+  if (!isMock && (passList.length === 0 || fromList.length === 0)) {
     return {
       enabled: false,
-      reason: !pass ? 'missing_followup_api_key' : 'missing_followup_email_from'
+      reason: passList.length === 0 ? 'missing_followup_api_key' : 'missing_followup_email_from',
+      pool: []
     };
   }
 
-  const rawHost = overrides.host !== undefined
-    ? overrides.host
-    : (env ? (env.FOLLOWUP_SMTP_HOST || env.SMTP_HOST || 'smtp.resend.com') : 'smtp.resend.com');
-  const host = (rawHost || '').trim();
+  const poolCount = Math.max(passList.length, fromList.length, isMock ? 1 : 0);
+  const pool = [];
 
-  const rawUser = overrides.user !== undefined
-    ? overrides.user
-    : (env ? (env.FOLLOWUP_SMTP_USER || env.SMTP_USER || 'resend') : 'resend');
-  const user = (rawUser || '').trim();
+  for (let i = 0; i < poolCount; i++) {
+    const pass = (passList[i] || passList[0] || '').trim();
+    const from = (fromList[i] || fromList[0] || '').trim();
 
-  const rawPort = overrides.port !== undefined
-    ? overrides.port
-    : (env ? (env.FOLLOWUP_SMTP_PORT || env.SMTP_PORT) : undefined);
-  const port = parsePort(rawPort, DEFAULT_SMTP_PORT);
+    const isResend = Boolean(
+      (env && (env.FOLLOWUP_RESEND_API_KEY || env.RESEND_API_KEY_FOLLOWUP)) ||
+      (pass && pass.startsWith('re_'))
+    );
 
-  const rawReplyTo = overrides.replyTo !== undefined
-    ? overrides.replyTo
-    : (env ? (env.SMTP_REPLY_TO || env.FOLLOWUP_REPLY_TO || env.EMAIL_FROM) : undefined);
-  const replyTo = (rawReplyTo || from || user).trim();
+    const rawHost = overrides.host !== undefined
+      ? overrides.host
+      : (env && env.FOLLOWUP_SMTP_HOST ? env.FOLLOWUP_SMTP_HOST : (isResend ? 'smtp.resend.com' : (env && env.SMTP_HOST ? env.SMTP_HOST : 'smtp.resend.com')));
+    const hostList = splitCsv(rawHost);
+    const host = (hostList[i] || hostList[0] || 'smtp.resend.com').trim();
 
-  const config = loadSmtpConfig(env, {
-    host,
-    port,
-    user,
-    pass,
-    from,
-    replyTo,
-    mock: isMock,
-    jsonTransport: isMock,
-    ...overrides
-  });
+    const rawUser = overrides.user !== undefined
+      ? overrides.user
+      : (env && env.FOLLOWUP_SMTP_USER ? env.FOLLOWUP_SMTP_USER : (isResend ? 'resend' : (env && env.SMTP_USER ? env.SMTP_USER : 'resend')));
+    const userList = splitCsv(rawUser);
+    const user = (userList[i] || userList[0] || 'resend').trim();
+
+    const rawPort = overrides.port !== undefined
+      ? overrides.port
+      : (env && env.FOLLOWUP_SMTP_PORT ? env.FOLLOWUP_SMTP_PORT : (isResend ? DEFAULT_SMTP_PORT : (env ? env.SMTP_PORT : DEFAULT_SMTP_PORT)));
+    const portList = splitCsv(rawPort);
+    const port = parsePort(portList[i] || portList[0], DEFAULT_SMTP_PORT);
+
+    const rawSecure = overrides.secure !== undefined
+      ? overrides.secure
+      : (port === 465);
+
+    const rawReplyTo = overrides.replyTo !== undefined
+      ? overrides.replyTo
+      : (env ? (env.SMTP_REPLY_TO || env.FOLLOWUP_REPLY_TO || env.EMAIL_FROM) : undefined);
+    const replyToList = splitCsv(rawReplyTo);
+    const replyTo = (replyToList[i] || replyToList[0] || from || user).trim();
+
+    const config = loadSmtpConfig(env, {
+      host,
+      port,
+      user,
+      pass,
+      from,
+      replyTo,
+      secure: rawSecure,
+      mock: isMock,
+      jsonTransport: isMock,
+      ...(poolCount > 1 ? { _fromKey: `${host}:${user}:${pass}:${from}` } : {}),
+      ...overrides
+    });
+
+    pool.push(config);
+  }
 
   return {
     enabled: true,
-    config
+    config: pool[0],
+    pool
   };
 }
 
@@ -333,6 +361,8 @@ function parseSmtpPool(env = process.env, overrides = {}) {
                     (typeof rawUser === 'string' && rawUser.includes(',')) ||
                     splitFrom.length > 1;
 
+  const pool = [];
+
   if (hasCommas) {
     const passes = splitCsv(rawPass);
     const hosts = splitCsv(rawHost);
@@ -344,7 +374,6 @@ function parseSmtpPool(env = process.env, overrides = {}) {
 
     const count = Math.max(passes.length, hosts.length, users.length, froms.length);
     if (count > 0) {
-      const pool = [];
       const cleanOverrides = { ...mergedOverrides };
       delete cleanOverrides.smtp;
 
@@ -372,12 +401,42 @@ function parseSmtpPool(env = process.env, overrides = {}) {
         }
         pool.push(loadSmtpConfig(env, itemOverride));
       }
-      return pool;
+    }
+  } else {
+    // Mode d: Fallback to single account
+    pool.push(loadSmtpConfig(env, mergedOverrides));
+  }
+
+  // Follow-up Account Spillover:
+  // If FOLLOWUP_RESEND_API_KEY (Account 2, 3...) is configured, automatically append distinct accounts
+  // into the cold outreach pool as failover accounts. When Account 1 hits its daily 100 quota,
+  // outreach seamlessly fails over to Account 2 to send the remaining quota (e.g. 44 emails for 144/day).
+  const allowSpillover = mergedOverrides.spillover !== false &&
+                         mergedOverrides.includeFollowUpSpillover !== false &&
+                         !(mergedOverrides.pass && !mergedOverrides.pass.includes(',') && !mergedOverrides.enableSpillover);
+
+  if (allowSpillover) {
+    const followup = loadFollowUpSmtpConfig(env, {
+      mock: mergedOverrides.mock || (env && (env.SMTP_MOCK === 'true' || env.SMTP_MOCK === '1')),
+      jsonTransport: mergedOverrides.jsonTransport || (env && (env.SMTP_MOCK === 'true' || env.SMTP_MOCK === '1'))
+    });
+
+    if (followup && followup.enabled && Array.isArray(followup.pool)) {
+      for (const fConfig of followup.pool) {
+        const isDuplicate = pool.some(p => {
+          const samePass = p.pass && fConfig.pass && p.pass === fConfig.pass;
+          const sameKey = getAccountKey(p) === getAccountKey(fConfig);
+          return samePass || sameKey;
+        });
+
+        if (!isDuplicate) {
+          pool.push(fConfig);
+        }
+      }
     }
   }
 
-  // Mode d: Fallback to single account
-  return [loadSmtpConfig(env, mergedOverrides)];
+  return pool;
 }
 
 function createTransporter(options = {}, deps = {}) {

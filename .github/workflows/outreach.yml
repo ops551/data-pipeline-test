@@ -52,6 +52,8 @@ jobs:
       SMTP_PASS: ${{ secrets.SMTP_PASS }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
       SMTP_REPLY_TO: ${{ secrets.SMTP_REPLY_TO }}
+      FOLLOWUP_RESEND_API_KEY: ${{ secrets.FOLLOWUP_RESEND_API_KEY }}
+      FOLLOWUP_EMAIL_FROM: ${{ secrets.FOLLOWUP_EMAIL_FROM }}
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
       OUTREACH_LIMIT: "1"
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}

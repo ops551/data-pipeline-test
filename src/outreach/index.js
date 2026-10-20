@@ -18,7 +18,8 @@ const {
 const {
   sendEmail: defaultSendEmail,
   verifyConnection: defaultVerifyConnection,
-  normalizeRecipient
+  normalizeRecipient,
+  isSmtpQuotaExceeded: defaultIsSmtpQuotaExceeded
 } = require('./email');
 const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAddress');
 
@@ -153,6 +154,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   const sleep = deps.sleepFn || ((ms) => new Promise(resolve => setTimeout(resolve, ms)));
   const parseCsvFn = deps.parseCSV || defaultParseCSV;
   const isValidEmail = deps.isValidEmailAddress || defaultIsValidEmailAddress;
+  const isSmtpQuotaExceededFn = deps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
 
   // Pre-flight connection check via verifyConnection (skip if dry-run or mock)
   if (!dryRun && !mock && !options.skipVerify) {
@@ -279,6 +281,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       continue;
     }
 
+    let isSending = false;
     try {
       // 1. Enrich company data
       const companyInfo = companiesMap.get(String(companyNum).trim()) || {};
@@ -341,6 +344,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
           ...(options.transporter ? { transporter: options.transporter } : {}),
           ...(options.emailOptions || {})
         };
+        isSending = true;
         const sendResult = await send(mailOptions, emailOptions, deps);
         logger.log(`Email sent successfully to ${recipient} (messageId: ${sendResult && sendResult.messageId ? sendResult.messageId : 'ok'})`);
         if (sendResult && sendResult.previewUrl) {
@@ -422,6 +426,19 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         cause: leadErr
       });
       logger.error(`Failed to process lead ${companyName} (${companyNum}):`, leadErr.message);
+
+      // Quota Exhaustion Break Guard:
+      // If all SMTP accounts in the pool have exhausted their daily quota during email sending,
+      // cleanly break the loop immediately to avoid hammering the provider with dead requests.
+      if (
+        isSending && (
+          isSmtpQuotaExceededFn(leadErr) ||
+          (leadErr.message && /all smtp accounts in pool are exhausted/i.test(leadErr.message))
+        )
+      ) {
+        logger.error(`[Outreach] All SMTP accounts in pool have exhausted their daily quota. Cleanly breaking loop to prevent spam.`);
+        break;
+      }
     }
 
     // Inter-email delay

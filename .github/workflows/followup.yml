@@ -1,0 +1,107 @@
+name: Follow-up Outreach Automation
+
+"on":
+  schedule:
+    # Runs Monday to Friday at 10:00 AM UTC (UK business hours)
+    - cron: "0 10 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: "Number of eligible follow-up emails to send"
+        required: false
+        type: choice
+        options:
+          - "25"
+          - "50"
+          - "100"
+          - "150"
+        default: "100"
+      dry_run:
+        description: "Run in dry-run mode (no emails sent, no CSV changes)"
+        required: false
+        type: boolean
+        default: false
+      test_email:
+        description: "Optional: redirect this manual run to a test email address; leave blank to contact the company"
+        required: false
+        type: string
+        default: ""
+  repository_dispatch:
+    types: [followup-run]
+
+concurrency:
+  group: outreach-pipeline
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  followup:
+    name: Run Follow-up Outreach
+    if: github.repository == 'ops551/data-pipeline-test'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    env:
+      FOLLOWUP_RESEND_API_KEY: ${{ secrets.FOLLOWUP_RESEND_API_KEY }}
+      FOLLOWUP_EMAIL_FROM: ${{ secrets.FOLLOWUP_EMAIL_FROM }}
+      SMTP_REPLY_TO: ${{ secrets.SMTP_REPLY_TO }}
+      SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate Follow-up Credentials
+        if: github.event_name == 'workflow_dispatch' && inputs.dry_run != true
+        env:
+          FOLLOWUP_RESEND_API_KEY: ${{ secrets.FOLLOWUP_RESEND_API_KEY }}
+          FOLLOWUP_EMAIL_FROM: ${{ secrets.FOLLOWUP_EMAIL_FROM }}
+        run: |
+          if [ -z "$FOLLOWUP_RESEND_API_KEY" ] || [ -z "$FOLLOWUP_EMAIL_FROM" ]; then
+            echo "::error::Set FOLLOWUP_RESEND_API_KEY and FOLLOWUP_EMAIL_FROM repository secrets before running follow-ups."
+            exit 1
+          fi
+
+      - name: Run Follow-up Engine
+        run: |
+          LIMIT_ARG="--limit=${{ inputs.limit || 100 }}"
+          DRY_RUN_ARG="${{ inputs.dry_run == true && '--dry-run' || '' }}"
+          TEST_EMAIL_ARG="${{ inputs.test_email != '' && format('--test-email={0}', inputs.test_email) || '' }}"
+
+          npm run followup -- $LIMIT_ARG $DRY_RUN_ARG $TEST_EMAIL_ARG
+
+      - name: Check CSV changes
+        id: check_changes
+        run: |
+          if [ -n "$(git status --porcelain follow_ups.csv)" ]; then
+            echo "has_changes=true" >> "$GITHUB_OUTPUT"
+            echo "Changes detected in follow_ups.csv."
+          else
+            echo "has_changes=false" >> "$GITHUB_OUTPUT"
+            echo "No changes detected in follow_ups.csv."
+          fi
+
+      - name: Commit and Push Directly
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add follow_ups.csv
+          git commit -m "chore(followup): append sent follow-up touches [run ${{ github.run_id }}]"
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break || sleep 3
+          done
