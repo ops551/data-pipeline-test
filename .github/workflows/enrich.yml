@@ -33,7 +33,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
       ENRICH_BATCH_SIZE: ${{ inputs.batch_size || '50' }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
-      DAYS_BACK: "30"
+      DAYS_BACK: "10"
       QUICK_EMAIL_VERIFICATION_API_KEY: ${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}
       SNIFFMAIL_API_KEY: ${{ secrets.SNIFFMAIL_API_KEY }}
       REON_API_KEY: ${{ secrets.REON_API_KEY }}

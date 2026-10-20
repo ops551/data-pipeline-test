@@ -5,11 +5,11 @@ const { loadConfig } = require('./config');
 const today = new Date('2026-09-19T10:00:00Z');
 const base = { COMPANIES_HOUSE_API_KEY: 'abc123' };
 
-test('defaults: last 7 days and 1000 results', () => {
+test('defaults: last 10 days and 1000 results', () => {
   const cfg = loadConfig(base, today);
   assert.deepEqual(cfg, {
     apiKey: 'abc123',
-    incorporatedFrom: '2026-08-20',
+    incorporatedFrom: '2026-09-09',
     incorporatedTo: '2026-09-19',
     maxResults: 1000,
   });
