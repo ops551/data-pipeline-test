@@ -92,6 +92,11 @@ test('Unit 5.18: GitHub Actions Enrichment Workflow', async (t) => {
     assert.strictEqual(env.ENRICH_BATCH_SIZE, "${{ inputs.batch_size || '50' }}");
     assert.strictEqual(env.COMPANIES_HOUSE_API_KEY, '${{ secrets.COMPANIES_HOUSE_API_KEY }}');
     assert.strictEqual(env.DAYS_BACK, '10');
+    assert.strictEqual(env.SMTP_HOST, '${{ secrets.SMTP_HOST }}');
+    assert.strictEqual(env.SMTP_USER, '${{ secrets.SMTP_USER }}');
+    assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
+    assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}');
+    assert.strictEqual(env.SMTP_REPLY_TO, '${{ secrets.SMTP_REPLY_TO }}');
     assert.strictEqual(env.QUICK_EMAIL_VERIFICATION_API_KEY, '${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}');
     assert.strictEqual(env.SNIFFMAIL_API_KEY, '${{ secrets.SNIFFMAIL_API_KEY }}');
     assert.strictEqual(env.REON_API_KEY, '${{ secrets.REON_API_KEY }}');

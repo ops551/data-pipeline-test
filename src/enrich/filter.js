@@ -89,6 +89,13 @@ function filterCandidates(
     'agent_address'
   ];
 
+  // Prioritize freshest candidates first (e.g. 5-10 day sweet spot)
+  candidates.sort((a, b) => {
+    const dateA = a.date_of_creation || '';
+    const dateB = b.date_of_creation || '';
+    return dateB.localeCompare(dateA);
+  });
+
   writeCSV(candidatesFile, candidates, columns);
   return candidates.length;
 }
