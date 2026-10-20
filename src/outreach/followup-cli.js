@@ -5,7 +5,7 @@ const { runFollowUpPipeline } = require('./followup');
 function parseArgs(args) {
   const options = {
     dryRun: false,
-    limit: 100,
+    limit: parseInt(process.env.FOLLOWUP_LIMIT, 10) || 1,
     testEmail: undefined
   };
 

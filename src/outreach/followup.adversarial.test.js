@@ -132,11 +132,11 @@ test('Adversarial: runFollowUpPipeline calls sleepFn exactly N-1 times with corr
 // -----------------------------------------------------------------------------
 
 test('Adversarial: parseArgs handles combinations of flags, syntax variants and defaults', () => {
-  assert.deepEqual(parseArgs([]), { dryRun: false, limit: 100, testEmail: undefined });
-  assert.deepEqual(parseArgs(['--dry-run']), { dryRun: true, limit: 100, testEmail: undefined });
+  assert.deepEqual(parseArgs([]), { dryRun: false, limit: 1, testEmail: undefined });
+  assert.deepEqual(parseArgs(['--dry-run']), { dryRun: true, limit: 1, testEmail: undefined });
   assert.deepEqual(parseArgs(['--limit', '50']), { dryRun: false, limit: 50, testEmail: undefined });
   assert.deepEqual(parseArgs(['--limit=25']), { dryRun: false, limit: 25, testEmail: undefined });
-  assert.deepEqual(parseArgs(['--limit', 'invalid_number']), { dryRun: false, limit: 100, testEmail: undefined });
+  assert.deepEqual(parseArgs(['--limit', 'invalid_number']), { dryRun: false, limit: 1, testEmail: undefined });
   assert.deepEqual(parseArgs(['--test-email', 'foo@bar.com', '--dry-run', '--limit=10']), {
     dryRun: true,
     limit: 10,
@@ -144,7 +144,7 @@ test('Adversarial: parseArgs handles combinations of flags, syntax variants and 
   });
   assert.deepEqual(parseArgs(['--test-email=bar@baz.com']), {
     dryRun: false,
-    limit: 100,
+    limit: 1,
     testEmail: 'bar@baz.com'
   });
 });

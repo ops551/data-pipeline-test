@@ -52,7 +52,7 @@ test('Unit 5.35: GitHub Actions Follow-up Workflow (.github/workflows/followup.y
     assert.ok(triggers.workflow_dispatch, 'workflow_dispatch must be configured');
     const inputs = triggers.workflow_dispatch.inputs || {};
     assert.ok(inputs.limit, 'must declare limit input');
-    assert.strictEqual(inputs.limit.default, '100');
+    assert.strictEqual(inputs.limit.default, '1');
     assert.ok(inputs.dry_run, 'must declare dry_run input');
     assert.strictEqual(inputs.dry_run.type, 'boolean');
     assert.ok(inputs.test_email, 'must declare test_email input');

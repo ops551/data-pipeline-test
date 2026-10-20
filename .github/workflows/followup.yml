@@ -11,11 +11,13 @@ name: Follow-up Outreach Automation
         required: false
         type: choice
         options:
+          - "1"
+          - "5"
+          - "10"
           - "25"
           - "50"
           - "100"
-          - "150"
-        default: "100"
+        default: "1"
       dry_run:
         description: "Run in dry-run mode (no emails sent, no CSV changes)"
         required: false
@@ -78,7 +80,7 @@ jobs:
 
       - name: Run Follow-up Engine
         run: |
-          LIMIT_ARG="--limit=${{ inputs.limit || 100 }}"
+          LIMIT_ARG="--limit=${{ inputs.limit || 1 }}"
           DRY_RUN_ARG="${{ inputs.dry_run == true && '--dry-run' || '' }}"
           TEST_EMAIL_ARG="${{ inputs.test_email != '' && format('--test-email={0}', inputs.test_email) || '' }}"
 
