@@ -7,7 +7,7 @@ const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
 const { searchCompany, searchCompanyLeadership, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
-const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail } = require('./pattern');
+const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
 
@@ -300,7 +300,11 @@ async function runEnrichment() {
         catchAllUnknown = catchAllCheck.unknown;
       }
 
+      let hadExhaustedEmail = false;
       let personLeads = [];
+      if (peopleList.length > 0) {
+        console.log(`  Evaluating potential decision-maker emails for ${peopleList.length} officer(s)...`);
+      }
       for (const person of peopleList) {
          const patternDetected = patternInfo.pattern || '';
          const resolved = await resolvePersonEmail({
@@ -332,6 +336,9 @@ async function runEnrichment() {
             });
          } else if (resolved && resolved.email) {
             console.log(`  Skipping person email ${resolved.email} with untrusted verification status "${resolved.verificationStatus}".`);
+            if (resolved.verificationStatus === 'all_apis_exhausted') {
+              hadExhaustedEmail = true;
+            }
          }
       }
 
@@ -416,6 +423,9 @@ async function runEnrichment() {
              TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase());
            if (!isDeliverable) {
              console.log(`  Extracted generic email ${bestGeneric} is not deliverable (${v.status}: ${v.reason}). Discarding.`);
+             if (v.reason === 'all_apis_exhausted') {
+               hadExhaustedEmail = true;
+             }
              bestGeneric = '';
              vStatus = '';
            } else {
@@ -440,6 +450,10 @@ async function runEnrichment() {
          } else {
            console.log(`  No contact found for ${company.company_name} (${company.company_number}). Skipped appending to leads.csv.`);
          }
+      }
+      if (hadExhaustedEmail && areAllVerificationApisExhausted()) {
+        console.log('\n[QuotaNotice] All email verification API quotas are exhausted for today. Halting batch to preserve un-enriched candidates.');
+        break;
       }
       recordEnriched(enrichedFile, company.company_number);
     }
