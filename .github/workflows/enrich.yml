@@ -34,6 +34,14 @@ jobs:
       ENRICH_BATCH_SIZE: ${{ inputs.batch_size || '50' }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
       DAYS_BACK: "10"
+      SMTP_HOST: ${{ secrets.SMTP_HOST }}
+      SMTP_PORT: ${{ secrets.SMTP_PORT }}
+      SMTP_SECURE: ${{ secrets.SMTP_SECURE }}
+      SMTP_USER: ${{ secrets.SMTP_USER }}
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      SMTP_REPLY_TO: ${{ secrets.SMTP_REPLY_TO }}
+      SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
       QUICK_EMAIL_VERIFICATION_API_KEY: ${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}
       SNIFFMAIL_API_KEY: ${{ secrets.SNIFFMAIL_API_KEY }}
       REON_API_KEY: ${{ secrets.REON_API_KEY }}

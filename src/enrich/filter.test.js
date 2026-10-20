@@ -109,3 +109,38 @@ test('filterCandidates excludes companies present in leadsFile and sentLeadsFile
     if (fs.existsSync(tmpSentLeads)) fs.unlinkSync(tmpSentLeads);
   }
 });
+
+test('filterCandidates sorts candidates freshest-first by date_of_creation descending', (t) => {
+  const tmpCompanies = path.join(__dirname, 'tmp_comp_sort.csv');
+  const tmpEnriched = path.join(__dirname, 'tmp_enr_sort.csv');
+  const tmpCandidates = path.join(__dirname, 'tmp_cand_sort.csv');
+
+  // Input file lists older company first (20 days old), then fresh company (5 days old)
+  const now = new Date();
+  const past20 = new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past5 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
+101,OLD CO,${past20},45200,AddOld
+102,FRESH CO,${past5},45200,AddFresh
+`;
+
+  fs.writeFileSync(tmpCompanies, companiesContent);
+  fs.writeFileSync(tmpEnriched, 'company_number\n');
+
+  try {
+    const count = filterCandidates(tmpCompanies, tmpEnriched, tmpCandidates);
+    assert.strictEqual(count, 2);
+
+    const candidatesData = fs.readFileSync(tmpCandidates, 'utf8').trim().split('\n');
+    // Header is line 0
+    // Line 1 MUST be FRESH CO (past5)
+    assert.ok(candidatesData[1].includes('FRESH CO'), 'Freshest company must be sorted first');
+    // Line 2 MUST be OLD CO (past20)
+    assert.ok(candidatesData[2].includes('OLD CO'), 'Older company must be sorted second');
+  } finally {
+    if (fs.existsSync(tmpCompanies)) fs.unlinkSync(tmpCompanies);
+    if (fs.existsSync(tmpEnriched)) fs.unlinkSync(tmpEnriched);
+    if (fs.existsSync(tmpCandidates)) fs.unlinkSync(tmpCandidates);
+  }
+});
