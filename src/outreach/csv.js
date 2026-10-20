@@ -550,6 +550,92 @@ function appendFollowUp(filePath, followup) {
   return appendFollowUps(filePath, [followup]);
 }
 
+/**
+ * Permanently suppresses an email address or company number from future outreach & follow-ups.
+ * 
+ * 1. Sets status: 'opt_out' in sent_leads.csv.
+ * 2. Sets status: 'opt_out' in follow_ups.csv.
+ * 3. Removes prospect from leads.csv if pending.
+ */
+function optOutLead(target, options = {}) {
+  const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
+  const followUpsPath = options.followUpsPath || DEFAULT_FOLLOWUPS_PATH;
+  const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
+
+  if (!target || typeof target !== 'string' || !target.trim()) {
+    return { success: false, reason: 'invalid_target', modifiedSentLeads: 0, modifiedFollowUps: 0, removedLeads: 0 };
+  }
+
+  const cleanTarget = target.trim().toLowerCase();
+  let modifiedSentLeads = 0;
+  let modifiedFollowUps = 0;
+  let removedLeads = 0;
+
+  // 1. Update sent_leads.csv if exists
+  if (fs.existsSync(sentLeadsPath)) {
+    const sentLeads = parseCSV(sentLeadsPath);
+    let changed = false;
+    for (const row of sentLeads) {
+      const matchEmail = (row.sent_to && row.sent_to.toLowerCase() === cleanTarget) ||
+                         (row.emails && row.emails.toLowerCase().includes(cleanTarget));
+      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      if (matchEmail || matchCompNum) {
+        if (row.status !== 'opt_out') {
+          row.status = 'opt_out';
+          changed = true;
+          modifiedSentLeads++;
+        }
+      }
+    }
+    if (changed) {
+      writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+    }
+  }
+
+  // 2. Update follow_ups.csv if exists
+  if (fs.existsSync(followUpsPath)) {
+    const followUps = readFollowUps(followUpsPath);
+    let changed = false;
+    for (const row of followUps) {
+      const matchEmail = row.sent_to && row.sent_to.toLowerCase() === cleanTarget;
+      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      if (matchEmail || matchCompNum) {
+        if (row.status !== 'opt_out') {
+          row.status = 'opt_out';
+          changed = true;
+          modifiedFollowUps++;
+        }
+      }
+    }
+    if (changed) {
+      writeCSVAtomic(followUpsPath, followUps, FOLLOWUPS_COLUMNS);
+    }
+  }
+
+  // 3. Remove from leads.csv if exists
+  if (fs.existsSync(leadsPath)) {
+    const leads = parseCSV(leadsPath);
+    const beforeLen = leads.length;
+    const filtered = leads.filter(row => {
+      const matchEmail = (row.emails && row.emails.toLowerCase().includes(cleanTarget));
+      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      return !(matchEmail || matchCompNum);
+    });
+    if (filtered.length !== beforeLen) {
+      removedLeads = beforeLen - filtered.length;
+      writeCSVAtomic(leadsPath, filtered, LEADS_COLUMNS);
+    }
+  }
+
+  return {
+    success: true,
+    target: cleanTarget,
+    modifiedSentLeads,
+    modifiedFollowUps,
+    removedLeads
+  };
+}
+
 module.exports = {
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
@@ -573,5 +659,6 @@ module.exports = {
   moveLeadToSent,
   moveLeadsToSent,
   purgeSentFromLeads,
+  optOutLead,
   writeCSVAtomic
 };

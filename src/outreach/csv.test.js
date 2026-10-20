@@ -18,7 +18,8 @@ const {
   moveLeadToSent,
   moveLeadsToSent,
   writeCSVAtomic,
-  purgeSentFromLeads
+  purgeSentFromLeads,
+  optOutLead
 } = require('./csv');
 
 function createTempWorkspace() {
@@ -631,4 +632,69 @@ test('purgeSentFromLeads purges already sent leads and preserves unsent ones', (
   // Purging again when already clean returns 0
   const repeatPurge = purgeSentFromLeads(leadsPath, sentLeadsPath);
   assert.equal(repeatPurge.purgedCount, 0);
+});
+
+// -----------------------------------------------------------------------------
+// Unit 5.40: Opt-Out Lead Suppression Suite
+// -----------------------------------------------------------------------------
+
+test('optOutLead suppresses lead across sent_leads.csv, follow_ups.csv, and removes from leads.csv', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'optout-test-'));
+  const leadsPath = path.join(dir, 'leads.csv');
+  const sentLeadsPath = path.join(dir, 'sent_leads.csv');
+  const followUpsPath = path.join(dir, 'follow_ups.csv');
+
+  const { FOLLOWUPS_COLUMNS, readFollowUps } = require('./csv');
+  const { parseCSV } = require('../enrich/csvParser');
+
+  // Populate leads.csv with 2 pending leads (one matches opt-out target)
+  const leads = [
+    { ...sampleLeads[0], company_number: '12345678', emails: 'target@domain.com' },
+    { ...sampleLeads[0], company_number: '87654321', emails: 'keep@domain.com' }
+  ];
+  writeCSVAtomic(leadsPath, leads, LEADS_COLUMNS);
+
+  // Populate sent_leads.csv with 2 records
+  const sentLeads = [
+    { ...sampleLeads[0], company_number: '12345678', sent_to: 'target@domain.com', status: 'lead' },
+    { ...sampleLeads[0], company_number: '99999999', sent_to: 'other@domain.com', status: 'lead' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  // Populate follow_ups.csv with 1 record
+  const followUps = [
+    { company_number: '12345678', sent_to: 'target@domain.com', followup_number: 1, sent_at: '2026-10-20T10:00:00Z', status: 'sent' }
+  ];
+  writeCSVAtomic(followUpsPath, followUps, FOLLOWUPS_COLUMNS);
+
+  // Execute opt-out on target email
+  const res = optOutLead('target@domain.com', { leadsPath, sentLeadsPath, followUpsPath });
+  assert.equal(res.success, true);
+  assert.equal(res.modifiedSentLeads, 1);
+  assert.equal(res.modifiedFollowUps, 1);
+  assert.equal(res.removedLeads, 1);
+
+  // Verify leads.csv had target removed
+  const remainingLeads = parseCSV(leadsPath);
+  assert.equal(remainingLeads.length, 1);
+  assert.equal(remainingLeads[0].emails, 'keep@domain.com');
+
+  // Verify sent_leads.csv status is now opt_out
+  const updatedSentLeads = parseCSV(sentLeadsPath);
+  assert.equal(updatedSentLeads.find(s => s.sent_to === 'target@domain.com').status, 'opt_out');
+  assert.equal(updatedSentLeads.find(s => s.sent_to === 'other@domain.com').status, 'lead');
+
+  // Verify follow_ups.csv status is now opt_out
+  const updatedFollowUps = readFollowUps(followUpsPath);
+  assert.equal(updatedFollowUps[0].status, 'opt_out');
+
+  // Idempotent: running again produces 0 modifications
+  const repeat = optOutLead('target@domain.com', { leadsPath, sentLeadsPath, followUpsPath });
+  assert.equal(repeat.modifiedSentLeads, 0);
+  assert.equal(repeat.modifiedFollowUps, 0);
+  assert.equal(repeat.removedLeads, 0);
+
+  // Invalid input handling
+  assert.equal(optOutLead('').success, false);
+  assert.equal(optOutLead(null).success, false);
 });
