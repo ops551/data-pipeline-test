@@ -25,6 +25,7 @@ const FOLLOWUPS_COLUMNS = Object.freeze([
   'sender_account',
   'status'
 ]);
+const FOLLOWUP_COLUMNS = FOLLOWUPS_COLUMNS;
 
 function formatField(value) {
   const text = String(value ?? '').replace(/\r?\n/g, ' ');
@@ -556,6 +557,7 @@ module.exports = {
   LEADS_COLUMNS,
   SENT_LEADS_COLUMNS,
   FOLLOWUPS_COLUMNS,
+  FOLLOWUP_COLUMNS,
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,

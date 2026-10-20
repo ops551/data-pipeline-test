@@ -99,6 +99,17 @@ function getEligibleFollowUps(
     }
 
     const previousFollowUps = followUpMap.get(candidateKey) || [];
+
+    // Opt-out / Unsubscribe Guard:
+    // If the lead or any previous follow-up is marked unsubscribed, opt_out, or do_not_contact, skip!
+    const isOptedOut =
+      /unsub|opt_?out|do_not_contact|block|suppress/i.test(String(lead.status || '')) ||
+      previousFollowUps.some(f => /unsub|opt_?out|do_not_contact|block|suppress/i.test(String(f.status || '')));
+
+    if (isOptedOut) {
+      continue;
+    }
+
     const touch1Fup = previousFollowUps.find(f => f.followup_number === 1);
     const touch2Fup = previousFollowUps.find(f => f.followup_number === 2);
 
@@ -262,16 +273,24 @@ function generateFollowUpEmail(candidate, options = {}) {
   };
 }
 
+function getDailyFollowUpCount(followUpsPath = DEFAULT_FOLLOWUPS_PATH, now = new Date()) {
+  const followUps = readFollowUps(followUpsPath);
+  if (!Array.isArray(followUps) || followUps.length === 0) return 0;
+  const dateStr = (now instanceof Date ? now : new Date(now)).toISOString().slice(0, 10);
+  return followUps.filter(f => f.sent_at && String(f.sent_at).slice(0, 10) === dateStr).length;
+}
+
 /**
  * Executes follow-up email dispatch via Account 2.
  *
  * Rules:
  * 1. Checks Account 2 credentials via loadFollowUpSmtpConfig.
- * 2. Fetches eligible follow-ups (Touch 2 & 3 within 10-day active window).
- * 3. Enforces rate-limiting delay between sends.
- * 4. Passes enableHtml: true for Resend 1x1 open tracking.
- * 5. Appends each sent follow-up atomically to follow_ups.csv.
- * 6. Supports dry-run and test-email redirection.
+ * 2. Enforces Daily Quota Cap: gracefully skips if today's send count reached dailyCap.
+ * 3. Fetches eligible follow-ups (Touch 2 & 3 within 10-day active window).
+ * 4. Enforces rate-limiting delay between sends.
+ * 5. Passes enableHtml: true for Resend 1x1 open tracking.
+ * 6. Appends each sent follow-up atomically to follow_ups.csv.
+ * 7. Supports dry-run and test-email redirection.
  */
 async function runFollowUpPipeline(options = {}, deps = {}) {
   const env = options.env || process.env;
@@ -301,9 +320,41 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
     };
   }
 
+  const now = options.now instanceof Date
+    ? options.now
+    : (typeof options.now === 'string' || typeof options.now === 'number' ? new Date(options.now) : new Date());
+
+  const todayUtcStr = now.toISOString().slice(0, 10);
+  const pool = (smtpConfig.pool && smtpConfig.pool.length > 0) ? smtpConfig.pool : [smtpConfig.config];
+  const defaultDailyCap = pool.length * 100;
+  const dailyCap = typeof options.dailyCap === 'number'
+    ? options.dailyCap
+    : (parseInt(process.env.FOLLOWUP_DAILY_CAP, 10) || defaultDailyCap);
+
+  // Check how many follow-ups were sent today (UTC calendar day)
+  const sentTodayCount = getDailyFollowUpCount(followUpsPath, now);
+
+  if (sentTodayCount >= dailyCap && !options.ignoreDailyCap && !isDryRun) {
+    logger.log(`[FollowUp] Daily quota cap reached for today (${sentTodayCount}/${dailyCap} sent on ${todayUtcStr}). Skipping run to prevent Resend delivery failures.`);
+    return {
+      success: true,
+      skipped: true,
+      reason: 'daily_cap_reached',
+      sentToday: sentTodayCount,
+      dailyCap,
+      eligible: 0,
+      sent: 0,
+      failed: 0,
+      details: []
+    };
+  }
+
+  const remainingDailyCapacity = Math.max(0, dailyCap - sentTodayCount);
+  const effectiveLimit = Math.min(limit, remainingDailyCapacity > 0 ? remainingDailyCapacity : limit);
+
   const eligibilityResult = getEligibleFollowUps(sentLeadsPath, followUpsPath, {
-    now: options.now,
-    limit,
+    now,
+    limit: effectiveLimit,
     maxAgeDays: options.maxAgeDays,
     touch2DelayMs: options.touch2DelayMs,
     touch3DelayMs: options.touch3DelayMs
@@ -324,7 +375,6 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
 
   logger.log(`[FollowUp] Found ${candidates.length} eligible follow-up candidates (Touch 2: ${eligibilityResult.touch2Count}, Touch 3: ${eligibilityResult.touch3Count}).`);
 
-  const pool = (smtpConfig.pool && smtpConfig.pool.length > 0) ? smtpConfig.pool : [smtpConfig.config];
   let currentAccountIndex = 0;
   let sentCount = 0;
   let failedCount = 0;
@@ -465,6 +515,7 @@ module.exports = {
   DEFAULT_MAX_DAILY_FOLLOWUPS,
   TOUCH_INTERVALS,
   getEligibleFollowUps,
+  getDailyFollowUpCount,
   formatThreadSubject,
   generateFollowUpEmail,
   runFollowUpPipeline
