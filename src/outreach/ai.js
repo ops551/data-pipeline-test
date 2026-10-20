@@ -139,6 +139,12 @@ const INVALID_FIRST_NAME_TOKENS = new Set([
   "SUPPORT", "ENQUIRIES", "ENQUIRY", "CONTACT", "OFFICE", "GENERAL", "CUSTOMER",
   "ABOUT", "US", "READ", "MORE", "SERVICE", "SERVICES", "COMPANY",
   "HELP", "DESK", "CARE", "LINE", "CENTRE", "CENTER", "COMMUNITY",
+  // Prepositions & functional connectives
+  "OF", "FOR", "AND", "IN", "AT", "TO", "WITH", "BY",
+  // Generic department names
+  "DESIGN", "DEVELOPMENT", "CREATIVE", "STRATEGY", "GROWTH", "PRODUCT",
+  // Honorific suffixes and professional credentials
+  "ESQ", "ESQUIRE", "PHD", "MBE", "OBE", "CBE", "BSC", "BA", "MA", "MD", "JR", "SR",
   // Corporate brands & agencies
   "DELOITTE", "PWC", "KPMG", "EY", "ERNST", "ACCENTURE", "MCKINSEY", "BAIN", "BCG",
   "CAPGEMINI", "COGNIZANT", "TCS", "INFOSYS", "WIPRO", "IBM", "MICROSOFT",
@@ -165,7 +171,14 @@ function extractFirstName(rawName) {
   let namePart = trimmed;
   if (trimmed.includes(",")) {
     const parts = trimmed.split(",");
-    namePart = (parts[1] || "").trim();
+    const part0 = (parts[0] || "").trim();
+    const part1 = (parts[1] || "").trim();
+    const isPart1Suffix = /^(esq|esquire|phd|mbe|obe|cbe|md|bsc|ba|ma|jr|sr|ii|iii|ceo|cto|cfo|director|founder)\.?$/i.test(part1);
+    if (isPart1Suffix || part0.split(/\s+/).length > 1) {
+      namePart = part0;
+    } else {
+      namePart = part1;
+    }
   }
 
   const tokens = namePart.split(/\s+/).filter(Boolean);
