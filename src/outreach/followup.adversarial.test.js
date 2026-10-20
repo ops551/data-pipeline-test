@@ -8,7 +8,8 @@ const {
   formatThreadSubject,
   generateFollowUpEmail,
   runFollowUpPipeline,
-  getEligibleFollowUps
+  getEligibleFollowUps,
+  getDailyFollowUpCount
 } = require('./followup');
 
 const { parseArgs } = require('./followup-cli');
@@ -393,4 +394,165 @@ test('Adversarial: runFollowUpPipeline rotates from Account 2 to Account 3 when 
   assert.equal(res.sent, 2);
   assert.equal(res.failed, 0);
   assert.deepEqual(usedAccounts, ['re_acc2', 're_acc3', 're_acc3']);
+});
+
+// -----------------------------------------------------------------------------
+// 3. Daily Quota Cap & Opt-Out Shield (Unit 5.39)
+// -----------------------------------------------------------------------------
+
+test('Adversarial: getDailyFollowUpCount correctly filters UTC calendar day and handles corrupted records', () => {
+  const { followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T14:30:00Z');
+
+  // Non-existent file returns 0
+  assert.equal(getDailyFollowUpCount(followUpsPath, now), 0);
+
+  const followUpRows = [
+    { company_number: '1', sent_to: 'a@co.uk', followup_number: '1', sent_at: '2026-10-19T23:59:59Z' }, // Yesterday UTC
+    { company_number: '2', sent_to: 'b@co.uk', followup_number: '1', sent_at: '2026-10-20T00:00:01Z' }, // Today UTC
+    { company_number: '3', sent_to: 'c@co.uk', followup_number: '1', sent_at: '2026-10-20T12:00:00Z' }, // Today UTC
+    { company_number: '4', sent_to: 'd@co.uk', followup_number: '2', sent_at: '2026-10-20T23:59:59Z' }, // Today UTC
+    { company_number: '5', sent_to: 'e@co.uk', followup_number: '1', sent_at: '2026-10-21T00:00:00Z' }, // Tomorrow UTC
+    { company_number: '6', sent_to: 'f@co.uk', followup_number: '1', sent_at: '' }, // Empty
+    { company_number: '7', sent_to: 'g@co.uk', followup_number: '1', sent_at: 'invalid-date' }, // Malformed
+    { company_number: '8', sent_to: 'h@co.uk', followup_number: '1' } // Missing sent_at
+  ];
+
+  const { FOLLOWUPS_COLUMNS } = require('./csv');
+  writeCSVAtomic(followUpsPath, followUpRows, FOLLOWUPS_COLUMNS);
+
+  // Exactly 3 records match 2026-10-20
+  assert.equal(getDailyFollowUpCount(followUpsPath, now), 3);
+});
+
+test('Adversarial: getEligibleFollowUps blocks candidates marked unsubscribed or opted-out', () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '7001', company_name: 'Lead Unsub', sent_to: 'unsub@co.uk', sent_at: past3Days, status: 'unsubscribed' },
+    { company_number: '7002', company_name: 'Lead OptOut', sent_to: 'optout@co.uk', sent_at: past3Days, status: 'opt_out' },
+    { company_number: '7003', company_name: 'Lead Suppress', sent_to: 'suppress@co.uk', sent_at: past3Days, status: 'do_not_contact' },
+    { company_number: '7004', company_name: 'Lead Active', sent_to: 'active@co.uk', sent_at: past3Days, status: 'sent' },
+    { company_number: '7005', company_name: 'FollowUp OptOut', sent_to: 'fu_optout@co.uk', sent_at: past3Days, status: 'sent' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  const { FOLLOWUPS_COLUMNS } = require('./csv');
+  const past2Days = new Date(now.getTime() - 2.5 * 24 * 60 * 60 * 1000).toISOString();
+  // 7005 was sent Touch 1, but status was subsequently updated to opt_out / unsubscribed
+  const followUps = [
+    { company_number: '7005', sent_to: 'fu_optout@co.uk', followup_number: 1, sent_at: past2Days, status: 'opt_out' }
+  ];
+  writeCSVAtomic(followUpsPath, followUps, FOLLOWUPS_COLUMNS);
+
+  const result = getEligibleFollowUps(sentLeadsPath, followUpsPath, { now });
+  // Only 7004 should be eligible; 7001, 7002, 7003, 7005 must all be skipped
+  assert.equal(result.eligible.length, 1);
+  assert.equal(result.eligible[0].sent_to, 'active@co.uk');
+});
+
+test('Adversarial: runFollowUpPipeline cleanly skips when today send count reaches dailyCap without calling sendEmail', async () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '8001', company_name: 'Lead 8001', sent_to: 'lead8001@co.uk', sent_at: past3Days }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  // Pre-populate follow_ups with 100 sends today (reaching the cap)
+  const { FOLLOWUPS_COLUMNS } = require('./csv');
+  const preExistingFollowUps = Array.from({ length: 100 }, (_, i) => ({
+    company_number: `C${i}`,
+    sent_to: `test${i}@domain.com`,
+    followup_number: 1,
+    sent_at: '2026-10-20T08:00:00Z',
+    status: 'sent'
+  }));
+  writeCSVAtomic(followUpsPath, preExistingFollowUps, FOLLOWUPS_COLUMNS);
+
+  let sendCalled = false;
+  const mockSendEmail = async () => {
+    sendCalled = true;
+    return { success: true, messageId: '<msg@test.dev>' };
+  };
+
+  const loggedMessages = [];
+  const res = await runFollowUpPipeline({
+    sentLeadsPath,
+    followUpsPath,
+    now,
+    dailyCap: 100,
+    env: {
+      FOLLOWUP_RESEND_API_KEY: 're_valid_key',
+      FOLLOWUP_EMAIL_FROM: 'nahid@nahid.usasocialhubofficial.com'
+    }
+  }, {
+    sendEmail: mockSendEmail,
+    logger: { log: (msg) => loggedMessages.push(msg), error: () => {} }
+  });
+
+  assert.equal(sendCalled, false, 'sendEmail should never be invoked when daily cap is reached');
+  assert.equal(res.success, true);
+  assert.equal(res.skipped, true);
+  assert.equal(res.reason, 'daily_cap_reached');
+  assert.equal(res.sentToday, 100);
+  assert.equal(res.dailyCap, 100);
+  assert.equal(res.sent, 0);
+  assert.ok(loggedMessages.some(m => m.includes('Daily quota cap reached for today')));
+});
+
+test('Adversarial: runFollowUpPipeline caps effectiveLimit to avoid exceeding dailyCap', async () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  // 4 eligible leads
+  const sentLeads = [
+    { company_number: '9101', company_name: 'Lead 9101', sent_to: 'l9101@co.uk', sent_at: past3Days },
+    { company_number: '9102', company_name: 'Lead 9102', sent_to: 'l9102@co.uk', sent_at: past3Days },
+    { company_number: '9103', company_name: 'Lead 9103', sent_to: 'l9103@co.uk', sent_at: past3Days },
+    { company_number: '9104', company_name: 'Lead 9104', sent_to: 'l9104@co.uk', sent_at: past3Days }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  // 98 emails already sent today, dailyCap = 100 -> only 2 remaining capacity!
+  const { FOLLOWUPS_COLUMNS } = require('./csv');
+  const preExisting = Array.from({ length: 98 }, (_, i) => ({
+    company_number: `C${i}`,
+    sent_to: `test${i}@co.uk`,
+    followup_number: 1,
+    sent_at: '2026-10-20T09:00:00Z',
+    status: 'sent'
+  }));
+  writeCSVAtomic(followUpsPath, preExisting, FOLLOWUPS_COLUMNS);
+
+  let sendCount = 0;
+  const mockSendEmail = async () => {
+    sendCount++;
+    return { success: true, messageId: `<msg${sendCount}@test.dev>` };
+  };
+
+  const res = await runFollowUpPipeline({
+    sentLeadsPath,
+    followUpsPath,
+    now,
+    dailyCap: 100,
+    limit: 10, // Requesting 10, but only 2 should be sent
+    delayMs: 0,
+    env: {
+      FOLLOWUP_RESEND_API_KEY: 're_valid_key',
+      FOLLOWUP_EMAIL_FROM: 'nahid@nahid.usasocialhubofficial.com'
+    }
+  }, {
+    sendEmail: mockSendEmail,
+    logger: { log: () => {}, error: () => {} }
+  });
+
+  assert.equal(sendCount, 2, 'Should only send up to remaining daily capacity (100 - 98 = 2)');
+  assert.equal(res.sent, 2);
+  assert.equal(res.failed, 0);
 });
