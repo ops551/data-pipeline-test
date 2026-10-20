@@ -145,6 +145,25 @@ test('rankEmailsByCompanyName accepts legitimate public email matching full bran
   );
 });
 
+test('rankEmailsByCompanyName accepts public email matching multiple brand words (Unit 5.44)', () => {
+  assert.deepStrictEqual(
+    rankEmailsByCompanyName(
+      ['ourhousemusicstudios@gmail.com'],
+      'OUR HOUSE STUDIOS LTD'
+    ),
+    ['ourhousemusicstudios@gmail.com']
+  );
+
+  // Still rejects completely random unrelated email
+  assert.deepStrictEqual(
+    rankEmailsByCompanyName(
+      ['unrelatedperson@gmail.com'],
+      'OUR HOUSE STUDIOS LTD'
+    ),
+    []
+  );
+});
+
 test('stripTestimonialsAndReviews removes blockquotes, testimonial/review containers, and review headings', () => {
   const { stripTestimonialsAndReviews, extractPeople } = require('./extract');
   const html = `

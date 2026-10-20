@@ -20,9 +20,17 @@ const TITLE_SUFFIXES = new Set([
 ]);
 
 const exhaustedKeys = new Set();
+const alertedProvidersInProcess = new Set();
 
 function resetExhaustedKeys() {
   exhaustedKeys.clear();
+  alertedProvidersInProcess.clear();
+}
+
+async function alertProviderOnce(provider, details) {
+  if (alertedProvidersInProcess.has(provider)) return;
+  alertedProvidersInProcess.add(provider);
+  await sendQuotaExhaustionAlert(provider, details);
 }
 
 function parseKeys(envVal) {
@@ -439,117 +447,125 @@ async function verifyEmail(email) {
 
   // Priority 1: QuickEmailVerification
   const qevKeys = parseKeys(process.env.QUICK_EMAIL_VERIFICATION_API_KEY);
-  for (const key of qevKeys) {
-    if (exhaustedKeys.has(`qev:${key}`)) continue;
-    try {
-      const res = await verifyQuickEmailVerification(email, key);
-      if (res && res.quotaExceeded) {
-        exhaustedKeys.add(`qev:${key}`);
-        await sendQuotaExhaustionAlert('QuickEmailVerification', { key, reason: res.reason || 'quota_exceeded' });
+  if (qevKeys.some(k => !exhaustedKeys.has(`qev:${k}`))) {
+    for (const key of qevKeys) {
+      if (exhaustedKeys.has(`qev:${key}`)) continue;
+      try {
+        const res = await verifyQuickEmailVerification(email, key);
+        if (res && res.quotaExceeded) {
+          exhaustedKeys.add(`qev:${key}`);
+          await alertProviderOnce('QuickEmailVerification', { key, reason: res.reason || 'quota_exceeded' });
+          continue;
+        }
+        if (res && res.timeout) {
+          continue;
+        }
+        if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
+          continue;
+        }
+        return res.isValid
+          ? { status: 'valid_domain', reason: 'quickemailverification' }
+          : { status: 'invalid', reason: res.reason || 'quickemailverification_invalid' };
+      } catch (err) {
+        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
+        if (!isTimeout) {
+          exhaustedKeys.add(`qev:${key}`);
+        }
         continue;
       }
-      if (res && res.timeout) {
-        continue;
-      }
-      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
-        continue;
-      }
-      return res.isValid
-        ? { status: 'valid_domain', reason: 'quickemailverification' }
-        : { status: 'invalid', reason: res.reason || 'quickemailverification_invalid' };
-    } catch (err) {
-      const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-      if (!isTimeout) {
-        exhaustedKeys.add(`qev:${key}`);
-      }
-      continue;
     }
   }
 
   // Priority 2: Sniffmail
   const sniffKeys = parseKeys(process.env.SNIFFMAIL_API_KEY);
-  for (const key of sniffKeys) {
-    if (exhaustedKeys.has(`sniffmail:${key}`)) continue;
-    try {
-      const res = await verifySniffmail(email, key);
-      if (res && res.quotaExceeded) {
-        exhaustedKeys.add(`sniffmail:${key}`);
-        await sendQuotaExhaustionAlert('Sniffmail', { key, reason: res.reason || 'quota_exceeded' });
+  if (sniffKeys.some(k => !exhaustedKeys.has(`sniffmail:${k}`))) {
+    for (const key of sniffKeys) {
+      if (exhaustedKeys.has(`sniffmail:${key}`)) continue;
+      try {
+        const res = await verifySniffmail(email, key);
+        if (res && res.quotaExceeded) {
+          exhaustedKeys.add(`sniffmail:${key}`);
+          await alertProviderOnce('Sniffmail', { key, reason: res.reason || 'quota_exceeded' });
+          continue;
+        }
+        if (res && res.timeout) {
+          continue;
+        }
+        if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
+          continue;
+        }
+        return res.isValid
+          ? { status: 'valid_domain', reason: 'sniffmail' }
+          : { status: 'invalid', reason: res.reason || 'sniffmail_invalid' };
+      } catch (err) {
+        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
+        if (!isTimeout) {
+          exhaustedKeys.add(`sniffmail:${key}`);
+        }
         continue;
       }
-      if (res && res.timeout) {
-        continue;
-      }
-      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
-        continue;
-      }
-      return res.isValid
-        ? { status: 'valid_domain', reason: 'sniffmail' }
-        : { status: 'invalid', reason: res.reason || 'sniffmail_invalid' };
-    } catch (err) {
-      const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-      if (!isTimeout) {
-        exhaustedKeys.add(`sniffmail:${key}`);
-      }
-      continue;
     }
   }
 
   // Priority 3: Reoon
   const reoonKeys = parseKeys(process.env.REON_API_KEY || process.env.REOON_API_KEY);
-  for (const key of reoonKeys) {
-    if (exhaustedKeys.has(`reoon:${key}`)) continue;
-    try {
-      const res = await verifyReoon(email, key);
-      if (res && res.quotaExceeded) {
-        exhaustedKeys.add(`reoon:${key}`);
-        await sendQuotaExhaustionAlert('Reoon', { key, reason: res.reason || 'quota_exceeded' });
+  if (reoonKeys.some(k => !exhaustedKeys.has(`reoon:${k}`))) {
+    for (const key of reoonKeys) {
+      if (exhaustedKeys.has(`reoon:${key}`)) continue;
+      try {
+        const res = await verifyReoon(email, key);
+        if (res && res.quotaExceeded) {
+          exhaustedKeys.add(`reoon:${key}`);
+          await alertProviderOnce('Reoon', { key, reason: res.reason || 'quota_exceeded' });
+          continue;
+        }
+        if (res && res.timeout) {
+          continue;
+        }
+        if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
+          continue;
+        }
+        return res.isValid
+          ? { status: 'valid_domain', reason: 'reoon' }
+          : { status: 'invalid', reason: res.reason || 'reoon_invalid' };
+      } catch (err) {
+        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
+        if (!isTimeout) {
+          exhaustedKeys.add(`reoon:${key}`);
+        }
         continue;
       }
-      if (res && res.timeout) {
-        continue;
-      }
-      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
-        continue;
-      }
-      return res.isValid
-        ? { status: 'valid_domain', reason: 'reoon' }
-        : { status: 'invalid', reason: res.reason || 'reoon_invalid' };
-    } catch (err) {
-      const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-      if (!isTimeout) {
-        exhaustedKeys.add(`reoon:${key}`);
-      }
-      continue;
     }
   }
 
   // Priority 4: ZeroBounce
   const zbKeys = parseKeys(process.env.ZEROBOUNCE || process.env.ZEROBOUNCE_API_KEY);
-  for (const key of zbKeys) {
-    if (exhaustedKeys.has(`zerobounce:${key}`)) continue;
-    try {
-      const res = await verifyZeroBounce(email, key);
-      if (res && res.quotaExceeded) {
-        exhaustedKeys.add(`zerobounce:${key}`);
-        await sendQuotaExhaustionAlert('ZeroBounce', { key, reason: res.reason || 'quota_exceeded' });
+  if (zbKeys.some(k => !exhaustedKeys.has(`zerobounce:${k}`))) {
+    for (const key of zbKeys) {
+      if (exhaustedKeys.has(`zerobounce:${key}`)) continue;
+      try {
+        const res = await verifyZeroBounce(email, key);
+        if (res && res.quotaExceeded) {
+          exhaustedKeys.add(`zerobounce:${key}`);
+          await alertProviderOnce('ZeroBounce', { key, reason: res.reason || 'quota_exceeded' });
+          continue;
+        }
+        if (res && res.timeout) {
+          continue;
+        }
+        if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
+          continue;
+        }
+        return res.isValid
+          ? { status: 'valid_domain', reason: 'zerobounce' }
+          : { status: 'invalid', reason: res.reason || 'zerobounce_invalid' };
+      } catch (err) {
+        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
+        if (!isTimeout) {
+          exhaustedKeys.add(`zerobounce:${key}`);
+        }
         continue;
       }
-      if (res && res.timeout) {
-        continue;
-      }
-      if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
-        continue;
-      }
-      return res.isValid
-        ? { status: 'valid_domain', reason: 'zerobounce' }
-        : { status: 'invalid', reason: res.reason || 'zerobounce_invalid' };
-    } catch (err) {
-      const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-      if (!isTimeout) {
-        exhaustedKeys.add(`zerobounce:${key}`);
-      }
-      continue;
     }
   }
 
@@ -561,7 +577,7 @@ async function verifyEmail(email) {
       const res = await verifyVerifalia(email, vUser, vPass);
       if (res && res.quotaExceeded) {
         exhaustedKeys.add(`verifalia:${vUser}`);
-        await sendQuotaExhaustionAlert('Verifalia', { key: vUser, reason: 'quota_exceeded' });
+        await alertProviderOnce('Verifalia', { key: vUser, reason: 'quota_exceeded' });
       } else if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
         // treat as non-fatal and proceed
       } else {
@@ -576,6 +592,26 @@ async function verifyEmail(email) {
 
   // All configured verification APIs are exhausted or not configured
   return { status: 'unverified', reason: 'all_apis_exhausted' };
+}
+
+function areAllVerificationApisExhausted() {
+  const qevKeys = parseKeys(process.env.QUICK_EMAIL_VERIFICATION_API_KEY);
+  const sniffKeys = parseKeys(process.env.SNIFFMAIL_API_KEY);
+  const reoonKeys = parseKeys(process.env.REON_API_KEY || process.env.REOON_API_KEY);
+  const zbKeys = parseKeys(process.env.ZEROBOUNCE || process.env.ZEROBOUNCE_API_KEY);
+  const vUser = process.env.VERIFALIA_USERNAME;
+  const vPass = process.env.VERIFALIA_PASSWORD;
+
+  const total = qevKeys.length + sniffKeys.length + reoonKeys.length + zbKeys.length + (vUser && vPass ? 1 : 0);
+  if (total === 0) return true;
+
+  const hasQev = qevKeys.some(k => !exhaustedKeys.has(`qev:${k}`));
+  const hasSniff = sniffKeys.some(k => !exhaustedKeys.has(`sniffmail:${k}`));
+  const hasReoon = reoonKeys.some(k => !exhaustedKeys.has(`reoon:${k}`));
+  const hasZb = zbKeys.some(k => !exhaustedKeys.has(`zerobounce:${k}`));
+  const hasVerifalia = Boolean(vUser && vPass && !exhaustedKeys.has(`verifalia:${vUser}`));
+
+  return !hasQev && !hasSniff && !hasReoon && !hasZb && !hasVerifalia;
 }
 
 async function checkCatchAll(domain) {
@@ -707,6 +743,7 @@ module.exports = {
   verifyZeroBounce,
   verifyVerifalia,
   resetExhaustedKeys,
-  exhaustedKeys
+  exhaustedKeys,
+  areAllVerificationApisExhausted
 };
 

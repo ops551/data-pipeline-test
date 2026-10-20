@@ -219,6 +219,19 @@ function rankEmailsByCompanyName(emails, companyName, officersStr = '') {
       if (joinedName && joinedName.length >= 5 && (userLower === joinedName || userLower.includes(joinedName))) {
         score += 50;
         companyMatch = true;
+      } else if (words.length >= 2) {
+        // Match multiple significant company brand words in user (e.g. ourhousemusicstudios@gmail.com for OUR HOUSE STUDIOS LTD)
+        const matchingUserWords = words.filter(w => userLower.includes(w));
+        if (matchingUserWords.length >= 2) {
+          score += 45;
+          companyMatch = true;
+        }
+      } else if (words.length === 1) {
+        const single = words[0];
+        if (single.length >= 4 && (userLower === single || userLower.includes(single))) {
+          score += 40;
+          companyMatch = true;
+        }
       }
     }
 

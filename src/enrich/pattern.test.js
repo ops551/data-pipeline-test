@@ -12,7 +12,8 @@ const {
   verifyZeroBounce,
   verifyVerifalia,
   verifyEmailSmtp,
-  resetExhaustedKeys
+  resetExhaustedKeys,
+  areAllVerificationApisExhausted
 } = require('./pattern');
 const { alertedKeys, resetAlertedKeys: resetAlerts } = require('./alerts');
 
@@ -780,6 +781,68 @@ test('Unit 5.22: verifyEmailSmtp strips angle brackets from EMAIL_FROM and SMTP_
     net.Socket.prototype.write = origWrite;
     restoreEnv();
   }
+});
+
+test('Unit 5.44: areAllVerificationApisExhausted returns true when no keys configured or all keys in exhaustedKeys', () => {
+  restoreEnv();
+  delete process.env.QUICK_EMAIL_VERIFICATION_API_KEY;
+  delete process.env.SNIFFMAIL_API_KEY;
+  delete process.env.REON_API_KEY;
+  delete process.env.REOON_API_KEY;
+  delete process.env.ZEROBOUNCE;
+  delete process.env.ZEROBOUNCE_API_KEY;
+  delete process.env.VERIFALIA_USERNAME;
+  delete process.env.VERIFALIA_PASSWORD;
+
+  assert.strictEqual(areAllVerificationApisExhausted(), true);
+
+  process.env.REOON_API_KEY = 'k1,k2';
+  assert.strictEqual(areAllVerificationApisExhausted(), false);
+
+  const { exhaustedKeys } = require('./pattern');
+  exhaustedKeys.add('reoon:k1');
+  assert.strictEqual(areAllVerificationApisExhausted(), false);
+
+  exhaustedKeys.add('reoon:k2');
+  assert.strictEqual(areAllVerificationApisExhausted(), true);
+  restoreEnv();
+});
+
+test('Unit 5.44: verifyEmail fast-skips exhausted providers without making network calls', async () => {
+  restoreEnv();
+  process.env.QUICK_EMAIL_VERIFICATION_API_KEY = 'q1';
+  process.env.REON_API_KEY = 'r1';
+
+  let qevCalls = 0;
+  let reoonCalls = 0;
+
+  global.fetch = async (url) => {
+    if (String(url).includes('quickemailverification')) {
+      qevCalls++;
+      return { status: 402, json: async () => ({ message: 'quota_exceeded' }) };
+    }
+    if (String(url).includes('reoon')) {
+      reoonCalls++;
+      return { status: 200, json: async () => ({ status: 'valid', is_catch_all: false }) };
+    }
+    return { status: 500, json: async () => ({}) };
+  };
+
+  // Call 1: QEV fails and exhausts, falls back to Reoon which succeeds
+  const res1 = await verifyEmail('user1@example.com');
+  assert.strictEqual(res1.status, 'valid_domain');
+  assert.strictEqual(res1.reason, 'reoon');
+  assert.strictEqual(qevCalls, 1);
+  assert.strictEqual(reoonCalls, 1);
+
+  // Call 2: QEV is in exhaustedKeys, so it MUST be skipped with 0 new fetch calls!
+  const res2 = await verifyEmail('user2@example.com');
+  assert.strictEqual(res2.status, 'valid_domain');
+  assert.strictEqual(res2.reason, 'reoon');
+  assert.strictEqual(qevCalls, 1, 'QEV must not be called again once exhausted');
+  assert.strictEqual(reoonCalls, 2);
+
+  restoreEnv();
 });
 
 
