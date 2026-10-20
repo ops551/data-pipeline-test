@@ -96,9 +96,9 @@ test('Adversarial: runFollowUpPipeline calls sleepFn exactly N-1 times with corr
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '90000001', company_name: 'Batch One', sent_to: 'b1@batch.co.uk', sent_at: past3Days },
-    { company_number: '90000002', company_name: 'Batch Two', sent_to: 'b2@batch.co.uk', sent_at: past3Days },
-    { company_number: '90000003', company_name: 'Batch Three', sent_to: 'b3@batch.co.uk', sent_at: past3Days }
+    { company_number: '90000001', company_name: 'Batch One', sent_to: 'b1@batch.co.uk', sent_at: past3Days, message_id: '<msg_b1@batch.co.uk>' },
+    { company_number: '90000002', company_name: 'Batch Two', sent_to: 'b2@batch.co.uk', sent_at: past3Days, message_id: '<msg_b2@batch.co.uk>' },
+    { company_number: '90000003', company_name: 'Batch Three', sent_to: 'b3@batch.co.uk', sent_at: past3Days, message_id: '<msg_b3@batch.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -318,9 +318,9 @@ test('Adversarial: runFollowUpPipeline cleanly breaks when all follow-up account
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '5001', company_name: 'Follow Lead 1', sent_to: 'f1@c.co.uk', sent_at: past3Days },
-    { company_number: '5002', company_name: 'Follow Lead 2', sent_to: 'f2@c.co.uk', sent_at: past3Days },
-    { company_number: '5003', company_name: 'Follow Lead 3', sent_to: 'f3@c.co.uk', sent_at: past3Days }
+    { company_number: '5001', company_name: 'Follow Lead 1', sent_to: 'f1@c.co.uk', sent_at: past3Days, message_id: '<msg_f1_5001@c.co.uk>' },
+    { company_number: '5002', company_name: 'Follow Lead 2', sent_to: 'f2@c.co.uk', sent_at: past3Days, message_id: '<msg_f2_5002@c.co.uk>' },
+    { company_number: '5003', company_name: 'Follow Lead 3', sent_to: 'f3@c.co.uk', sent_at: past3Days, message_id: '<msg_f3_5003@c.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -359,8 +359,8 @@ test('Adversarial: runFollowUpPipeline rotates from Account 2 to Account 3 when 
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '6001', company_name: 'Pool Lead 1', sent_to: 'p1@c.co.uk', sent_at: past3Days },
-    { company_number: '6002', company_name: 'Pool Lead 2', sent_to: 'p2@c.co.uk', sent_at: past3Days }
+    { company_number: '6001', company_name: 'Pool Lead 1', sent_to: 'p1@c.co.uk', sent_at: past3Days, message_id: '<msg_p1_6001@c.co.uk>' },
+    { company_number: '6002', company_name: 'Pool Lead 2', sent_to: 'p2@c.co.uk', sent_at: past3Days, message_id: '<msg_p2_6002@c.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -431,11 +431,11 @@ test('Adversarial: getEligibleFollowUps blocks candidates marked unsubscribed or
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '7001', company_name: 'Lead Unsub', sent_to: 'unsub@co.uk', sent_at: past3Days, status: 'unsubscribed' },
-    { company_number: '7002', company_name: 'Lead OptOut', sent_to: 'optout@co.uk', sent_at: past3Days, status: 'opt_out' },
-    { company_number: '7003', company_name: 'Lead Suppress', sent_to: 'suppress@co.uk', sent_at: past3Days, status: 'do_not_contact' },
-    { company_number: '7004', company_name: 'Lead Active', sent_to: 'active@co.uk', sent_at: past3Days, status: 'sent' },
-    { company_number: '7005', company_name: 'FollowUp OptOut', sent_to: 'fu_optout@co.uk', sent_at: past3Days, status: 'sent' }
+    { company_number: '7001', company_name: 'Lead Unsub', sent_to: 'unsub@co.uk', sent_at: past3Days, status: 'unsubscribed', message_id: '<msg_7001>' },
+    { company_number: '7002', company_name: 'Lead OptOut', sent_to: 'optout@co.uk', sent_at: past3Days, status: 'opt_out', message_id: '<msg_7002>' },
+    { company_number: '7003', company_name: 'Lead Suppress', sent_to: 'suppress@co.uk', sent_at: past3Days, status: 'do_not_contact', message_id: '<msg_7003>' },
+    { company_number: '7004', company_name: 'Lead Active', sent_to: 'active@co.uk', sent_at: past3Days, status: 'sent', message_id: '<msg_7004>' },
+    { company_number: '7005', company_name: 'FollowUp OptOut', sent_to: 'fu_optout@co.uk', sent_at: past3Days, status: 'sent', message_id: '<msg_7005>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -459,7 +459,7 @@ test('Adversarial: runFollowUpPipeline cleanly skips when today send count reach
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
-    { company_number: '8001', company_name: 'Lead 8001', sent_to: 'lead8001@co.uk', sent_at: past3Days }
+    { company_number: '8001', company_name: 'Lead 8001', sent_to: 'lead8001@co.uk', sent_at: past3Days, message_id: '<msg_8001@co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -512,10 +512,10 @@ test('Adversarial: runFollowUpPipeline caps effectiveLimit to avoid exceeding da
 
   // 4 eligible leads
   const sentLeads = [
-    { company_number: '9101', company_name: 'Lead 9101', sent_to: 'l9101@co.uk', sent_at: past3Days },
-    { company_number: '9102', company_name: 'Lead 9102', sent_to: 'l9102@co.uk', sent_at: past3Days },
-    { company_number: '9103', company_name: 'Lead 9103', sent_to: 'l9103@co.uk', sent_at: past3Days },
-    { company_number: '9104', company_name: 'Lead 9104', sent_to: 'l9104@co.uk', sent_at: past3Days }
+    { company_number: '9101', company_name: 'Lead 9101', sent_to: 'l9101@co.uk', sent_at: past3Days, message_id: '<msg_9101@co.uk>' },
+    { company_number: '9102', company_name: 'Lead 9102', sent_to: 'l9102@co.uk', sent_at: past3Days, message_id: '<msg_9102@co.uk>' },
+    { company_number: '9103', company_name: 'Lead 9103', sent_to: 'l9103@co.uk', sent_at: past3Days, message_id: '<msg_9103@co.uk>' },
+    { company_number: '9104', company_name: 'Lead 9104', sent_to: 'l9104@co.uk', sent_at: past3Days, message_id: '<msg_9104@co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
@@ -555,4 +555,65 @@ test('Adversarial: runFollowUpPipeline caps effectiveLimit to avoid exceeding da
   assert.equal(sendCount, 2, 'Should only send up to remaining daily capacity (100 - 98 = 2)');
   assert.equal(res.sent, 2);
   assert.equal(res.failed, 0);
+});
+
+// -----------------------------------------------------------------------------
+// 4. Threading Integrity: Strict message_id Requirement (Unit 5.41)
+// -----------------------------------------------------------------------------
+
+test('Adversarial: getEligibleFollowUps strictly excludes leads missing message_id to prevent unthreaded emails', () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '9201', company_name: 'No MsgId 1', sent_to: 'no1@test.co.uk', sent_at: past3Days }, // undefined
+    { company_number: '9202', company_name: 'No MsgId 2', sent_to: 'no2@test.co.uk', sent_at: past3Days, message_id: '' }, // empty string
+    { company_number: '9203', company_name: 'No MsgId 3', sent_to: 'no3@test.co.uk', sent_at: past3Days, message_id: '   ' }, // whitespace
+    { company_number: '9204', company_name: 'Has MsgId', sent_to: 'yes@test.co.uk', sent_at: past3Days, message_id: '<valid_msg_id_9204@domain.com>' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  const res = getEligibleFollowUps(sentLeadsPath, followUpsPath, { now });
+  assert.equal(res.eligible.length, 1);
+  assert.equal(res.eligible[0].sent_to, 'yes@test.co.uk');
+  assert.equal(res.missingMessageIdCount, 3);
+});
+
+test('Adversarial: runFollowUpPipeline skips entire run cleanly when all leads lack message_id', async () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '9301', company_name: 'Legacy Lead 1', sent_to: 'leg1@co.uk', sent_at: past3Days },
+    { company_number: '9302', company_name: 'Legacy Lead 2', sent_to: 'leg2@co.uk', sent_at: past3Days, message_id: '' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  let sendInvoked = false;
+  const mockSendEmail = async () => {
+    sendInvoked = true;
+    return { success: true };
+  };
+
+  const logs = [];
+  const res = await runFollowUpPipeline({
+    sentLeadsPath,
+    followUpsPath,
+    now,
+    env: {
+      FOLLOWUP_RESEND_API_KEY: 're_valid_key',
+      FOLLOWUP_EMAIL_FROM: 'nahid@nahid.usasocialhubofficial.com'
+    }
+  }, {
+    sendEmail: mockSendEmail,
+    logger: { log: (msg) => logs.push(msg), error: () => {} }
+  });
+
+  assert.equal(sendInvoked, false);
+  assert.equal(res.eligible, 0);
+  assert.equal(res.sent, 0);
+  assert.equal(res.missingMessageId, 2);
+  assert.ok(logs.some(l => l.includes('missing message_id: 2')));
 });

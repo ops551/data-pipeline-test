@@ -45,6 +45,7 @@ function getEligibleFollowUps(
   const touch2DelayMs = typeof options.touch2DelayMs === 'number' ? options.touch2DelayMs : TOUCH_INTERVALS.touch2;
   const touch3DelayMs = typeof options.touch3DelayMs === 'number' ? options.touch3DelayMs : TOUCH_INTERVALS.touch3;
   const limit = typeof options.limit === 'number' ? options.limit : DEFAULT_MAX_DAILY_FOLLOWUPS;
+  const requireMessageId = options.requireMessageId !== false;
 
   const sentLeads = readLeads(sentLeadsPath);
   if (sentLeads.length === 0) {
@@ -52,6 +53,7 @@ function getEligibleFollowUps(
       eligible: [],
       totalEligible: 0,
       agedOutCount: 0,
+      missingMessageIdCount: 0,
       touch2Count: 0,
       touch3Count: 0
     };
@@ -69,6 +71,7 @@ function getEligibleFollowUps(
   }
 
   let agedOutCount = 0;
+  let missingMessageIdCount = 0;
   const eligibleCandidates = [];
   const seenCandidates = new Set();
 
@@ -107,6 +110,13 @@ function getEligibleFollowUps(
       previousFollowUps.some(f => /unsub|opt_?out|do_not_contact|block|suppress/i.test(String(f.status || '')));
 
     if (isOptedOut) {
+      continue;
+    }
+
+    // Threading Guard: Skip leads missing original message_id to prevent unthreaded emails
+    const rawMessageId = lead.message_id ? String(lead.message_id).trim() : '';
+    if (requireMessageId && !rawMessageId) {
+      missingMessageIdCount++;
       continue;
     }
 
@@ -173,6 +183,7 @@ function getEligibleFollowUps(
     eligible: limitedCandidates,
     totalEligible,
     agedOutCount,
+    missingMessageIdCount,
     touch2Count,
     touch3Count
   };
@@ -362,18 +373,19 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
 
   const candidates = eligibilityResult.eligible;
   if (candidates.length === 0) {
-    logger.log(`[FollowUp] No eligible follow-ups due (total sent leads checked, aged out: ${eligibilityResult.agedOutCount}).`);
+    logger.log(`[FollowUp] No eligible follow-ups due (total sent leads checked, aged out: ${eligibilityResult.agedOutCount}, missing message_id: ${eligibilityResult.missingMessageIdCount}).`);
     return {
       success: true,
       eligible: 0,
       sent: 0,
       failed: 0,
       agedOut: eligibilityResult.agedOutCount,
+      missingMessageId: eligibilityResult.missingMessageIdCount,
       details: []
     };
   }
 
-  logger.log(`[FollowUp] Found ${candidates.length} eligible follow-up candidates (Touch 2: ${eligibilityResult.touch2Count}, Touch 3: ${eligibilityResult.touch3Count}).`);
+  logger.log(`[FollowUp] Found ${candidates.length} eligible follow-up candidates (Touch 2: ${eligibilityResult.touch2Count}, Touch 3: ${eligibilityResult.touch3Count}, skipped without message_id: ${eligibilityResult.missingMessageIdCount}).`);
 
   let currentAccountIndex = 0;
   let sentCount = 0;
