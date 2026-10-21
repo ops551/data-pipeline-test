@@ -38,6 +38,20 @@ function parseKeys(envVal) {
   return String(envVal).split(',').map((k) => k.trim()).filter(Boolean);
 }
 
+function isNetworkOrTimeoutError(err) {
+  if (!err) return false;
+  if (err.name === 'TimeoutError' || err.name === 'AbortError') return true;
+  const msg = err.message || '';
+  if (/timeout|aborted|econnreset|econnrefused|etimedout|enetunreach|fetch failed/i.test(msg)) return true;
+  if (err.cause) {
+    if (err.cause.name === 'TimeoutError' || err.cause.name === 'AbortError') return true;
+    const cMsg = err.cause.message || '';
+    if (/timeout|aborted|econnreset|econnrefused|etimedout|enetunreach/i.test(cMsg)) return true;
+    if (err.cause.code && /etimedout|econnreset|econnrefused|enetunreach/i.test(err.cause.code)) return true;
+  }
+  return false;
+}
+
 function isQuotaExceeded(status, data) {
   if (status === 402 || status === 429 || status === 401 || status === 403) {
     return true;
@@ -178,30 +192,37 @@ function inferEmails(name, domain, patternInfo) {
 
 async function verifyQuickEmailVerification(email, apiKey) {
   const url = `https://api.quickemailverification.com/v1/verify?email=${encodeURIComponent(email)}&apikey=${encodeURIComponent(apiKey)}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
-    return { quotaExceeded: true };
-  }
-  const data = await res.json().catch(() => null);
-  if (!data) {
-    if (res.status === 200) {
-      return { success: false, isValid: false, reason: 'qev_malformed_response' };
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+      return { quotaExceeded: true };
     }
-    return { quotaExceeded: res.status >= 400 };
+    const data = await res.json().catch(() => null);
+    if (!data) {
+      if (res.status === 200) {
+        return { success: false, isValid: false, reason: 'qev_malformed_response' };
+      }
+      return { quotaExceeded: res.status >= 400 };
+    }
+    if (isQuotaExceeded(res.status, data)) {
+      return { quotaExceeded: true };
+    }
+    const isDeliverable = data.result === 'valid';
+    const isSafe = String(data.safe_to_send).toLowerCase() === 'true';
+    const isAcceptAll = String(data.accept_all).toLowerCase() === 'true';
+    const isValid = isDeliverable && isSafe && !isAcceptAll;
+    return {
+      success: true,
+      isValid,
+      isCatchAll: isAcceptAll,
+      reason: isValid ? 'quickemailverification' : (isAcceptAll ? 'qev_accept_all_unsafe' : (data.reason || 'qev_invalid'))
+    };
+  } catch (err) {
+    if (isNetworkOrTimeoutError(err)) {
+      return { success: false, timeout: true, reason: 'qev_timeout' };
+    }
+    throw err;
   }
-  if (isQuotaExceeded(res.status, data)) {
-    return { quotaExceeded: true };
-  }
-  const isDeliverable = data.result === 'valid';
-  const isSafe = String(data.safe_to_send).toLowerCase() === 'true';
-  const isAcceptAll = String(data.accept_all).toLowerCase() === 'true';
-  const isValid = isDeliverable && isSafe && !isAcceptAll;
-  return {
-    success: true,
-    isValid,
-    isCatchAll: isAcceptAll,
-    reason: isValid ? 'quickemailverification' : (isAcceptAll ? 'qev_accept_all_unsafe' : (data.reason || 'qev_invalid'))
-  };
 }
 
 async function verifySniffmail(email, apiKey) {
@@ -229,17 +250,18 @@ async function verifySniffmail(email, apiKey) {
     if (isQuotaExceeded(res.status, data)) {
       return { quotaExceeded: true };
     }
-    const isValid = data.is_valid === true && data.is_deliverable === true && data.is_reachable !== 'risky';
-    const isCatchAll = Boolean(data.is_catchall || data.catch_all || data.is_reachable === 'risky');
+    const isRisky = data.is_reachable === 'risky' || /risky/i.test(data.reason || '');
+    const isValid = data.is_valid === true && data.is_deliverable === true && !isRisky;
+    const isCatchAll = Boolean(data.is_catchall || data.catch_all || isRisky);
     return {
       success: true,
       isValid,
       isCatchAll,
-      reason: isValid ? 'sniffmail' : (data.reason || 'sniffmail_invalid')
+      isRisky,
+      reason: isValid ? 'sniffmail' : (isCatchAll ? 'sniffmail_catch_all' : (data.reason || 'sniffmail_invalid'))
     };
   } catch (err) {
-    const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-    if (isTimeout) {
+    if (isNetworkOrTimeoutError(err)) {
       return { success: false, timeout: true, reason: 'sniffmail_timeout' };
     }
     throw err;
@@ -248,86 +270,110 @@ async function verifySniffmail(email, apiKey) {
 
 async function verifyReoon(email, apiKey) {
   const url = `https://emailverifier.reoon.com/api/v1/verify?email=${encodeURIComponent(email)}&key=${encodeURIComponent(apiKey)}&mode=power`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
-    return { quotaExceeded: true };
-  }
-  const data = await res.json().catch(() => null);
-  if (!data) {
-    if (res.status === 200) {
-      return { success: false, isValid: false, reason: 'reoon_malformed_response' };
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(25000) });
+    if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+      return { quotaExceeded: true };
     }
-    return { quotaExceeded: res.status >= 400 };
+    const data = await res.json().catch(() => null);
+    if (!data) {
+      if (res.status === 200) {
+        return { success: false, isValid: false, reason: 'reoon_malformed_response' };
+      }
+      return { quotaExceeded: res.status >= 400 };
+    }
+    if (isQuotaExceeded(res.status, data)) {
+      return { quotaExceeded: true };
+    }
+    const isCatchAll = data.status === 'catch_all' || data.is_catch_all === true;
+    const isDeliverable = (data.is_deliverable === true || data.status === 'valid' || data.status === 'safe');
+    const isSafe = data.is_safe_to_send !== false;
+    const isInvalid = data.status === 'invalid' || data.status === 'disposable' || data.status === 'spamtrap' || data.is_deliverable === false;
+    const isValid = isDeliverable && isSafe && !isCatchAll && !isInvalid;
+    return {
+      success: true,
+      isValid,
+      isCatchAll,
+      reason: isValid ? 'reoon' : (isCatchAll ? 'reoon_catch_all' : (data.status || 'reoon_invalid'))
+    };
+  } catch (err) {
+    if (isNetworkOrTimeoutError(err)) {
+      return { success: false, timeout: true, reason: 'reoon_timeout' };
+    }
+    throw err;
   }
-  if (isQuotaExceeded(res.status, data)) {
-    return { quotaExceeded: true };
-  }
-  const isCatchAll = data.status === 'catch_all' || data.is_catch_all === true;
-  const isValid = (data.status === 'valid' || data.status === 'safe') && !isCatchAll;
-  return {
-    success: true,
-    isValid,
-    isCatchAll,
-    reason: isValid ? 'reoon' : (isCatchAll ? 'reoon_catch_all' : (data.status || 'reoon_invalid'))
-  };
 }
 
 async function verifyZeroBounce(email, apiKey) {
   const url = `https://api.zerobounce.net/v2/validate?api_key=${encodeURIComponent(apiKey)}&email=${encodeURIComponent(email)}`;
-  const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
-    return { quotaExceeded: true };
-  }
-  const data = await res.json().catch(() => null);
-  if (!data) {
-    if (res.status === 200) {
-      return { success: false, isValid: false, reason: 'zerobounce_malformed_response' };
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+      return { quotaExceeded: true };
     }
-    return { quotaExceeded: res.status >= 400 };
+    const data = await res.json().catch(() => null);
+    if (!data) {
+      if (res.status === 200) {
+        return { success: false, isValid: false, reason: 'zerobounce_malformed_response' };
+      }
+      return { quotaExceeded: res.status >= 400 };
+    }
+    if (isQuotaExceeded(res.status, data)) {
+      return { quotaExceeded: true };
+    }
+    const isValid = data.status === 'valid';
+    return {
+      success: true,
+      isValid,
+      reason: isValid ? 'zerobounce' : (data.status || 'zerobounce_invalid')
+    };
+  } catch (err) {
+    if (isNetworkOrTimeoutError(err)) {
+      return { success: false, timeout: true, reason: 'zerobounce_timeout' };
+    }
+    throw err;
   }
-  if (isQuotaExceeded(res.status, data)) {
-    return { quotaExceeded: true };
-  }
-  const isValid = data.status === 'valid';
-  return {
-    success: true,
-    isValid,
-    reason: isValid ? 'zerobounce' : (data.status || 'zerobounce_invalid')
-  };
 }
 
 async function verifyVerifalia(email, username, password) {
   const url = 'https://api.verifalia.com/v2.7/email-validations?waitTime=5000';
   const auth = Buffer.from(`${username}:${password}`).toString('base64');
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Basic ${auth}`
-    },
-    body: JSON.stringify({ entries: [{ inputData: email }] }),
-    signal: AbortSignal.timeout(5000)
-  });
-  if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
-    return { quotaExceeded: true };
-  }
-  const data = await res.json().catch(() => null);
-  if (!data) {
-    if (res.status === 200) {
-      return { success: false, isValid: false, reason: 'verifalia_malformed_response' };
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Basic ${auth}`
+      },
+      body: JSON.stringify({ entries: [{ inputData: email }] }),
+      signal: AbortSignal.timeout(5000)
+    });
+    if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+      return { quotaExceeded: true };
     }
-    return { quotaExceeded: res.status >= 400 };
+    const data = await res.json().catch(() => null);
+    if (!data) {
+      if (res.status === 200) {
+        return { success: false, isValid: false, reason: 'verifalia_malformed_response' };
+      }
+      return { quotaExceeded: res.status >= 400 };
+    }
+    if (isQuotaExceeded(res.status, data)) {
+      return { quotaExceeded: true };
+    }
+    const entry = data.entries && data.entries[0];
+    const isValid = Boolean(entry && entry.classification === 'Deliverable');
+    return {
+      success: true,
+      isValid,
+      reason: isValid ? 'verifalia' : ((entry && entry.classification) || 'verifalia_invalid')
+    };
+  } catch (err) {
+    if (isNetworkOrTimeoutError(err)) {
+      return { success: false, timeout: true, reason: 'verifalia_timeout' };
+    }
+    throw err;
   }
-  if (isQuotaExceeded(res.status, data)) {
-    return { quotaExceeded: true };
-  }
-  const entry = data.entries && data.entries[0];
-  const isValid = Boolean(entry && entry.classification === 'Deliverable');
-  return {
-    success: true,
-    isValid,
-    reason: isValid ? 'verifalia' : ((entry && entry.classification) || 'verifalia_invalid')
-  };
 }
 
 function extractSenderEmail(rawSender, fallbackDomain) {
@@ -467,8 +513,7 @@ async function verifyEmail(email) {
           ? { status: 'valid_domain', reason: 'quickemailverification' }
           : { status: 'invalid', reason: res.reason || 'quickemailverification_invalid' };
       } catch (err) {
-        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-        if (!isTimeout) {
+        if (!isNetworkOrTimeoutError(err)) {
           exhaustedKeys.add(`qev:${key}`);
         }
         continue;
@@ -491,6 +536,11 @@ async function verifyEmail(email) {
         if (res && res.timeout) {
           continue;
         }
+        if (res && res.isRisky) {
+          // Sniffmail considers role accounts and uncertain servers as 'risky' / unverified.
+          // Do not reject the candidate outright; continue to next provider (Reoon) for definitive deep check.
+          continue;
+        }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
         }
@@ -498,8 +548,7 @@ async function verifyEmail(email) {
           ? { status: 'valid_domain', reason: 'sniffmail' }
           : { status: 'invalid', reason: res.reason || 'sniffmail_invalid' };
       } catch (err) {
-        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-        if (!isTimeout) {
+        if (!isNetworkOrTimeoutError(err)) {
           exhaustedKeys.add(`sniffmail:${key}`);
         }
         continue;
@@ -529,8 +578,7 @@ async function verifyEmail(email) {
           ? { status: 'valid_domain', reason: 'reoon' }
           : { status: 'invalid', reason: res.reason || 'reoon_invalid' };
       } catch (err) {
-        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-        if (!isTimeout) {
+        if (!isNetworkOrTimeoutError(err)) {
           exhaustedKeys.add(`reoon:${key}`);
         }
         continue;
@@ -560,8 +608,7 @@ async function verifyEmail(email) {
           ? { status: 'valid_domain', reason: 'zerobounce' }
           : { status: 'invalid', reason: res.reason || 'zerobounce_invalid' };
       } catch (err) {
-        const isTimeout = err && (err.name === 'TimeoutError' || err.name === 'AbortError' || /timeout|aborted/i.test(err.message || ''));
-        if (!isTimeout) {
+        if (!isNetworkOrTimeoutError(err)) {
           exhaustedKeys.add(`zerobounce:${key}`);
         }
         continue;
@@ -585,8 +632,10 @@ async function verifyEmail(email) {
           ? { status: 'valid_domain', reason: 'verifalia' }
           : { status: 'invalid', reason: res.reason || 'verifalia_invalid' };
       }
-    } catch {
-      exhaustedKeys.add(`verifalia:${vUser}`);
+    } catch (err) {
+      if (!isNetworkOrTimeoutError(err)) {
+        exhaustedKeys.add(`verifalia:${vUser}`);
+      }
     }
   }
 

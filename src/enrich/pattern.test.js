@@ -222,6 +222,48 @@ test('Reoon parser validates deliverability criteria', async () => {
     assert.strictEqual(malformedRes.success, false);
     assert.strictEqual(malformedRes.isValid, false);
     assert.strictEqual(malformedRes.reason, 'reoon_malformed_response');
+
+    // Deliverable role_account (Unit 5.45)
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({
+        status: 'role_account',
+        is_deliverable: true,
+        is_safe_to_send: true,
+        is_catch_all: false
+      })
+    });
+    const roleValid = await verifyReoon('info@sncommercial.co.uk', 'test-reoon-key');
+    assert.strictEqual(roleValid.isValid, true);
+    assert.strictEqual(roleValid.reason, 'reoon');
+
+    // Undeliverable role_account
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({
+        status: 'role_account',
+        is_deliverable: false,
+        is_safe_to_send: false,
+        is_catch_all: false
+      })
+    });
+    const roleInvalid = await verifyReoon('info@bad.co.uk', 'test-reoon-key');
+    assert.strictEqual(roleInvalid.isValid, false);
+
+    // Catch-all role_account (must be rejected!)
+    global.fetch = async () => ({
+      status: 200,
+      json: async () => ({
+        status: 'role_account',
+        is_deliverable: true,
+        is_safe_to_send: true,
+        is_catch_all: true
+      })
+    });
+    const roleCatchAll = await verifyReoon('info@catchall.co.uk', 'test-reoon-key');
+    assert.strictEqual(roleCatchAll.isValid, false);
+    assert.strictEqual(roleCatchAll.isCatchAll, true);
+    assert.strictEqual(roleCatchAll.reason, 'reoon_catch_all');
   } finally {
     restoreEnv();
   }
@@ -844,6 +886,78 @@ test('Unit 5.44: verifyEmail fast-skips exhausted providers without making netwo
 
   restoreEnv();
 });
+
+test('Unit 5.45: Sniffmail risky result falls through to Reoon and verifies successfully', async () => {
+  restoreEnv();
+  process.env.SNIFFMAIL_API_KEY = 'sniff_k1';
+  process.env.REON_API_KEY = 'reoon_k1';
+
+  let sniffCalled = 0;
+  let reoonCalled = 0;
+
+  global.fetch = async (url) => {
+    if (String(url).includes('sniffmail')) {
+      sniffCalled++;
+      return {
+        status: 200,
+        json: async () => ({
+          email: 'info@sncommercial.co.uk',
+          is_valid: false,
+          is_reachable: 'risky',
+          is_role_account: true,
+          is_deliverable: false,
+          reason: 'Risky - may not be deliverable'
+        })
+      };
+    }
+    if (String(url).includes('reoon')) {
+      reoonCalled++;
+      return {
+        status: 200,
+        json: async () => ({
+          status: 'role_account',
+          is_deliverable: true,
+          is_safe_to_send: true,
+          is_catch_all: false
+        })
+      };
+    }
+    return { status: 500, json: async () => ({}) };
+  };
+
+  const res = await verifyEmail('info@sncommercial.co.uk');
+  assert.strictEqual(sniffCalled, 1, 'Sniffmail should be called first');
+  assert.strictEqual(reoonCalled, 1, 'Reoon should be called as fallback when Sniffmail is risky');
+  assert.strictEqual(res.status, 'valid_domain');
+  assert.strictEqual(res.reason, 'reoon');
+
+  restoreEnv();
+});
+
+test('Unit 5.45: Temporary network error or socket timeout does NOT add key to exhaustedKeys', async () => {
+  restoreEnv();
+  const { exhaustedKeys, resetExhaustedKeys } = require('./pattern');
+  resetExhaustedKeys();
+
+  process.env.REON_API_KEY = 'reoon_network_key';
+
+  global.fetch = async () => {
+    const err = new TypeError('fetch failed');
+    err.cause = { code: 'ETIMEDOUT', message: 'connect ETIMEDOUT 1.2.3.4:443' };
+    throw err;
+  };
+
+  const res = await verifyEmail('any@example.com');
+  assert.strictEqual(res.status, 'unverified');
+  assert.strictEqual(
+    exhaustedKeys.has('reoon:reoon_network_key'),
+    false,
+    'Temporary network errors must not exhaust the key'
+  );
+
+  restoreEnv();
+});
+
 
 
 
