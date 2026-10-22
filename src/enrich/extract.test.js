@@ -653,6 +653,79 @@ test('extractEmails, extractPhones, and extractPeople handle giant inputs safely
   assert.strictEqual(people[0].role, 'Founder');
 });
 
+test('Unit 5.46: search_snippet upgrades existing officers but never injects unverified strangers', () => {
+  const { extractPeople } = require('./extract');
+
+  const activeOfficers = [
+    { name: 'Ankita Mohapatra', role: 'director' },
+    { name: 'Rudra Prakash Parida', role: 'director' }
+  ];
+
+  const peopleMap = new Map();
+  for (const off of activeOfficers) {
+    peopleMap.set(off.name.toLowerCase(), {
+      name: off.name,
+      job_title: off.role || 'Director',
+      role_source_url: 'officers_api',
+      weight: 30
+    });
+  }
+
+  // Snippet contains legitimate founder mention for Ankita, plus random search strangers (Randhir Thakur, David Jim)
+  const snippetHtml = `
+    <div>
+      <p>Founder Ankita Mohapatra launched the graduate career program.</p>
+      <p>Randhir Thakur, CEO</p>
+      <p>David Jim, Director</p>
+    </div>
+  `;
+
+  const snippetPeople = extractPeople(snippetHtml, activeOfficers, 'search_snippet', 'GRADFORWARD LTD');
+  assert.ok(snippetPeople.length >= 1);
+
+  // Apply the Unit 5.46 cross-referencing logic from src/enrich/index.js
+  const weightMap = { 'Founder': 100, 'CEO': 90, 'Director': 30 };
+  for (const p of snippetPeople) {
+    const pNameLower = p.name.toLowerCase();
+    const w = weightMap[p.role] || 10;
+
+    let existing = peopleMap.get(pNameLower);
+    if (!existing) {
+      const pParts = pNameLower.split(/\s+/).filter(Boolean);
+      if (pParts.length >= 2) {
+        for (const [key, val] of peopleMap.entries()) {
+          const exParts = key.split(/\s+/).filter(Boolean);
+          if (exParts.length >= 2 && exParts[0] === pParts[0] && exParts[exParts.length - 1] === pParts[pParts.length - 1]) {
+            existing = val;
+            break;
+          }
+        }
+      }
+    }
+
+    if (existing && w > existing.weight) {
+      existing.job_title = p.role;
+      existing.role_source_url = p.source_url;
+      existing.weight = w;
+    }
+  }
+
+  const finalPeople = Array.from(peopleMap.values());
+  assert.strictEqual(finalPeople.length, 2, 'Must retain exactly the 2 real company officers and reject strangers');
+  
+  const ankita = finalPeople.find(p => p.name === 'Ankita Mohapatra');
+  assert.ok(ankita);
+  assert.strictEqual(ankita.job_title, 'Founder');
+  assert.strictEqual(ankita.role_source_url, 'search_snippet');
+
+  const rudra = finalPeople.find(p => p.name === 'Rudra Prakash Parida');
+  assert.ok(rudra);
+  assert.strictEqual(rudra.job_title, 'director');
+
+  assert.strictEqual(peopleMap.has('randhir thakur'), false);
+  assert.strictEqual(peopleMap.has('david jim'), false);
+});
+
 
 
 
