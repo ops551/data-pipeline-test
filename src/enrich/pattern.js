@@ -35,7 +35,10 @@ async function alertProviderOnce(provider, details) {
 
 function parseKeys(envVal) {
   if (!envVal) return [];
-  return String(envVal).split(',').map((k) => k.trim()).filter(Boolean);
+  return String(envVal)
+    .split(',')
+    .map((k) => k.trim().replace(/^[A-Z0-9_]+=\s*/i, '').replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean);
 }
 
 function isNetworkOrTimeoutError(err) {
@@ -251,14 +254,14 @@ async function verifySniffmail(email, apiKey) {
       return { quotaExceeded: true };
     }
     const isRisky = data.is_reachable === 'risky' || /risky/i.test(data.reason || '');
-    const isValid = data.is_valid === true && data.is_deliverable === true && !isRisky;
     const isCatchAll = Boolean(data.is_catchall || data.catch_all || isRisky);
+    const isValid = data.is_valid === true && data.is_deliverable === true && !isRisky && !isCatchAll;
     return {
       success: true,
       isValid,
       isCatchAll,
       isRisky,
-      reason: isValid ? 'sniffmail' : (isCatchAll ? 'sniffmail_catch_all' : (data.reason || 'sniffmail_invalid'))
+      reason: isValid ? 'sniffmail' : (isRisky ? 'sniffmail_risky' : (isCatchAll ? 'sniffmail_catch_all' : (data.reason || 'sniffmail_invalid')))
     };
   } catch (err) {
     if (isNetworkOrTimeoutError(err)) {
@@ -536,14 +539,11 @@ async function verifyEmail(email) {
         if (res && res.timeout) {
           continue;
         }
-        if (res && res.isRisky) {
-          // Sniffmail considers role accounts and uncertain servers as 'risky' / unverified.
-          // Do not reject the candidate outright; continue to next provider (Reoon) for definitive deep check.
-          continue;
-        }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
         }
+        // As per Unit 5.47 requirement: If Sniffmail determines an email is risky or invalid,
+        // immediately return as invalid and do NOT fall through to Reoon or burn subsequent keys.
         return res.isValid
           ? { status: 'valid_domain', reason: 'sniffmail' }
           : { status: 'invalid', reason: res.reason || 'sniffmail_invalid' };
@@ -793,6 +793,7 @@ module.exports = {
   verifyVerifalia,
   resetExhaustedKeys,
   exhaustedKeys,
-  areAllVerificationApisExhausted
+  areAllVerificationApisExhausted,
+  parseKeys
 };
 
