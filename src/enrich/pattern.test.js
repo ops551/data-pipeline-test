@@ -338,6 +338,7 @@ test('Verifalia parser validates Deliverable classification with basic auth', as
 
 test('Automated quota failover: switches between comma-separated keys within a provider', async () => {
   try {
+    process.env.SMTP_MOCK = 'true';
     process.env.QUICK_EMAIL_VERIFICATION_API_KEY = 'exhausted_key,healthy_key';
     const attemptedKeys = [];
 
@@ -961,6 +962,101 @@ test('Unit 5.45: Temporary network error or socket timeout does NOT add key to e
     false,
     'Temporary network errors must not exhaust the key'
   );
+
+  restoreEnv();
+});
+
+test('Unit 5.48: parseKeys handles newlines, carriage returns, semicolons, and commas', () => {
+  const { parseKeys } = require('./pattern');
+  const multiFormat = `
+    key1, key2;
+    key3\r
+    key4
+  `;
+  const keys = parseKeys(multiFormat);
+  assert.deepStrictEqual(keys, ['key1', 'key2', 'key3', 'key4']);
+});
+
+test('Unit 5.48: verifyEmail returns no_mx immediately for domain without MX records without calling APIs', async () => {
+  restoreEnv();
+  process.env.SNIFFMAIL_API_KEY = 'sniff_key_1,sniff_key_2';
+  delete process.env.SMTP_MOCK;
+  delete process.env.SKIP_MX_CHECK;
+
+  let fetchCalls = 0;
+  global.fetch = async () => {
+    fetchCalls++;
+    return { status: 200, json: async () => ({}) };
+  };
+
+  // oceans-taste.com has NO MX records (ENODATA)
+  const res = await verifyEmail('mohammed.ahmed@oceans-taste.com');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'no_mx');
+  assert.strictEqual(fetchCalls, 0, 'Must NOT invoke any external verification APIs when MX is absent');
+
+  restoreEnv();
+});
+
+test('Unit 5.48: Sniffmail 403 WAF block does not mark key as quotaExceeded and stops looping immediately', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_waf_1,sniff_waf_2,sniff_waf_3';
+  const { exhaustedKeys, resetExhaustedKeys } = require('./pattern');
+  resetExhaustedKeys();
+
+  let sniffCalls = 0;
+  global.fetch = async (url) => {
+    if (String(url).includes('sniffmail.io')) {
+      sniffCalls++;
+      return { status: 403, text: async () => '<html>Cloudflare WAF Forbidden</html>' };
+    }
+    return { status: 500 };
+  };
+
+  const res = await verifyEmail('admin@company.com');
+  assert.strictEqual(sniffCalls, 1, 'Should break immediately on WAF 403 without looping across all keys');
+  assert.strictEqual(exhaustedKeys.has('sniffmail:sniff_waf_1'), false, 'WAF 403 must not mark key as quotaExceeded');
+  assert.strictEqual(res.status, 'unverified');
+  assert.strictEqual(res.reason, 'verification_unavailable');
+
+  restoreEnv();
+});
+
+test('Unit 5.48: Sniffmail quota exhaustion (402/429) fails over to next key in key list', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_k1,sniff_k2';
+  const { exhaustedKeys, resetExhaustedKeys } = require('./pattern');
+  resetExhaustedKeys();
+
+  const triedKeys = [];
+  global.fetch = async (url, opts) => {
+    const authHeader = (opts && opts.headers && opts.headers.Authorization) || '';
+    if (authHeader.includes('sniff_k1')) {
+      triedKeys.push('sniff_k1');
+      return { status: 402, json: async () => ({ error: 'quota_exceeded' }) };
+    }
+    if (authHeader.includes('sniff_k2')) {
+      triedKeys.push('sniff_k2');
+      return {
+        status: 200,
+        json: async () => ({
+          is_valid: true,
+          is_deliverable: true,
+          is_reachable: 'safe'
+        })
+      };
+    }
+    return { status: 500 };
+  };
+
+  const res = await verifyEmail('founder@company.com');
+  assert.deepStrictEqual(triedKeys, ['sniff_k1', 'sniff_k2'], 'Must failover from key 1 to key 2 on quota exhaustion');
+  assert.strictEqual(exhaustedKeys.has('sniffmail:sniff_k1'), true);
+  assert.strictEqual(exhaustedKeys.has('sniffmail:sniff_k2'), false);
+  assert.strictEqual(res.status, 'valid_domain');
+  assert.strictEqual(res.reason, 'sniffmail');
 
   restoreEnv();
 });

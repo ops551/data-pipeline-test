@@ -19,6 +19,16 @@ const TITLE_SUFFIXES = new Set([
   'obe', 'mbe', 'cbe', 'kbe', 'dbe', 'phd', 'esq', 'jr', 'sr', 'ii', 'iii', 'iv', 'kc', 'qc'
 ]);
 
+const PUBLIC_EMAIL_PROVIDERS = new Set([
+  'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com',
+  'yahoo.com', 'yahoo.co.uk', 'icloud.com', 'aol.com', 'live.com',
+  'mail.com', 'proton.me', 'protonmail.com'
+]);
+
+const TEST_OR_DOC_DOMAINS = new Set([
+  'example.com', 'example.org', 'example.net', 'test.com', 'company.com', 'validcompany.com'
+]);
+
 const exhaustedKeys = new Set();
 const alertedProvidersInProcess = new Set();
 
@@ -36,7 +46,7 @@ async function alertProviderOnce(provider, details) {
 function parseKeys(envVal) {
   if (!envVal) return [];
   return String(envVal)
-    .split(',')
+    .split(/[\r\n,;]+/)
     .map((k) => k.trim().replace(/^[A-Z0-9_]+=\s*/i, '').replace(/^['"]|['"]$/g, ''))
     .filter(Boolean);
 }
@@ -235,13 +245,22 @@ async function verifySniffmail(email, apiKey) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
         Authorization: `Bearer ${apiKey}`
       },
       body: JSON.stringify({ email }),
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(8000)
     });
-    if (res.status === 402 || res.status === 429 || res.status === 401 || res.status === 403) {
+    if (res.status === 402 || res.status === 429) {
       return { quotaExceeded: true };
+    }
+    if (res.status === 401) {
+      return { quotaExceeded: true, reason: 'unauthorized_key' };
+    }
+    if (res.status === 403) {
+      return { success: false, timeout: false, reason: 'sniffmail_waf_blocked' };
     }
     const data = await res.json().catch(() => null);
     if (!data) {
@@ -494,6 +513,33 @@ async function verifyEmail(email) {
     return { status: 'invalid', reason: 'syntax' };
   }
 
+  // Fast pre-flight DNS MX check: if the domain has no MX records at all,
+  // it is impossible to receive email. Avoid calling external verification APIs and wasting quota/time.
+  const emailDomain = (email.split('@')[1] || '').toLowerCase().trim();
+  if (
+    process.env.SMTP_MOCK !== 'true' &&
+    process.env.SMTP_MOCK !== '1' &&
+    process.env.SKIP_MX_CHECK !== 'true' &&
+    emailDomain &&
+    !PUBLIC_EMAIL_PROVIDERS.has(emailDomain) &&
+    !TEST_OR_DOC_DOMAINS.has(emailDomain)
+  ) {
+    try {
+      const mxPromise = resolveMx(emailDomain);
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('timeout')), 2000)
+      );
+      const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
+      if (!mxRecords || mxRecords.length === 0 || (mxRecords.length === 1 && mxRecords[0].exchange === '')) {
+        return { status: 'invalid', reason: 'no_mx' };
+      }
+    } catch (err) {
+      if (err.code === 'ENODATA' || err.code === 'ENOTFOUND') {
+        return { status: 'invalid', reason: 'no_mx' };
+      }
+    }
+  }
+
   // Priority 1: QuickEmailVerification
   const qevKeys = parseKeys(process.env.QUICK_EMAIL_VERIFICATION_API_KEY);
   if (qevKeys.some(k => !exhaustedKeys.has(`qev:${k}`))) {
@@ -506,8 +552,8 @@ async function verifyEmail(email) {
           await alertProviderOnce('QuickEmailVerification', { key, reason: res.reason || 'quota_exceeded' });
           continue;
         }
-        if (res && res.timeout) {
-          continue;
+        if (res && (res.timeout || res.reason === 'sniffmail_waf_blocked')) {
+          break;
         }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
@@ -536,8 +582,8 @@ async function verifyEmail(email) {
           await alertProviderOnce('Sniffmail', { key, reason: res.reason || 'quota_exceeded' });
           continue;
         }
-        if (res && res.timeout) {
-          continue;
+        if (res && (res.timeout || res.reason === 'sniffmail_waf_blocked')) {
+          break;
         }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
@@ -568,8 +614,8 @@ async function verifyEmail(email) {
           await alertProviderOnce('Reoon', { key, reason: res.reason || 'quota_exceeded' });
           continue;
         }
-        if (res && res.timeout) {
-          continue;
+        if (res && (res.timeout || res.reason === 'sniffmail_waf_blocked')) {
+          break;
         }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
@@ -598,8 +644,8 @@ async function verifyEmail(email) {
           await alertProviderOnce('ZeroBounce', { key, reason: res.reason || 'quota_exceeded' });
           continue;
         }
-        if (res && res.timeout) {
-          continue;
+        if (res && (res.timeout || res.reason === 'sniffmail_waf_blocked')) {
+          break;
         }
         if (!res || res.success === false || res.status === 'unknown' || res.reason === 'unknown' || (res.reason && String(res.reason).toLowerCase() === 'unknown')) {
           continue;
@@ -637,6 +683,12 @@ async function verifyEmail(email) {
         exhaustedKeys.add(`verifalia:${vUser}`);
       }
     }
+  }
+
+  // If not all APIs are actually exhausted (e.g. temporary WAF block or network timeout),
+  // do NOT report all_apis_exhausted because that would falsely halt the batch!
+  if (!areAllVerificationApisExhausted()) {
+    return { status: 'unverified', reason: 'verification_unavailable' };
   }
 
   // All configured verification APIs are exhausted or not configured
