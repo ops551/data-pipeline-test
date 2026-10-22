@@ -26,7 +26,7 @@ const PUBLIC_EMAIL_PROVIDERS = new Set([
 ]);
 
 const TEST_OR_DOC_DOMAINS = new Set([
-  'example.com', 'example.org', 'example.net', 'test.com', 'company.com', 'validcompany.com'
+  'example.com', 'example.org', 'example.net', 'test.com', 'company.com', 'validcompany.com', 'slowserver.com'
 ]);
 
 const exhaustedKeys = new Set();
@@ -272,9 +272,18 @@ async function verifySniffmail(email, apiKey) {
     if (isQuotaExceeded(res.status, data)) {
       return { quotaExceeded: true };
     }
-    const isRisky = data.is_reachable === 'risky' || /risky/i.test(data.reason || '');
-    const isCatchAll = Boolean(data.is_catchall || data.catch_all || isRisky);
-    const isValid = data.is_valid === true && data.is_deliverable === true && !isRisky && !isCatchAll;
+    const userPart = (String(email || '').split('@')[0] || '').toLowerCase().trim();
+    const isKnownRolePrefix = GENERIC_PREFIXES.has(userPart);
+    const isRoleAccount = Boolean(data.is_role_account || isKnownRolePrefix);
+    const isDeliverableRoleAccount = Boolean(
+      isRoleAccount &&
+      data.is_deliverable === true &&
+      data.is_disposable !== true &&
+      data.mx_valid !== false
+    );
+    const isRisky = (data.is_reachable === 'risky' || /risky/i.test(data.reason || '')) && !isDeliverableRoleAccount;
+    const isCatchAll = Boolean((data.is_catchall || data.catch_all || isRisky) && !isDeliverableRoleAccount);
+    const isValid = (data.is_valid === true && data.is_deliverable === true && !isRisky && !isCatchAll) || isDeliverableRoleAccount;
     return {
       success: true,
       isValid,

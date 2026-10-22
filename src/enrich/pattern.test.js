@@ -1061,6 +1061,84 @@ test('Unit 5.48: Sniffmail quota exhaustion (402/429) fails over to next key in 
   restoreEnv();
 });
 
+test('Unit 5.49: Sniffmail accepts deliverable role account (admin@, info@) with valid MX directly as valid_domain', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_unit49_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'admin@pembertonplumbing.co.uk',
+      is_valid: false,
+      is_reachable: 'risky',
+      is_disposable: false,
+      is_role_account: true,
+      is_deliverable: true,
+      mx_valid: true,
+      reason: 'Risky - may not be deliverable'
+    })
+  });
+
+  const res = await verifyEmail('admin@pembertonplumbing.co.uk');
+  assert.strictEqual(res.status, 'valid_domain');
+  assert.strictEqual(res.reason, 'sniffmail');
+
+  restoreEnv();
+});
+
+test('Unit 5.49: Sniffmail rejects undeliverable role account', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_unit49_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'admin@pembertonplumbing.co.uk',
+      is_valid: false,
+      is_reachable: 'risky',
+      is_disposable: false,
+      is_role_account: true,
+      is_deliverable: false,
+      mx_valid: true,
+      reason: 'Risky - may not be deliverable'
+    })
+  });
+
+  const res = await verifyEmail('admin@pembertonplumbing.co.uk');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'sniffmail_risky');
+
+  restoreEnv();
+});
+
+test('Unit 5.49: Sniffmail rejects non-role unknown email on risky catch-all domain', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_unit49_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'randomperson@pembertonplumbing.co.uk',
+      is_valid: false,
+      is_reachable: 'risky',
+      is_disposable: false,
+      is_role_account: false,
+      is_deliverable: true,
+      mx_valid: true,
+      reason: 'Risky - may not be deliverable'
+    })
+  });
+
+  const res = await verifyEmail('randomperson@pembertonplumbing.co.uk');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'sniffmail_risky');
+
+  restoreEnv();
+});
+
 
 
 
