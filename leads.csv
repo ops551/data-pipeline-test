@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17534745,FINE FLOW CARE LIMITED,2026-10-22,info@finecare247.com,,no,lead,officers_api; existing_website; web_scrape,https://www.finecare247.com/,Page title: finecare247 Homepage forms: 0 Visible homepage text: finecare247,Amaka Cassandra Ejere,director,person_fallback,,,,,,reoon,yes
