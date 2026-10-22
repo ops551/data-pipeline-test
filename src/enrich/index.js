@@ -264,22 +264,29 @@ async function runEnrichment() {
       if (leadershipRes.html) {
         const snippetPeople = extractPeople(leadershipRes.html, activeOfficers, 'search_snippet', company.company_name);
         for (const p of snippetPeople) {
-           const key = p.name.toLowerCase();
+           const pNameLower = p.name.toLowerCase();
            const w = getRoleWeight(p.role);
-           if (peopleMap.has(key)) {
-             const existing = peopleMap.get(key);
-             if (w > existing.weight) {
-               existing.job_title = p.role;
-               existing.role_source_url = p.source_url;
-               existing.weight = w;
+
+           // Cross-reference existing company officers / site people to upgrade leadership role (e.g. Director -> Founder/CEO).
+           // NEVER insert unverified strangers from open web search snippets into peopleMap!
+           let existing = peopleMap.get(pNameLower);
+           if (!existing) {
+             const pParts = pNameLower.split(/\s+/).filter(Boolean);
+             if (pParts.length >= 2) {
+               for (const [key, val] of peopleMap.entries()) {
+                 const exParts = key.split(/\s+/).filter(Boolean);
+                 if (exParts.length >= 2 && exParts[0] === pParts[0] && exParts[exParts.length - 1] === pParts[pParts.length - 1]) {
+                   existing = val;
+                   break;
+                 }
+               }
              }
-           } else {
-             peopleMap.set(key, {
-               name: p.name,
-               job_title: p.role,
-               role_source_url: p.source_url,
-               weight: w
-             });
+           }
+
+           if (existing && w > existing.weight) {
+             existing.job_title = p.role;
+             existing.role_source_url = p.source_url;
+             existing.weight = w;
            }
         }
       }
