@@ -887,9 +887,9 @@ test('Unit 5.44: verifyEmail fast-skips exhausted providers without making netwo
   restoreEnv();
 });
 
-test('Unit 5.45: Sniffmail risky result falls through to Reoon and verifies successfully', async () => {
+test('Unit 5.47: Sniffmail risky result is immediately discarded as invalid and does NOT fall through to Reoon', async () => {
   restoreEnv();
-  process.env.SNIFFMAIL_API_KEY = 'sniff_k1';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_k1,sniff_k2,sniff_k3';
   process.env.REON_API_KEY = 'reoon_k1';
 
   let sniffCalled = 0;
@@ -901,7 +901,7 @@ test('Unit 5.45: Sniffmail risky result falls through to Reoon and verifies succ
       return {
         status: 200,
         json: async () => ({
-          email: 'info@sncommercial.co.uk',
+          email: 'admin@pembertonplumbing.co.uk',
           is_valid: false,
           is_reachable: 'risky',
           is_role_account: true,
@@ -925,13 +925,20 @@ test('Unit 5.45: Sniffmail risky result falls through to Reoon and verifies succ
     return { status: 500, json: async () => ({}) };
   };
 
-  const res = await verifyEmail('info@sncommercial.co.uk');
-  assert.strictEqual(sniffCalled, 1, 'Sniffmail should be called first');
-  assert.strictEqual(reoonCalled, 1, 'Reoon should be called as fallback when Sniffmail is risky');
-  assert.strictEqual(res.status, 'valid_domain');
-  assert.strictEqual(res.reason, 'reoon');
+  const res = await verifyEmail('admin@pembertonplumbing.co.uk');
+  assert.strictEqual(sniffCalled, 1, 'Sniffmail should be called only once and stop (never loop over remaining keys)');
+  assert.strictEqual(reoonCalled, 0, 'Reoon should NOT be called when Sniffmail gives a risky verdict');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'sniffmail_risky');
 
   restoreEnv();
+});
+
+test('Unit 5.47: parseKeys handles accidental env var prefixes and surrounding quotes cleanly', () => {
+  const { parseKeys } = require('./pattern');
+  const raw = 'SNIFFMAIL_API_KEY="sniff_key1", \'sniff_key2\', REON_API_KEY=reoon_key3, sniff_key4';
+  const keys = parseKeys(raw);
+  assert.deepStrictEqual(keys, ['sniff_key1', 'sniff_key2', 'reoon_key3', 'sniff_key4']);
 });
 
 test('Unit 5.45: Temporary network error or socket timeout does NOT add key to exhaustedKeys', async () => {
