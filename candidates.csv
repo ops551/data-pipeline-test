@@ -1,54 +1,5 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-SC906928,STERLING NEST LIMITED,2026-10-23,active,ltd,47910,"1/2 27 Kyleakin Road, Thornliebank, Glasgow, G46 8AG, Scotland",no
-17539065,GHARIS MOTORS LIMITED,2026-10-23,active,ltd,45112;77110,"209 Wardend Road, Birmingham, B8 2QY, England",no
-17539068,HEIRBEAUTY LTD,2026-10-23,active,ltd,96020,"1 Ford Close, Ashford, TW15 3SB, United Kingdom",no
-17539063,FUEL+D LTD,2026-10-23,active,ltd,10850,"136 Kenilworth Court, Coventry, CV3 6JD, United Kingdom",no
-17524295,LEEDS SWEETS LIMITED,2026-10-15,active,ltd,47240,"45 St. Alban Approach, Leeds, LS9 6LF, England",no
-17524297,COLOURBOARD LIMITED,2026-10-15,active,ltd,52230,"7 High Street, Cromer, Norfolk, NR27 9HG, England",no
-17524309,LELLIE LTD,2026-10-15,active,ltd,46520;46900;47910,"Suite Ra01,, 195-197 Wood Street, London, E17 3NU, England",no
-17524307,EASTBOURNE ESSENTIAL LTD,2026-10-15,active,ltd,47190,"Liberty House, 30 Whitchurch Lane, Edgware, HA8 6LE, England",no
-17524288,OAK & ORBIT LIMITED,2026-10-15,active,ltd,47910;62090,"Office 21598 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
-17524368,LEO HAIR STUDIO LTD,2026-10-15,active,ltd,96020,"1416 Pershore Road, Birmingham, West Midlands, B30 2PH, United Kingdom",no
-17524392,AQORIO LTD,2026-10-15,active,ltd,62012,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17524453,UK COLLEGES OVERSEAS DEVELOPMENT SERVICES OFFICE LTD,2026-10-15,active,ltd,96090,"57b Fulham High Street, London, SW6 3JJ, England",no
-17524449,THE BIG DIPPER LIMITED,2026-10-15,active,ltd,46390,"506 Belem Tower Belem Close, Liverpool, L17 3DB, England",no
-17524468,PLANT COST MANAGEMENT LTD,2026-10-15,active,ltd,70229,"Radley House, Grangefield Industrial Estate, Pudsey, LS28 6LE, England",no
-17524475,ABU SUPPLY LTD,2026-10-15,active,ltd,46900,"Unit C, Station Road, Peterborough, PE6 0QE, United Kingdom",no
-17524510,MARC’S BAKERY LTD,2026-10-15,active,ltd,47240,"102 Cabinhill Road, Nuneaton, CV10 9RN, United Kingdom",no
-17524512,GOJJO LIMITED,2026-10-15,active,ltd,56101,"67-70 Mott Street, Birmingham, B19 3HE, England",no
-17524509,HISSA TRADING LTD,2026-10-15,active,ltd,47910,"1 Cromer Avenue, Burnley, BB10 3HA, United Kingdom",no
-17524578,ARBOUR & STONE LTD,2026-10-15,active,ltd,47910,"Ryland, Vines Cross Road, Heathfield, TN21 0HF, United Kingdom",no
-17524576,ZOLIV LTD,2026-10-15,active,ltd,46900;47190;47910,"Flat 52 Bergenia House, Bedfont Lane, Feltham, TW13 4GE, England",no
-17524573,BASEOVER CONSTRUCTION LTD,2026-10-15,active,ltd,41202,"4 Sidhu Mews, Romford, RM3 9FR, England",no
-17524569,TMF CONTRACTS LTD,2026-10-15,active,ltd,43999,"27 Chittock Mead, Basildon, SS14 1RW, United Kingdom",no
-17524571,DONABUY LTD,2026-10-15,active,ltd,46190;47910,"8 Limber Close, Gainsborough, DN21 1TU, United Kingdom",no
-17524590,D&D ROOFING SPECIALIST LTD,2026-10-15,active,ltd,43910,"16 Hennals Avenue, Redditch, B97 5RX, England",no
-17524581,NEST VISIONS LTD,2026-10-15,active,ltd,47190,"10 Freshfield Avenue, London, E8 4BQ, England",no
-17524584,IAH CENTRAL LIMITED,2026-10-15,active,ltd,47910,"27 Halliday Drive, Leeds, LS12 3PA, England",no
-17524579,R CHEEMA LTD,2026-10-15,active,ltd,49410,"14 Mulberry Road, Walsall, WS3 2NQ, England",no
-17524609,SELLVANTO LTD,2026-10-15,active,ltd,47910,"76 Wedderburn Road, Barking, IG11 7XG, United Kingdom",no
-17524606,ZEYVORO LIMITED,2026-10-15,active,ltd,47910,"99 Alpine Street, Reading, RG1 2PZ, England",no
-17524616,ECHELON SALES LTD,2026-10-15,active,ltd,85590,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17524613,CAREVIA QUALITY & COMPLIANCE LTD,2026-10-15,active,ltd,58190;62012;70229;85590,"124-128 City Road, London, EC1V 2NX, England",yes
-17524608,GUILLEMOT NOIR LIMITED,2026-10-15,active,ltd,38110;43999,"82a London Street, Chertsey, KT16 8AJ, England",no
-17522070,EASY TO CART LTD,2026-10-15,active,ltd,47910,"115 Dormers Wells Lane, Southall, UB1 3JA, England",no
-17522414,QJG FINANCE LTD,2026-10-15,active,ltd,47770,"17 Royal Gardens, Bowdon, Altrincham, WA14 3GX, England",no
-17522412,SUMHAVEN CARE GROUP LTD,2026-10-15,active,ltd,87100;87200;87300;87900,"Aacsl Accountants House Unit 9, Astra Centre, Edinburgh Way, Harlow, Essex, CM20 2BN, United Kingdom",no
-17522413,UK SCHOOL OF EXCELLENCE LTD,2026-10-15,active,ltd,85590;85600,"Broadway Chambers C/O: Ficas Accounting Ltd., 1 Cranbrook Road, London, IG1 4DU, United Kingdom",no
-17522420,I MALLAN LTD,2026-10-15,active,ltd,49320,"38b Vere Street, Barry, CF63 2HU, United Kingdom",no
-17522419,LINESENSEI LTD,2026-10-15,active,ltd,58290;62012,"Suite Ra01 195-197 Wood Street, London, E17 3NU, United Kingdom",yes
-17522422,BUILDNEWLEADS LTD,2026-10-15,active,ltd,74909,"195 Wood Street, London, E17 3NU, United Kingdom",no
-17522404,MSCHEF LTD,2026-10-15,active,ltd,56101;56210;56290,"16 St. Peters Park, Mold, CH7 6DP, Wales",no
-17522511,SANN EXPRESS LTD,2026-10-15,active,ltd,52290,"115 Winrose Approach, Leeds, LS10 3QF, United Kingdom",no
-17522510,ORIGINAL FUNK COLLECTIVE LTD,2026-10-15,active,ltd,90020,"53 Ynys Y Gored, Port Talbot, SA13 2EB, Wales",no
-17522519,SALUS PHARMA LTD,2026-10-15,active,ltd,70229,"Unit A, 82 James Carter Road, Mildenhall, IP28 7DE, United Kingdom",yes
-17522528,SINRO LONDON LIMITED,2026-10-15,active,ltd,46341,"36 Queensway, Enfield, EN3 4SA, England",no
-17522530,ELSEWHERE COACHING LTD,2026-10-15,active,ltd,70229;85590,"Flat 167 Leamore Court 1 Meath Crescent, London, E2 0QQ, England",no
-17522524,MY FIRST EVERYTHING LIMITED,2026-10-15,active,ltd,63120,"The Mount, Oldwood Road, Tenbury Wells, WR15 8EP, England",no
-17522536,LILY'S LITTLE CUP LTD,2026-10-15,active,ltd,10831,"Flat 2, 38 Frognal, London, NW3 6AG, United Kingdom",no
-17522535,MIIKA TECHNOLOGIES LTD,2026-10-15,active,ltd,72190,"Babraham Hall, Babraham, Cambridge, CB22 3AT, England",no
-17522527,CLEAR OUTCOMES RESEARCH LTD,2026-10-15,active,ltd,70229,"Unit E03 Charter Square, Sheffield, S1 4HS, United Kingdom",no
-17522537,YFLO MARKERTING LIMITED,2026-10-15,active,ltd,73110,"39 Nicholson House Brandon Street, London, SE17 1ED, United Kingdom",no
+17539076,ALL OR NOTHING CLOTHING LTD,2026-10-23,active,ltd,47190,"25 Gainford Road, Billingham, TS23 3HW, England",no
 17522538,GREAT WALLS OF ARUN LTD,2026-10-15,active,ltd,74100,"Flat 1, 10, Gilden Court Rowell Drive, Harrow, HA2 6FH, United Kingdom",no
 17522545,LUMIN GREEN LTD,2026-10-15,active,ltd,71112;71122;74901,"2 Lighthouse View, Seaham, SR7 7PR, England",no
 17522541,DIRECT TRADDING LTD,2026-10-15,active,ltd,47890,"Crown House Flat 3, 45 Yarmouth Way, Great Yarmouth, United Kingdom, NR30 2QZ, United Kingdom",no
