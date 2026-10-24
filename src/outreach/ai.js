@@ -306,6 +306,17 @@ function classifySector(company = {}) {
       "b2b",
       "tech",
       "general",
+      "car_showroom",
+      "watch_showroom",
+      "bike_showroom",
+      "detailing",
+      "aesthetics_clinic",
+      "dentistry",
+      "kitchen_interior",
+      "estate_agent",
+      "fitness",
+      "wedding_events",
+      "pet_grooming",
     ].includes(normalizedSector)
   ) {
     return normalizedSector;
@@ -327,7 +338,57 @@ function classifySector(company = {}) {
     .map((c) => c.trim())
     .filter(Boolean);
 
+  const textToScan = [
+    company.industry,
+    company.company_name,
+    company.website_context,
+    company.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
   for (const code of codes) {
+    // 1. Exact high-converting sub-niche SICs
+    if (code === "45111" || code === "45112" || code === "45190") {
+      return "car_showroom";
+    }
+    if (code === "45400") {
+      return "bike_showroom";
+    }
+    if (code === "47770" || code === "95250") {
+      return "watch_showroom";
+    }
+    if (code === "86230") {
+      return "dentistry";
+    }
+    if (code === "68310") {
+      return "estate_agent";
+    }
+    if (code === "74100" || code === "43320") {
+      return "kitchen_interior";
+    }
+    if (code === "93120" || code === "93130") {
+      return "fitness";
+    }
+    if (code.startsWith("7420") || code === "93290") {
+      return "wedding_events";
+    }
+    if (code === "96090") {
+      return "pet_grooming";
+    }
+    if (code === "96020" || code === "96040" || code === "86900" || code === "86909") {
+      return "aesthetics_clinic";
+    }
+    if (code === "45200") {
+      if (/\b(?:detailing|ceramic|coating|valet|valeting|paint correction|wrap|ppf|tint)\b/i.test(textToScan)) {
+        return "detailing";
+      }
+      return "trades";
+    }
+
     const p2 = code.slice(0, 2);
     const p3 = code.slice(0, 3);
 
@@ -343,13 +404,12 @@ function classifySector(company = {}) {
     if (p2 === "86" || p2 === "87") {
       return "healthcare";
     }
-    // 41, 42, 43: Construction/Trades, 812: Cleaning, 45/45200: Garages/Repair
+    // 41, 42, 43: Construction/Trades, 812: Cleaning, 45: Garages/Repair
     if (
       p2 === "41" ||
       p2 === "42" ||
       p2 === "43" ||
       p3 === "812" ||
-      code === "45200" ||
       p2 === "45"
     ) {
       return "trades";
@@ -364,17 +424,94 @@ function classifySector(company = {}) {
     }
   }
 
-  const textToScan = [
-    company.industry,
-    company.company_name,
-    company.website_context,
-    company.description,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  // 2. High-precision contextual keywords
+  if (
+    /\b(?:detailing|ceramic coating|paint correction|valeting|car wrap|ppf|tinting)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "detailing";
+  }
+
+  if (
+    /\b(?:watch(?:es)?|timepiece(?:s)?|horology|rolex|patek|audemars|omega watch|jeweller(?:y|ies)?)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "watch_showroom";
+  }
+
+  if (
+    /\b(?:car showroom|used cars?|car dealership|motor sales|auto sales|vehicle dealership|used vehicles?)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "car_showroom";
+  }
+
+  if (
+    /\b(?:motorcycles?|motorbikes?|superbikes?|ducati|yamaha|harley[- ]davidson)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "bike_showroom";
+  }
+
+  if (
+    /\b(?:cosmetic dentist(?:ry)?|smile makeover|composite bonding|teeth whitening|invisalign)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "dentistry";
+  }
+
+  if (
+    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "aesthetics_clinic";
+  }
+
+  if (
+    /\b(?:bespoke kitchen|fitted kitchen|fitted wardrobes?|joinery|interior design(?:er)?|luxury joinery)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "kitchen_interior";
+  }
+
+  if (
+    /\b(?:estate agents?|lettings? agents?|property sales|residential sales|serviced accommodation|airbnb management)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "estate_agent";
+  }
+
+  if (
+    /\b(?:fitness studio|personal training|reformer pilates|crossfit|boutique gym)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "fitness";
+  }
+
+  if (
+    /\b(?:dog grooming|pet groom(?:ing|er)|dog spa|canine hydrotherapy)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "pet_grooming";
+  }
+
+  if (
+    /\b(?:wedding photographer|wedding venue|event planner|wedding videograph(?:y|er))\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "wedding_events";
+  }
 
   if (
     /\b(?:software|apps?|saas|cloud|ai|dev agency|programming|web development studio|digital product agency|it consultancy)\b/i.test(
@@ -464,6 +601,116 @@ function applySafeWordReplacements(text) {
 }
 
 const SECTOR_CONFIGS = Object.freeze({
+  car_showroom: {
+    role: "a showroom automation developer",
+    subject: (name) => `${name} - vehicle showcase & viewings`,
+    pitch:
+      "Explain that you set up an automated AI showroom system specifically for car dealerships: 1) Turns vehicle stock photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook. 2) 24/7 WhatsApp assistant replies to buyer enquiries on price, mileage, or part-exchange and books test-drives and viewings directly into their calendar. 3) Streamlines vehicle inventory pages for instant mobile reservations.",
+    question:
+      "Are you currently exploring ways to increase showroom footfall or test-drive bookings?",
+    focus: "car showcase Reels, automated social scheduling, and 24/7 test-drive booking",
+    cta: "If you would like to see a quick 30-second preview of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
+  },
+  watch_showroom: {
+    role: "a luxury timepiece automation developer",
+    subject: (name) => `${name} - timepiece showcase & viewings`,
+    pitch:
+      "Explain that you set up an automated AI showcase system for watch and jewellery dealers: 1) Turns inventory photography into high-definition macro wrist-roll Reels, dial and bezel detail clips, and daily Stories for new arrivals scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers collector questions on price and provenance and books private boutique viewings into their calendar. 3) Optimizes timepiece catalog for instant high-res viewing.",
+    question:
+      "Are you currently exploring ways to expand your private client network or showcase timepieces?",
+    focus: "macro wrist-roll Reels, automated scheduling, and private boutique viewings",
+    cta: "If you would like to see a quick 30-second preview of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
+  },
+  bike_showroom: {
+    role: "a motorbike showroom automation developer",
+    subject: (name) => `${name} - bike showcase & test-rides`,
+    pitch:
+      "Explain that you set up an automated showcase system for motorbike dealerships: 1) Turns bike photos into dynamic walkaround Reels, exhaust sound clips, and daily arrival Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers questions on specs and financing and books test-rides and showroom viewings into their calendar. 3) Streamlines bike inventory listings for fast mobile browsing.",
+    question:
+      "Are you currently exploring ways to increase bike showroom visits or test-rides?",
+    focus: "bike walkaround Reels, exhaust sound clips, and test-ride bookings",
+    cta: "If you would like to see a quick 30-second preview of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
+  },
+  detailing: {
+    role: "an automotive detailing automation developer",
+    subject: (name) => `${name} - customer bookings & showcase`,
+    pitch:
+      "Explain that you set up an automated social and booking system for detailing studios: 1) Turns bay photos into 50/50 paint correction Reels, ceramic coating showcases, and daily finished-vehicle Stories auto-scheduled across Instagram and Facebook. 2) 24/7 rapid WhatsApp assistant replies to incoming package inquiries and books detailing slots directly into their calendar while they work in the bay. 3) Optimizes detailing package pages for one-tap booking.",
+    question:
+      "Are you currently looking to fill your detailing bays with high-ticket ceramic packages?",
+    focus: "paint correction Reels, ceramic coating showcases, and WhatsApp slot booking",
+    cta: "If you would like to see a quick 30-second preview of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
+  },
+  aesthetics_clinic: {
+    role: "a clinic automation developer",
+    subject: (name) => `${name} - patient bookings & treatments`,
+    pitch:
+      "Explain that you set up an automated growth engine for aesthetic and skin clinics: 1) Turns clinic treatment photos into glow-up transformation Reels and daily Stories highlighting client results and last-minute cancellation slots, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers treatment questions and books consultations or patch tests directly into their clinic calendar. 3) Streamlines treatment booking pages for one-tap mobile reservations.",
+    question:
+      "Are you currently exploring ways to fill your clinic calendar with consultation bookings?",
+    focus: "treatment transformation Reels, open appointment Stories, and consultation bookings",
+    cta: "If you would like to see a quick 30-second preview of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
+  },
+  dentistry: {
+    role: "a dental practice automation developer",
+    subject: (name) => `${name} - patient consultations & smiles`,
+    pitch:
+      "Explain that you set up an automated patient booking system for dental practices: 1) Turns before-and-after smile photos into transformation reveal Reels and daily patient review Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers treatment inquiries (composite bonding, Invisalign, whitening) and books smile assessments directly into the appointment book. 3) Streamlines consultation request pages for mobile patients.",
+    question:
+      "Are you currently exploring ways to increase private cosmetic patient consultations?",
+    focus: "smile makeover Reels, patient review Stories, and assessment bookings",
+    cta: "If you would like to see a quick 30-second preview of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
+  },
+  kitchen_interior: {
+    role: "an interior design and joinery automation developer",
+    subject: (name) => `${name} - bespoke project showcase`,
+    pitch:
+      "Explain that you set up an automated showcase system for bespoke kitchen and interior studios: 1) Turns project photos into cinematic room-reveal Reels, material craftsmanship closeups, and daily in-progress Stories auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant captures client dimensions and books home measurement and design consultations into their calendar. 3) Optimizes luxury portfolio galleries for fast mobile viewing.",
+    question:
+      "Are you currently looking to attract more bespoke residential design projects?",
+    focus: "room reveal Reels, craftsmanship Stories, and home design visit booking",
+    cta: "If you would like to see a quick 30-second preview of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
+  },
+  estate_agent: {
+    role: "a property automation developer",
+    subject: (name) => `${name} - property walkthroughs & viewings`,
+    pitch:
+      "Explain that you set up an automated property showcase system for estate and letting agents: 1) Turns listing photos into cinematic property walkthrough Reels and daily Stories for new listings and price adjustments, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers buyer and tenant inquiries and books property viewings into agent calendars instantly. 3) Optimizes property listings for fast mobile browsing.",
+    question:
+      "Are you currently exploring ways to increase viewing bookings for your property listings?",
+    focus: "property walkthrough Reels, listing Stories, and automated viewing bookings",
+    cta: "If you would like to see a quick 30-second preview of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
+  },
+  fitness: {
+    role: "a fitness automation developer",
+    subject: (name) => `${name} - member signups & trial passes`,
+    pitch:
+      "Explain that you set up an automated member acquisition system for gyms, personal trainers, and pilates studios: 1) Turns client progress photos into 12-week body transformation Reels and daily motivational Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers class inquiries and books free trial passes and consultations into their calendar. 3) Optimizes class schedules and membership signups for mobile.",
+    question:
+      "Are you currently looking to increase new member signups and trial pass bookings?",
+    focus: "transformation Reels, daily motivation Stories, and trial pass booking",
+    cta: "If you would like to see a quick 30-second preview of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
+  },
+  wedding_events: {
+    role: "an event automation developer",
+    subject: (name) => `${name} - event bookings & availability`,
+    pitch:
+      "Explain that you set up an automated showcase system for wedding venues, photographers, and event planners: 1) Turns event photos into cinematic highlight Reels and daily behind-the-scenes Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant checks date availability, sends digital brochures, and books venue viewings into their calendar. 3) Optimizes event portfolio galleries for fast mobile browsing.",
+    question:
+      "Are you currently exploring ways to increase venue bookings or wedding inquiries?",
+    focus: "wedding highlight Reels, date availability checker, and viewing bookings",
+    cta: "If you would like to see a quick 30-second preview of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
+  },
+  pet_grooming: {
+    role: "a pet business automation developer",
+    subject: (name) => `${name} - grooming bookings & schedule`,
+    pitch:
+      "Explain that you set up an automated growth system for pet grooming salons and dog spas: 1) Turns salon photos into fluffy grooming transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers breed pricing questions and books grooming slots into their calendar while groomers are busy with pets. 3) Optimizes mobile booking pages for easy package selection.",
+    question:
+      "Are you currently looking to keep your grooming slots fully booked throughout the week?",
+    focus: "grooming transformation Reels, daily salon Stories, and WhatsApp appointment booking",
+    cta: "If you would like to see a quick 30-second preview of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
+  },
   ecommerce: {
     role: "an e-commerce automation engineer",
     subject: (name) => `Quick question about ${name}'s online store`,
@@ -564,11 +811,254 @@ function getMockEmail(company = {}, options = {}) {
   const greeting = directorName
     ? `Hey ${directorName},`
     : `Hey ${emailCompanyName},`;
+  const hasVerifiedWebsite = Boolean(company.website_url || company.website);
 
   let subject = "";
   let bodyLines = [];
 
   switch (sector) {
+    case "car_showroom":
+      subject = `${emailCompanyName} - vehicle showcase & viewings`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed the vehicle inventory at ${emailCompanyName}.`,
+        "",
+        "Running a car showroom means you have incredible vehicles in stock, but nobody has hours each day to film, edit, and post daily showcase reels and stories for every car on your lot.",
+        "",
+        "We set up an automated AI showroom system specifically for car dealerships:",
+        "1. Automated Car Showcase Reels & Stories: Turns your vehicle photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook on complete auto-pilot.",
+        "2. 24/7 Test-Drive & WhatsApp Booking: When prospective buyers message asking about price, mileage, or part-exchange, an automated assistant replies promptly and books test-drives directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Showroom Website Optimization: We streamline your vehicle inventory pages so mobile visitors can browse cars and reserve viewings with zero lag."
+          : "3. Fast Mobile Inventory Catalog: A modern, high-speed vehicle showcase where buyers can browse available stock and book test-drives directly.",
+        "",
+        "If you would like to see a quick 30-second preview of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "watch_showroom":
+      subject = `${emailCompanyName} - timepiece showcase & viewings`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed the timepiece collection at ${emailCompanyName}.`,
+        "",
+        "In luxury watch retail, collectors want to see every detail—the dial finish, bezel condition, and wrist presence—but filming high-res video reels and daily stories for every piece in your vault takes hours.",
+        "",
+        "We set up an automated AI showcase system specifically for watch and jewellery dealers:",
+        "1. Macro Wrist-Roll Reels & Stories: Turns your inventory photography into high-definition wrist-roll Reels, dial macro clips, and daily Stories for new arrivals scheduled across Instagram and TikTok.",
+        "2. 24/7 VIP Viewing & Inquiries: When collectors message asking about price, box/papers, or provenance, an automated assistant replies promptly and books private boutique viewings into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Boutique Website Optimization: We streamline your timepiece catalog so collectors can inspect high-res photos and request private viewings in one tap."
+          : "3. Luxury Inventory Showcase: A modern, high-speed catalog built to showcase available timepieces and capture VIP viewing requests.",
+        "",
+        "If you would like to see a quick 30-second preview of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "bike_showroom":
+      subject = `${emailCompanyName} - bike showcase & test-rides`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently checked out ${emailCompanyName}.`,
+        "",
+        "Running a motorcycle showroom means high-demand bikes moving in and out, but nobody has the time to film walkaround clips, capture exhaust sounds, and post daily reels for every bike in stock.",
+        "",
+        "We set up an automated AI showcase system built for motorbike dealerships:",
+        "1. Bike Walkaround Reels & Sound Clips: Turns your bike photos into dynamic walkaround Reels, spec breakdown posts, and daily arrival Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 Test-Ride & Viewing Booking: When riders message about price, mileage, or financing, an automated assistant replies promptly and books showroom viewings or test-rides into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Inventory Speed Tuning: We streamline your bike listings so mobile riders can browse stock and book test-rides with zero delay."
+          : "3. Fast Mobile Bike Catalog: A modern showroom site built for riders to browse available bikes and book test-rides directly.",
+        "",
+        "If you would like to see a quick 30-second preview of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "detailing":
+      subject = `${emailCompanyName} - customer bookings & showcase`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently checked out ${emailCompanyName}.`,
+        "",
+        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer quote enquiry.",
+        "",
+        "We set up an automated content and booking engine built for detailing studios:",
+        "1. 50/50 Before-After Reels & Daily Stories: Turns quick photos from your bay into high-gloss transformation Reels, ceramic coating showcases, and daily completed-car Stories auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 Rapid WhatsApp Assistant: Replies promptly to incoming inquiries and books detailing packages directly into your schedule so you never lose a booking while working on a car.",
+        hasVerifiedWebsite
+          ? "3. Studio Website Conversion Tuning: We optimize your existing site so car owners can select packages and request dates in one tap."
+          : "3. Modern Detailing Booking Page: A high-converting mobile landing page showcasing packages, results, and instant WhatsApp booking.",
+        "",
+        "If you would like to see a quick 30-second preview of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "aesthetics_clinic":
+      subject = `${emailCompanyName} - patient bookings & treatments`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed the treatments offered at ${emailCompanyName}.`,
+        "",
+        "Treating clients in clinic all day means you rarely have time to edit before-and-after clips, post daily stories, or reply promptly to every inquiry asking about treatment prices.",
+        "",
+        "We set up an automated growth and booking engine built specifically for aesthetic clinics:",
+        "1. Transformation Reels & Daily Stories: Turns quick photos from your clinic into high-converting glow-up Reels and daily Stories (showcasing client results and open cancellation slots) auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 Consultation & WhatsApp Assistant: Replies promptly to treatment inquiries and books consultations or patch tests directly into your clinic calendar.",
+        hasVerifiedWebsite
+          ? "3. Clinic Website Optimization: We streamline your treatment pages so mobile visitors can book consultations in one tap."
+          : "3. Fast Mobile Booking Page: A clean, modern clinic page built to turn local visitors into booked consultations.",
+        "",
+        "If you would like to see a quick 30-second preview of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "dentistry":
+      subject = `${emailCompanyName} - patient consultations & smiles`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed the patient services at ${emailCompanyName}.`,
+        "",
+        "Performing treatments chairside means reception and clinical staff rarely have time to film smile makeovers, edit reels, or manage patient direct messages.",
+        "",
+        "We set up an automated patient booking system for dental practices:",
+        "1. Smile Reveal Reels & Patient Stories: Turns before-and-after smile photos into transformation reveal Reels and daily patient review Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 Consultation & WhatsApp Assistant: Answers inquiries for composite bonding, Invisalign, or whitening and books cosmetic smile assessments directly into your appointment book.",
+        hasVerifiedWebsite
+          ? "3. Practice Website Tuning: We streamline your consultation pages so prospective patients can request smile assessments in one tap."
+          : "3. Modern Cosmetic Dental Showcase: A fast mobile booking page designed to showcase smile transformations and capture private consultations.",
+        "",
+        "If you would like to see a quick 30-second preview of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "kitchen_interior":
+      subject = `${emailCompanyName} - bespoke project showcase`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently checked out ${emailCompanyName}.`,
+        "",
+        "When your team is on-site measuring and fitting bespoke kitchens and joinery, there is no time to film room reveals, edit video reels, or write daily social posts—even though homeowners buy based on visual craftsmanship.",
+        "",
+        "We set up an automated showcase system designed for bespoke joinery and interior studios:",
+        "1. Room Reveal Reels & Craft Stories: Turns your completed project photos into cinematic room-reveal Reels, material closeups, and daily in-progress Stories scheduled across Instagram and Facebook on autopilot.",
+        "2. 24/7 Design Consultation Booking: When prospective clients message asking for estimates, an automated assistant replies promptly and books free home measurement and design visits into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Portfolio Website Speed Tuning: We streamline your gallery pages so homeowners can inspect high-res projects and request design visits with zero lag."
+          : "3. Modern Bespoke Portfolio Showcase: A high-end mobile showcase designed to display your craftsmanship and capture design consultations.",
+        "",
+        "If you would like to see a quick 30-second preview of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "estate_agent":
+      subject = `${emailCompanyName} - property walkthroughs & viewings`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently checked out ${emailCompanyName}.`,
+        "",
+        "Managing viewings and appraisals all day means agents rarely have hours to edit walkthrough reels, write property copy, or reply promptly to every evening tenant or buyer inquiry.",
+        "",
+        "We set up an automated property showcase and viewing engine for estate agents:",
+        "1. Property Walkthrough Reels & Stories: Turns listing photography into cinematic property walkthrough Reels and daily Stories for new listings and price adjustments auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 Automated Viewing Assistant: Replies promptly to buyer and tenant inquiries and books property viewings into agent calendars instantly via WhatsApp.",
+        hasVerifiedWebsite
+          ? "3. Property Listing Speed Tuning: We streamline your listing pages so mobile home seekers can browse available properties and book viewings in one tap."
+          : "3. Modern Property Showcase: A high-speed mobile portal designed to showcase available listings and capture viewing requests.",
+        "",
+        "If you would like to see a quick 30-second preview of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "fitness":
+      subject = `${emailCompanyName} - member signups & trial passes`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed ${emailCompanyName}.`,
+        "",
+        "Coaching clients on the gym floor all day means trainers and studio owners rarely have time to edit workout clips, post daily motivational stories, or follow up with prospective member inquiries.",
+        "",
+        "We set up an automated member acquisition setup built for fitness and pilates studios:",
+        "1. Body Transformation Reels & Stories: Turns client progress photos into 12-week body transformation Reels, workout technique tips, and daily motivation Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 Trial Pass & WhatsApp Assistant: Replies promptly to class inquiries and books free trial passes and fitness assessments directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Class Schedule Mobile Tuning: We streamline your timetable and signup flow so prospective members can book trial passes in one tap."
+          : "3. Modern Studio Landing Page: A clean, mobile-first page built to turn local fitness searchers into booked trial passes.",
+        "",
+        "If you would like to see a quick 30-second preview of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "wedding_events":
+      subject = `${emailCompanyName} - event bookings & availability`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently reviewed ${emailCompanyName}.`,
+        "",
+        "Shooting events or managing venues on weekends leaves zero time during the week to edit highlight reels, post daily behind-the-scenes stories, or answer repetitive date-availability inquiries.",
+        "",
+        "We set up an automated showcase system for wedding venues and event creatives:",
+        "1. Cinematic Highlight Reels & Stories: Turns event photography into cinematic highlight Reels and daily behind-the-scenes Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 Date Checker & Viewing Assistant: Replies promptly to date inquiries, delivers digital brochures, and books venue viewings directly into your calendar via WhatsApp.",
+        hasVerifiedWebsite
+          ? "3. Gallery Speed Optimization: We streamline your event gallery pages so couples can browse high-res photos and check dates with zero lag."
+          : "3. Modern Event Showcase: A luxury mobile showcase designed to highlight past events and capture private venue viewings.",
+        "",
+        "If you would like to see a quick 30-second preview of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
+    case "pet_grooming":
+      subject = `${emailCompanyName} - grooming bookings & schedule`;
+      bodyLines = [
+        greeting,
+        "",
+        `I recently checked out ${emailCompanyName}.`,
+        "",
+        "When you are in the salon washing, drying, and styling pets all day, you cannot stop to answer phone calls, edit transformation clips, or manage appointment inquiries.",
+        "",
+        "We set up an automated social and booking system for pet grooming salons:",
+        "1. Fluffy Grooming Transformation Reels: Turns salon photos into show-ready transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 WhatsApp Appointment Assistant: Answers breed pricing questions and books grooming slots directly into your calendar while you work.",
+        hasVerifiedWebsite
+          ? "3. Grooming Menu Mobile Tuning: We streamline your service menu so pet owners can select packages and request appointment dates in one tap."
+          : "3. Fast Mobile Grooming Page: A clean, modern booking page built to keep your grooming slots fully booked throughout the week.",
+        "",
+        "If you would like to see a quick 30-second preview of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
+        "",
+        signature,
+      ];
+      break;
+
     case "ecommerce":
       subject = `Quick question about ${emailCompanyName}'s online store`;
       bodyLines = [

@@ -8,10 +8,18 @@ const { isTargetSic } = require('./sic');
 test('isTargetSic', (t) => {
   // Good codes
   assert.strictEqual(isTargetSic('45200'), true);
+  assert.strictEqual(isTargetSic('45111'), true); // car showroom
+  assert.strictEqual(isTargetSic('45400'), true); // motorbike showroom
+  assert.strictEqual(isTargetSic('47770'), true); // luxury watches
+  assert.strictEqual(isTargetSic('86230'), true); // cosmetic dentistry
+  assert.strictEqual(isTargetSic('68310'), true); // estate agents
+  assert.strictEqual(isTargetSic('62012'), true); // tech agency
   assert.strictEqual(isTargetSic('47110; 99999'), false); // one dormant code drops it
   assert.strictEqual(isTargetSic('47110; 82990'), false);
-  assert.strictEqual(isTargetSic('11111'), true); // not in target list
-  assert.strictEqual(isTargetSic('45200; 11111'), true); // has a good code, no bad codes
+  assert.strictEqual(isTargetSic('70229'), false); // management consultancy shell dropped
+  assert.strictEqual(isTargetSic('68100'), false); // real estate SPV dropped
+  assert.strictEqual(isTargetSic('11111'), false); // not in target list, strictly rejected
+  assert.strictEqual(isTargetSic('45200; 11111'), true); // has a target code, no bad codes
 });
 
 test('getDaysOld', (t) => {
