@@ -1,54 +1,5 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17512723,SILVER LANE SERVICES LIMITED,2026-10-11,active,ltd,49320,"Flat 10 Field House, 40 Schoolgate Drive, Morden, SM4 5DJ, England",no
-17512624,JAYS ORCHARD LTD,2026-10-11,active,ltd,01240,"89 Hursley Road, Chandler's Ford, Eastleigh, SO53 2FS, England",no
-17512630,LEGENDARY CARE LTD,2026-10-11,active,ltd,87200;87300;87900,"27 Flanders Close, Kempston, Bedford, MK42 8TD, England",no
-SC905562,VIORA BUSINESS SOLUTIONS LTD,2026-10-11,active,ltd,62012,"37 Back Rogerton Crescent, Cumnock, KA18 2EU, United Kingdom",no
-17512628,RAW TRADE & LOGISTICS CONNECTIONS LTD,2026-10-11,active,ltd,70229,"159 Winchester Road, London, E4 9JN, United Kingdom",no
-17512621,SATINELLE BEAUTY LTD,2026-10-11,active,ltd,47750;47910,"28 Margeholes, Watford, WD19 5AP, United Kingdom",no
-17512626,JD DESIGN & CONSTRUCTION LIMITED,2026-10-11,active,ltd,43290,"86 Hever Avenue, West Kingsdown, Sevenoaks, TN15 6HQ, England",no
-17512631,OLUFI'S KITCHEN LTD,2026-10-11,active,ltd,56103;56210,"6 Darwell Drive, Pevensey, BN24 5PG, United Kingdom",no
-17512694,DIRECT LINK LOGISTICS LTD,2026-10-11,active,ltd,52290,"91 Sweetmans Road, Shaftesbury, SP7 8EH, United Kingdom",no
-17512688,AUTOCARE365 WINTON LTD,2026-10-11,active,ltd,45200,"567-571 Wimborne Road, Bournemouth, BH9 2AR, England",no
-17512672,LAND ROVERS OF LONDON LTD,2026-10-11,active,ltd,94990,"8 Hillside Road, Epsom, KT17 3EH, England",no
-17512678,MEDEKTA LTD,2026-10-11,active,ltd,85590,"21 Leicester Street, Ashton-Under-Lyne, OL7 9AE, England",no
-17512685,SKSELVAM LTD,2026-10-11,active,ltd,56103,"82 Newquay Road, London, SE6 2NP, England",no
-17512701,TRUECOST ENGINEERING LTD,2026-10-11,active,ltd,46690;46900;71129,"84 Forest Road, Coalville, LE67 3SH, England",no
-17512700,MASTER IMAGING LTD,2026-10-11,active,ltd,70229;85590;86220;86900,"167-169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
-17512702,F&H WHOLESALE LTD,2026-10-11,active,ltd,46900,"Flat 5 Sycamore Court, 228 Romford Road, London, E7 9HB, England",no
-17512698,GR PROJECTS (NW) LTD,2026-10-11,active,ltd,43320;80200,"33 Cavendish Drive, Birkenhead, CH42 6RG, United Kingdom",no
-17512704,LEGE AUTOMOTIVE LTD,2026-10-11,active,ltd,45111;45112;45400,"105 High Street, Brentwood, CM14 4RR, England",no
-17512710,PRANCING PONY BAKERY LIMITED,2026-10-11,active,ltd,10720;47240;47810,"Flat 227 Cotton Field Wharf, 4 New Union Street, Manchester, M4 6FW, England",no
-17512713,AUE-KSA CHAUFFEUR LTD,2026-10-11,active,ltd,49320,"Flat 36 Belgravia House, 30 Clarence Avenue, London, SW4 8HY, England",no
-17512715,ISTANERA LTD,2026-10-11,active,ltd,70229,"Unit 8 Bowker House, Lee Mill Bridge, Ivybridge, PL21 9EF, England",no
-17512652,TONY RECOVERY LTD,2026-10-11,active,ltd,52219,"Flat 1 Villiers Court, Rose Hill, Oxford, OX4 4HP, England",no
-17512647,PRO LEVEL MAINTENANCE LTD,2026-10-11,active,ltd,43341;43390,"1 Atherstone Avenue, Manchester, M8 4PE, England",no
-17512646,MOHAJON BARI 2 LTD,2026-10-11,active,ltd,56102,"21, Elmslie Point Leopold Street, London, E3 4LB, United Kingdom",no
-17512588,MOBILE TYRE AUTOCARE LTD,2026-10-11,active,ltd,45200,"16 St. Edwards Way, Romford, RM1 4DD, England",no
-17512707,APEX DOT LTD,2026-10-11,active,ltd,62012;63990;74100;90030,"48 Washington Wharf, Birmingham, B1 1NN, England",no
-17512350,VALUCH LUXURY LIMITED,2026-10-11,active,ltd,55100,"6 Nutmeg Drive, Gorton, Manchester, M18 7DU, England",no
-17512346,HIMALAYAN VITALS LIMITED,2026-10-11,active,ltd,47910,"10 Fletcher Fold Road, Bury, BL9 9RX, England",no
-17512345,MORENA9 LTD,2026-10-11,active,ltd,74100,"42 Broom Road, Croydon, CR0 8NE, United Kingdom",no
-17512356,DARREN GADD ELECTRICAL SERVICES LTD,2026-10-11,active,ltd,43210,"2a Greys Road, Studley, B80 7QQ, England",no
-17512398,NEXT 8 APPLICATIONS & DATA LTD,2026-10-11,active,ltd,62012;62090;63110,"9 Atbara Road, Teddington, TW11 9PA, England",no
-17512400,SOLARIA GROUP LTD,2026-10-11,active,ltd,78109,"2 Lepp Crescent, Bury, BL8 1HX, United Kingdom",no
-17512429,AKA TRADING PARTNERS LIMITED,2026-10-11,active,ltd,47910,"21 Trident Boulevard, Castle Vale, Birmingham, B35 7LZ, England",no
-17512431,KITDAUTOCARE LTD,2026-10-11,active,ltd,45200,"66 Paul Street, London, EC2A 4NA, England",yes
-17512433,THORNTON HEATH BARBERS LTD,2026-10-11,active,ltd,96020,"15 Brigstock Road, Thornton Heath, CR7 7JG, England",no
-17512428,KADAM LOGISTICS LTD,2026-10-11,active,ltd,49410;56290,"35 Rydal Way, Ruislip, HA4 0RX, England",no
-17512436,VALUENEXA LTD,2026-10-11,active,ltd,46900;47910;85590;85600,"321-323 High Road, Romford, RM6 6AX, England",no
-17512494,YORKTHREAD TEXTILES LTD,2026-10-11,active,ltd,18121;46410;46420;47910,"15a Wray Place, Rochdale, OL16 5EZ, England",no
-17512497,GALRONE CIVIL ENGINEERING LTD,2026-10-11,active,ltd,37000;42110;42910;42990,"18 Hetherington Way, Uxbridge, UB10 8AT, United Kingdom",no
-17512498,RWH UTILITIES LTD,2026-10-11,active,ltd,42110,"4 Tercel Grove, Stoke-On-Trent, ST3 7FZ, England",no
-17512493,MS TRAVEL LIMITED,2026-10-11,active,ltd,49320,"56 Clipstone Road, Sheffield, S9 5ET, England",no
-17512561,VEE HEALTH LTD,2026-10-11,active,ltd,86900,"7 Woodspring Grove, Muxton, Telford, TF2 8SS, England",no
-17512549,PKS AIR CONDITIONING LTD,2026-10-11,active,ltd,43220,"28 Bowling Green Road, Hinckley, LE10 1EX, England",no
-17512562,OXFORD GAS MAINTENANCE LTD,2026-10-11,active,ltd,43220,"18 Sage Drive, Didcot, OX11 6HN, England",no
-17512553,PIONEER FOUR LIMITED,2026-10-11,active,ltd,86220,"105 Richmond Park Road, Derby, DE22 4PL, England",no
-17512550,HAYSO HEALTH LIMITED,2026-10-11,active,ltd,62012,"24 Bushnell Road, London, SW17 8QP, England",no
-17512552,RING READY LTD,2026-10-11,active,ltd,63110,"23 Goodlass Road, Liverpool, L24 9HJ, England",no
-17512569,B&Y CONSTRUCTION SERVICES LIMITED,2026-10-11,active,ltd,41202,"Flat 18 Allison Court, 136 Oxford Road, Reading, RG1 7ND, England",no
-17512564,AUREA SMILES LTD,2026-10-11,active,ltd,86230,"Flat 68 Orchid Court, Sovereign Way, Tonbridge, TN9 1FZ, England",no
-17512578,SWS SOUTHERN WASTE SERVICES LTD,2026-10-11,active,ltd,46770,"27b Greywell Road, Havant, PO9 5AH, England",no
+SC906954,GEM GLOBAL GROUP LTD,2026-10-24,active,ltd,85590;85600,"51d Kinghorne Road, Dundee, DD3 6PR, Scotland",no
 17512566,MONEY SHOT ENTERTAINMENT LTD,2026-10-11,active,ltd,47910;59112,"Staffordshire House, Beechdale Road, Nottingham, NG8 3FH, England",no
 17512563,STERLING CONSULTING SERVICES LTD,2026-10-11,active,ltd,70221;70229,"94 Street Lane, Leeds, LS8 2AL, England",no
 17512571,MGK AUTOMOTIVE LTD,2026-10-11,active,ltd,45200,"11 Stopford Avenue, Wakefield, WF2 6RJ, England",no
