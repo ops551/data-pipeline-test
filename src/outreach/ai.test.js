@@ -1059,3 +1059,34 @@ test('formatCleanCompanyName strips legal entity suffixes and converts ALL-CAPS 
   assert.equal(formatCleanCompanyName(undefined), '');
   assert.equal(formatCleanCompanyName('Already Clean Company'), 'Already Clean Company');
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.50: Dynamic & Company-Customized Outreach Subject Lines
+// -----------------------------------------------------------------------------
+
+test('Unit 5.50: buildPrompt instructs Gemini to generate customized company-specific subject lines', () => {
+  const prompt = buildPrompt({
+    company_name: 'Harbour Roasters Ltd',
+    industry: 'Specialty coffee roasters',
+    website_url: 'https://harbourroasters.co.uk'
+  });
+
+  assert.ok(prompt.includes('Subject Line Requirement: Create a natural, customized subject line'));
+  assert.ok(prompt.includes("Do NOT default to generic 'Quick question about...'"));
+  assert.ok(prompt.includes('Must be specifically customized to the recipient company name and their core business/offering'));
+});
+
+test('Unit 5.50: cleanEmailContent cleanly preserves customized company-specific subject lines and trims trailing periods', () => {
+  const rawEmail = JSON.stringify({
+    subject: 'Harbour Roasters - table reservations and bean supply.',
+    body: 'Hey Harbour Roasters,\n\nWe build custom reservation systems.\n\nBest regards,\nNahid'
+  });
+
+  const cleaned = cleanEmailContent(rawEmail, {
+    companyName: 'Harbour Roasters Ltd'
+  });
+
+  assert.equal(cleaned.subject, 'Harbour Roasters - table reservations and bean supply');
+  assert.ok(!cleaned.subject.endsWith('.'));
+  assert.ok(!cleaned.subject.toLowerCase().includes('quick question'));
+});
