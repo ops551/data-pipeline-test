@@ -681,7 +681,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       subject,
       text,
       replyTo: config.replyTo,
-      ...(combined.enableHtml || process.env.ENABLE_HTML_EMAIL === 'true'
+      ...((combined.enableHtml !== undefined ? Boolean(combined.enableHtml) : (process.env.ENABLE_HTML_EMAIL === 'true' || (combined.env && combined.env.ENABLE_HTML_EMAIL === 'true')))
         ? { html: formatHtmlContent(text, combined) }
         : {}),
       ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),
@@ -767,7 +767,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       subject,
       text,
       replyTo: config.replyTo,
-      ...(combined.enableHtml || process.env.ENABLE_HTML_EMAIL === 'true'
+      ...((combined.enableHtml !== undefined ? Boolean(combined.enableHtml) : (process.env.ENABLE_HTML_EMAIL === 'true' || (combined.env && combined.env.ENABLE_HTML_EMAIL === 'true')))
         ? { html: formatHtmlContent(text, combined) }
         : {}),
       ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),

@@ -55,6 +55,7 @@ jobs:
       FOLLOWUP_RESEND_API_KEY: ${{ secrets.FOLLOWUP_RESEND_API_KEY }}
       FOLLOWUP_EMAIL_FROM: ${{ secrets.FOLLOWUP_EMAIL_FROM }}
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
+      ENABLE_HTML_EMAIL: "true"
       OUTREACH_LIMIT: "1"
       OUTREACH_DRY_RUN: ${{ inputs.dry_run || 'false' }}
       TEST_EMAIL: ${{ github.event_name == 'workflow_dispatch' && inputs.test_email || '' }}
