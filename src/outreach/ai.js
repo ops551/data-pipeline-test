@@ -772,7 +772,8 @@ function buildPrompt(company = {}, options = {}) {
 
   return [
     `Write a short, natural cold outreach email from ${track.role}.`,
-    `Suggested subject line: "${track.subject(emailCompanyName)}"`,
+    `Suggested subject line (baseline reference): "${track.subject(emailCompanyName)}"`,
+    "- Subject Line Requirement: Create a natural, customized subject line (3 to 6 words) tailored specifically to this business and what they actually do (informed by their specific trade, industry, or homepage offerings). Do NOT default to generic 'Quick question about...'. Vary the style naturally (e.g. '[Company] - enquiry flow', '[Company] & client bookings', 'Idea for [Company]'s customer messaging', 'Streamlining bookings for [Company]'). Never use forbidden spam words.",
     `Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(", ")}.`,
     "Do not use any forbidden word or phrase anywhere in the subject or body. Use the provided Company Name to Use in the Email for the recipient name. If a forbidden term would otherwise fit, replace it with a natural, unblocked synonym that keeps the same meaning and tone, or rephrase the sentence without losing its intended message.",
     "",
@@ -807,6 +808,7 @@ function buildPrompt(company = {}, options = {}) {
     `7. Sign-off: Must end with:\n${signature}`,
     "",
     "Rules:",
+    "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
     "- Keep it under 100-120 words before the signature.",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
@@ -915,7 +917,7 @@ function cleanEmailContent(rawText, options = {}) {
   subject = subject.replace(emailCompanyPattern, emailCompanyName);
   body = body.replace(emailCompanyPattern, emailCompanyName);
   // Also strip residual legal entity suffixes from subject
-  subject = subject.replace(/\b(?:ltd\.?|limited|cic\.?|llp\.?|plc\.?|inc\.?)\b/gi, "").replace(/\s{2,}/g, " ").trim();
+  subject = subject.replace(/\b(?:ltd\.?|limited|cic\.?|llp\.?|plc\.?|inc\.?)\b/gi, "").replace(/\s{2,}/g, " ").replace(/\.+$/, "").trim();
 
   body = body
     .replace(
