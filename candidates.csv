@@ -1,54 +1,14 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17539312,VIA AZUR MARKETING LTD,2026-10-24,active,ltd,62090,"2nd Floor College House, 17 King Edwards Road,, Ruislip,, London,, HA4 7AE, United Kingdom",yes
-17539307,SHEER LIVING CO LTD,2026-10-24,active,ltd,46499,"Suite  11 1st Floor Front Studio, Hawley Manor, Hawley Road, Dartford, DA1 1PX, United Kingdom",no
-17539270,WE CLAIM WITH YOU LTD,2026-10-24,active,ltd,69109;82190,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17539268,CONTEMPORARY BUILDING LTD,2026-10-24,active,ltd,41202;43290,"23a The Precinct, London Road, Waterlooville, Hampshire, PO7 7DT, United Kingdom",no
-17539284,FOUNDATIONS FOR CHANGE CIC,2026-10-24,active,private-limited-guarant-nsc,85590;86900;88990,"39 Brickhill Way, Calvert, Buckingham, MK18 2FS, England",no
-17539269,TAVENOR HEALTH & LIFESTYLE LTD,2026-10-24,active,ltd,47750,"227 St. Neots Road, Cambridge, Cambridgeshire, CB23 7QJ, United Kingdom",no
-17539264,SPEC HARBOUR LTD,2026-10-24,active,ltd,62020;62090;63120,"Flat 72 Steel House The Metalworks, Petersfield Avenue, Slough, SL2 5AE, England",no
-17539295,MEDICUS MOMENTUM LTD,2026-10-24,active,ltd,73110,"7 Bell Yard, London, WC2A 2JR, England",no
-17539240,ARLEMONT WORKS LTD,2026-10-24,active,ltd,18129;32990;47910,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17539256,A1 GROOMS LTD,2026-10-24,active,ltd,01430,"2 Lime Court, Pathfields Business Park, South Molton, Devon, EX36 3LH, United Kingdom",no
-17539305,H5N LABS LTD,2026-10-24,active,ltd,58210;58290,"195 Wood Street, London, E17 3NU, United Kingdom",no
-17520571,GOLDEN DEVELOPMENT LTD,2026-10-14,active,ltd,46900;62020;63110;95110,"All Saints Business Centre, All Saints Street, Bolton, Greater Manchester, BL1 2EJ, United Kingdom",no
-17520576,NAAMI HEALTH LTD,2026-10-14,active,ltd,84120;86900,"140, Gill House Holyhead Road, Birmingham, West Midlands, B21 0AF, United Kingdom",no
-17520574,OBELISK FORGE LIMITED,2026-10-14,active,ltd,58290,"29 Dukes Avenue, Grays, RM17 5AG, England",no
-17520562,CEM HUROGLU LIMITED,2026-10-14,active,ltd,47910,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17520585,OLIVE GARDEN SUPERMARKET LTD,2026-10-14,active,ltd,46170,"8 Marlborough Crescent, Unit 2, Newcastle Upon Tyne, NE1 4EE, United Kingdom",no
-17520587,THE NERD STOP CIC,2026-10-14,active,private-limited-guarant-nsc,47990;85590;86900;90020,"38 Shakespeare Avenue, Millbrook, Stalybridge, SK15 3HE, England",no
-17520565,KAUFFMAN MOTOR COMPANY LTD,2026-10-14,active,ltd,77110,"Second Floor, 34 Lime Street, London, EC3M 7AT, United Kingdom",no
-17520586,WANTIVA LTD,2026-10-14,active,ltd,96090,"Flat 22 Telford House, Tiverton Street, London, SE1 6NY, England",no
-17520566,LIFE ELECTRICIAN LTD,2026-10-14,active,ltd,43210,"154a Balgores Lane, Romford, RM2 6BP, England",no
-17520693,TRS RESOURCE LTD,2026-10-14,active,ltd,80100,"112 Urmston Lane, Stretford, Manchester, M32 9BQ, England",no
-17520689,LILORA GROUP LTD,2026-10-14,active,ltd,47749,"F14 The Aesthetics Accountant, Raise Business Centre, Tom Pudding Way, Goole, DN14 6BS, United Kingdom",no
-17520698,PM AIRCRAFT ART PAINTING LTD,2026-10-14,active,ltd,33160,"3 Anderson Court, Newnham Road, Cambridge, CB3 9EZ, United Kingdom",yes
-17520697,ESENSEL SPORTS LTD,2026-10-14,active,ltd,47710,"48 Cussons Close, Waltham Cross, EN7 6JF, United Kingdom",no
-17520892,BRASSERIE HORNCHURCH LTD,2026-10-14,active,ltd,56101,"17a Billet Lane, Hornchurch, RM11 1TS, England",no
-17520884,DITRY PURCHASE LTD,2026-10-14,active,ltd,81210;81299,"Langstone Gate, Solent Road, Havant, PO9 1TR, England",no
-17520890,KNQ LTD,2026-10-14,active,ltd,56103,"482 Lady Margaret Road, Southall, UB1 2NW, England",no
-17520886,GEM OF BOROUGH LTD,2026-10-14,active,ltd,56101;56302,"96 Southwark Bridge Road, London, SE1 0EF, United Kingdom",no
-17520865,THE COMPOUND GYM LTD,2026-10-14,active,ltd,93130,"3 Chalfont Court, Beaumont Rise, Marlow, SL7 1ED, England",no
-17520869,STRAIGHTLINE STUDIO LTD,2026-10-14,active,ltd,96090,"Hartshill House, 32 Hartshill Road, Hartshill, Stoke-On-Trent, ST4 7QU, United Kingdom",no
-17520867,NF CUSTOM CREATIONS LTD,2026-10-14,active,ltd,32990;47910,"Unit C, Blackett Street, Manchester, M12 6AE, United Kingdom",no
-17520868,E C CUSTOM CARS LTD,2026-10-14,active,ltd,45112,"29 Morse Road, Norwich, NR1 4PJ, England",no
-17520866,OSD SPEEDY LTD,2026-10-14,active,ltd,45200,"19b Kassassin Street, Portsmouth, PO4 9PS, United Kingdom",no
-17520882,TOO MANY TABS LTD,2026-10-14,active,ltd,85590,"Jordan Barn, Widecombe-In-The-Moor, Newton Abbot, TQ13 7PN, England",no
-17520881,HOUSE OF PAWTRAITS LTD,2026-10-14,active,ltd,47910,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17520883,RBL SKIPS LTD,2026-10-14,active,ltd,38110,"25 Stirling Avenue, Berkeley Beverborne, Worcester, WR4 0EJ, England",no
-17520877,HORIZON ENGINEERING AND RURAL SERVICES LTD,2026-10-14,active,ltd,01410;01450;70229;71129,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17520873,OSTERIA DEI LEONI LTD,2026-10-14,active,ltd,56101,"176 Herne Hill Road, London, Uk, SE24 0AH, United Kingdom",no
-17520863,THE TIMBER AGENCY LIMITED,2026-10-14,active,ltd,46130,"First Floor, Unit 12 Pennine Business Park, Longbow Close, Bradley, Yorkshire, HD2 1GQ, England",no
-17520859,OLIVIAN TRANSPORT LTD,2026-10-14,active,ltd,49410,"3 Smyth Court, Northampton, NN3 8HS, United Kingdom",no
-17520982,SPIRALHOME LTD,2026-10-14,active,ltd,47910,"Director's Office No.404, Unit 7 Wilsons Business Park, Manchester, M40 8WN, United Kingdom",no
-17521001,HOMIB LTD,2026-10-14,active,ltd,56290,"8 Gresley Close, London, N15 5BQ, England",no
-17521004,YTT MOTORS LTD,2026-10-14,active,ltd,45112,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17520985,VERITAS GLOW LTD,2026-10-14,active,ltd,46450;47910,"1 St Gabriel's Court, Leeds, LS14 5QT, England",no
-17520995,DER LONDON LIMITED,2026-10-14,active,ltd,46499;46900;47722,"Flat 93 Copal House, 25 Minnie Baldock Street, London, E16 1DT, England",no
-17521065,FOUR PAK LTD,2026-10-14,active,ltd,46170;74909,"6 Darley Road, Rochdale, OL11 2LF, United Kingdom",no
-17521062,AIH DISTRIBUTIONS LTD,2026-10-14,active,ltd,47910,"655 Prince Of Wales Road, Sheffield, S9 4ES, United Kingdom",no
-17521157,PLAMER LTD,2026-10-14,active,ltd,23320,"30a Beresford Road, Reading, RG30 1DD, England",no
-17521159,ABYSHIRE COMMUNITY CIC,2026-10-14,active,private-limited-guarant-nsc,61900;62090;85590;88990,"Unit A 82 James Carter Road, Mildenhall, Bury St. Edmunds, IP28 7DE, England",no
-17521161,AH BUILD LTD,2026-10-14,active,ltd,41100,"16 Lesseps Road, Liverpool, L8 0RD, United Kingdom",no
+17539317,ANA SOLICITORS LTD,2026-10-24,active,ltd,69102,"Office 12 Baylis House, Stoke Poges Lane, Slough, SL1 3PB, England",no
+17539286,AIRIS PROTIER LIMITED,2026-10-24,active,ltd,43999,"13 The Courtyard Timothy's Bridge Road, Stratford-Upon-Avon, Warwickshire, CV37 9NP, United Kingdom",no
+17539315,CEBA FORUM LIMITED,2026-10-24,active,private-limited-guarant-nsc,72200;85600,"19 Leyden Street, London, E1 7LE, United Kingdom",no
+17539343,MRF SHIPPING LINE LTD,2026-10-24,active,ltd,46690;50200;52290,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17539302,OFFICE ADDRESS HUB LIMITED,2026-10-24,active,ltd,82110,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17539329,SPUGGIE LTD,2026-10-24,active,ltd,58290,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17539334,AAK SALON LTD,2026-10-24,active,ltd,96020,"211-213 Newark Road, Lincoln, LN5 8NP, England",no
+17539341,PEOPLE ORGANISED LTD,2026-10-24,active,ltd,58290;62012,"8 Fairfax Mansions, Finchley Road, London, NW3 6JY, United Kingdom",no
+17539345,MIAHERE LTD,2026-10-24,active,ltd,47910,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17539337,WARDOVA LIMITED,2026-10-24,active,ltd,80100,"Flat 7 Farndale House, Kilburn Vale, London, NW6 4QS, England",no
 17521164,AXION AUTO GROUP LTD,2026-10-14,active,ltd,45190;45200,"Flat 303, Prioress House 5-7 Loxford Road, Barking, IG11 8SD, United Kingdom",no
 17521166,INTLEXL LIMITED,2026-10-14,active,ltd,58290;62012;62020;63110,"131 South End, C/O Aczone Consultants Ltd, Croydon, CR0 1BJ, England",no
 17521168,AMENITY TECHNOLOGIES LIMITED,2026-10-14,active,ltd,33200,"124-128 City Road, London, EC1V 2NX, England",yes
