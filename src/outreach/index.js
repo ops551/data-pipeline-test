@@ -334,11 +334,13 @@ async function runOutreachPipeline(options = {}, deps = {}) {
         const mailOptions = {
           to: recipient,
           subject,
-          text: body
+          text: body,
+          enableHtml: options.enableHtml !== undefined ? options.enableHtml : true
         };
         const emailOptions = {
           mock,
           logger,
+          enableHtml: options.enableHtml !== undefined ? options.enableHtml : true,
           env: options.env || process.env,
           ...(options.smtp ? { smtp: options.smtp } : {}),
           ...(options.transporter ? { transporter: options.transporter } : {}),

@@ -1183,5 +1183,36 @@ test('sendEmail fails over to backup account in pool when primary account exhaus
   resetExhaustedSmtpAccounts();
 });
 
+test('Unit 5.51: sendEmail enables HTML when enableHtml is true and honors explicit enableHtml: false override over env', async () => {
+  // Test 1: enableHtml: true attaches HTML
+  const res1 = await sendEmail(
+    { to: 'lead@example.com', subject: 'HTML Test', text: 'Hello HTML', enableHtml: true },
+    { mock: true }
+  );
+  assert.ok(res1.success);
+  const parsed1 = JSON.parse(res1.info.message);
+  assert.ok(parsed1.html, 'HTML content must be generated when enableHtml: true');
+  assert.ok(parsed1.html.includes('<p style='));
+
+  // Test 2: explicit enableHtml: false overrides env ENABLE_HTML_EMAIL=true
+  const prevEnv = process.env.ENABLE_HTML_EMAIL;
+  try {
+    process.env.ENABLE_HTML_EMAIL = 'true';
+    const res2 = await sendEmail(
+      { to: 'lead@example.com', subject: 'Plain Test', text: 'Hello Plain', enableHtml: false },
+      { mock: true }
+    );
+    assert.ok(res2.success);
+    const parsed2 = JSON.parse(res2.info.message);
+    assert.strictEqual(parsed2.html, undefined, 'Explicit enableHtml: false must override ENABLE_HTML_EMAIL=true');
+  } finally {
+    if (prevEnv === undefined) {
+      delete process.env.ENABLE_HTML_EMAIL;
+    } else {
+      process.env.ENABLE_HTML_EMAIL = prevEnv;
+    }
+  }
+});
+
 
 

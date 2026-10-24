@@ -957,3 +957,79 @@ test('runOutreachPipeline skips lead when lead email syntax is invalid even when
   }
 });
 
+// -----------------------------------------------------------------------------
+// Unit 5.51: Dual-Account Open Tracking Synchronization & HTML Delivery
+// -----------------------------------------------------------------------------
+
+test('Unit 5.51: runOutreachPipeline defaults enableHtml to true for Resend 1x1 open tracking pixel injection', async () => {
+  const ws = createWorkspace();
+  const sentCalls = [];
+
+  try {
+    const mockSendEmail = async (mailOptions, emailOptions) => {
+      sentCalls.push({ mailOptions, emailOptions });
+      return { success: true, messageId: 'msg-551' };
+    };
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        companiesPath: ws.companiesPath,
+        delay: 0,
+        mock: true,
+        logger: silentLogger
+      },
+      {
+        getPendingLeads: () => [sampleLeadsData[0]],
+        generateEmail: async () => ({ subject: 'Test Subject', body: `Hi\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: mockSendEmail
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.equal(sentCalls.length, 1);
+    assert.strictEqual(sentCalls[0].mailOptions.enableHtml, true, 'mailOptions must enable HTML for Resend open tracking');
+    assert.strictEqual(sentCalls[0].emailOptions.enableHtml, true, 'emailOptions must enable HTML for Resend open tracking');
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('Unit 5.51: runOutreachPipeline respects explicit enableHtml: false override', async () => {
+  const ws = createWorkspace();
+  const sentCalls = [];
+
+  try {
+    const mockSendEmail = async (mailOptions, emailOptions) => {
+      sentCalls.push({ mailOptions, emailOptions });
+      return { success: true, messageId: 'msg-551-false' };
+    };
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        companiesPath: ws.companiesPath,
+        enableHtml: false,
+        delay: 0,
+        mock: true,
+        logger: silentLogger
+      },
+      {
+        getPendingLeads: () => [sampleLeadsData[0]],
+        generateEmail: async () => ({ subject: 'Test Subject', body: `Hi\n\n${DEFAULT_SIGNATURE_STRING}` }),
+        sendEmail: mockSendEmail
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.equal(sentCalls.length, 1);
+    assert.strictEqual(sentCalls[0].mailOptions.enableHtml, false);
+    assert.strictEqual(sentCalls[0].emailOptions.enableHtml, false);
+  } finally {
+    ws.cleanup();
+  }
+});
+
+

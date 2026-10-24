@@ -97,6 +97,7 @@ test('Unit 3.5: GitHub Actions Outreach Workflow', async (t) => {
     assert.strictEqual(env.SMTP_PASS, '${{ secrets.SMTP_PASS }}');
     assert.strictEqual(env.EMAIL_FROM, '${{ secrets.EMAIL_FROM }}', 'EMAIL_FROM secret must be wired to outreach job');
     assert.strictEqual(env.SPAM_ALERT_EMAIL, '${{ secrets.SPAM_ALERT_EMAIL }}');
+    assert.strictEqual(env.ENABLE_HTML_EMAIL, 'true', 'ENABLE_HTML_EMAIL must be set to true for open tracking');
     assert.strictEqual(env.QUICK_EMAIL_VERIFICATION_API_KEY, '${{ secrets.QUICK_EMAIL_VERIFICATION_API_KEY }}');
     assert.strictEqual(env.SNIFFMAIL_API_KEY, '${{ secrets.SNIFFMAIL_API_KEY }}');
     assert.strictEqual(env.REON_API_KEY, '${{ secrets.REON_API_KEY }}');
