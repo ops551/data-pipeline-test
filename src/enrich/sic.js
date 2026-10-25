@@ -1,5 +1,5 @@
-// Target SIC codes that represent our 14 high-converting sectors
-const TARGET_SICS = [
+// Target SIC codes that represent our high-converting sectors
+const TIER_1_SICS = [
   // 1. Car Showrooms & Dealerships
   '45111', '45112', '45190',
   // 2. Motorbike & Superbike Dealers
@@ -9,29 +9,46 @@ const TARGET_SICS = [
   // 4. Car Detailing, Valeting & Garages
   '45200',
   // 5. Aesthetic Clinics, Salons & Wellbeing
-  '96020', '96040', '86900', '86909',
+  '96020', '96040',
   // 6. Cosmetic Dentistry & Dental Practices
   '86230',
   // 7. Bespoke Kitchens, Joinery & Interior Design
   '74100', '43320',
-  // 8. Estate Agents & Property Letting
-  '68310',
-  // 9. Fitness, Gyms & Pilates Studios
-  '93120', '93130', '93199',
-  // 10. Essential Trades (Plumbers, Electricians, Construction, Cleaning)
+  // 8. Fine Dining, Restaurants & Hospitality
+  '56101', '56102', '56103', '55100'
+];
+
+const TIER_2_SICS = [
+  // Essential Trades (Plumbers, Electricians, Construction, Roofing)
   '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '43999',
+  // Cleaning Services
   '81210', '81221', '81222', '81223', '81291', '81299',
-  // 11. Weddings, Luxury Events & Photography
+  // Weddings, Luxury Events & Photography
   '74201', '74202', '74203', '74209', '93290',
-  // 12. Pet Grooming & Dog Spas
+  // Fitness, Gyms & Pilates Studios
+  '93120', '93130', '93199',
+  // Pet Grooming & Dog Spas
   '96090',
-  // 13. Restaurants, Cafes, Dining & Hospitality
-  '55100', '55201', '55202', '55209', '55300', '55900',
-  '56101', '56102', '56103', '56210', '56290', '56301', '56302',
+  // Estate Agents & Property Letting
+  '68310',
+  // Additional Hospitality & Catering
+  '55201', '55202', '55209', '55300', '55900', '56210', '56290', '56301', '56302'
+];
+
+const TIER_3_SICS = [
+  // Health Activities (general clinics)
+  '86900', '86909',
+  // Retail & Ecommerce
   '47110', '47190', '47210', '47220', '47230', '47240', '47290',
   '47710', '47721', '47722', '47730', '47741', '47749', '47750',
-  // 14. Tech & Digital Agencies (Developer Contractor Hire)
+  // Tech & Digital Agencies
   '62012', '62020', '62090', '58290', '73110'
+];
+
+const TARGET_SICS = [
+  ...TIER_1_SICS,
+  ...TIER_2_SICS,
+  ...TIER_3_SICS
 ];
 
 // SPV / holding / dormant / corporate shell codes to exclude
@@ -49,7 +66,42 @@ const EXCLUDED_SICS = [
 ];
 
 const TARGET_SIC_SET = new Set(TARGET_SICS);
+const TIER_1_SET = new Set(TIER_1_SICS);
+const TIER_2_SET = new Set(TIER_2_SICS);
+const TIER_3_SET = new Set(TIER_3_SICS);
 const EXCLUDED_SIC_SET = new Set(EXCLUDED_SICS);
+
+const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
+  /\b(?:charity|charities|charitable|foundation|fundraising|non[- ]?profit|social housing|cic|c\.i\.c|community trust|charitable trust)\b/i,
+  /\b(?:recruitment|staffing|talent acquisition|headhunters?|personnel|workforce)\b/i,
+  /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i
+]);
+
+function getSicPriority(sicString) {
+  if (!sicString) return 0;
+  const raw = Array.isArray(sicString) ? sicString.join(';') : String(sicString || '');
+  const codes = raw
+    .split(/[;,]/)
+    .map(c => c.trim())
+    .filter(Boolean);
+
+  if (codes.length === 0) return 0;
+  for (const c of codes) {
+    if (EXCLUDED_SIC_SET.has(c)) return 0;
+  }
+  if (codes.some(c => TIER_1_SET.has(c))) return 100;
+  if (codes.some(c => TIER_2_SET.has(c))) return 60;
+  if (codes.some(c => TIER_3_SET.has(c))) return 10;
+  return 0;
+}
+
+function isDisqualifiedCompany(company = {}) {
+  const name = String(company.company_name || '').toLowerCase();
+  for (const pattern of NEGATIVE_DISQUALIFY_PATTERNS) {
+    if (pattern.test(name)) return true;
+  }
+  return false;
+}
 
 function isTargetSic(sicString) {
   if (!sicString) return false;
@@ -70,4 +122,14 @@ function isTargetSic(sicString) {
   return codes.some(code => TARGET_SIC_SET.has(code));
 }
 
-module.exports = { TARGET_SICS, EXCLUDED_SICS, isTargetSic };
+module.exports = {
+  TARGET_SICS,
+  TIER_1_SICS,
+  TIER_2_SICS,
+  TIER_3_SICS,
+  EXCLUDED_SICS,
+  isTargetSic,
+  getSicPriority,
+  isDisqualifiedCompany,
+  NEGATIVE_DISQUALIFY_PATTERNS
+};

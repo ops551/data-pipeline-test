@@ -350,8 +350,81 @@ function classifySector(company = {}) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+  // 1. High-precision contextual keywords (Brand intent & explicit names override loose SIC codes)
+  if (
+    /\b(?:bespoke kitchen|fitted kitchen|fitted wardrobes?|joinery|interior design(?:er)?|luxury joinery)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "kitchen_interior";
+  }
+
+  if (
+    /\b(?:watch(?:es)?|timepiece(?:s)?|horology|rolex|patek|audemars|omega watch|jeweller(?:y|ies)?)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "watch_showroom";
+  }
+
+  if (
+    /\b(?:car showroom|used cars?|car dealership|motor sales|auto sales|vehicle dealership|used vehicles?)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "car_showroom";
+  }
+
+  if (
+    /\b(?:motorcycles?|motorbikes?|superbikes?|ducati|yamaha|harley[- ]davidson)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "bike_showroom";
+  }
+
+  if (
+    /\b(?:cosmetic dentist(?:ry)?|smile makeover|composite bonding|teeth whitening|invisalign)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "dentistry";
+  }
+
+  if (
+    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading|hair salon|beauty salon|nail salon|dreadlocks?|loc extensions?|locs? salon|loc install)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "aesthetics_clinic";
+  }
+
+  if (
+    /\b(?:detailing|ceramic coating|paint correction|valeting|car wrap|ppf|tinting)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "detailing";
+  }
+
+  if (
+    /\b(?:dog grooming|pet groom(?:ing|er)|dog spa|canine hydrotherapy)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "pet_grooming";
+  }
+
+  if (
+    /\b(?:wedding photographer|wedding venue|event planner|wedding videograph(?:y|er)|portrait photograph(?:y|er)|commercial photograph(?:y|er)|photograph(?:y|er))\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "wedding_events";
+  }
+
+  // 2. High-converting sub-niche SICs
   for (const code of codes) {
-    // 1. Exact high-converting sub-niche SICs
     if (code === "45111" || code === "45112" || code === "45190") {
       return "car_showroom";
     }
@@ -379,8 +452,14 @@ function classifySector(company = {}) {
     if (code === "96090") {
       return "pet_grooming";
     }
-    if (code === "96020" || code === "96040" || code === "86900" || code === "86909") {
+    if (code === "96020" || code === "96040") {
       return "aesthetics_clinic";
+    }
+    if (code === "86900" || code === "86909") {
+      if (/\b(?:aesthetics?|botox|filler|skin|laser|facial|beauty|cosmetic)\b/i.test(textToScan)) {
+        return "aesthetics_clinic";
+      }
+      return "healthcare";
     }
     if (code === "45200") {
       if (/\b(?:detailing|ceramic|coating|valet|valeting|paint correction|wrap|ppf|tint)\b/i.test(textToScan)) {
@@ -530,19 +609,19 @@ function classifySector(company = {}) {
   }
 
   if (
-    /\b(?:clinic|medical|patient|therapy|dental|doctor|physio|physiotherapy|care|healthcare|hospital)\b/i.test(
-      textToScan,
-    )
-  ) {
-    return "healthcare";
-  }
-
-  if (
-    /\b(?:plumber|plumbing|electrician|electrical|builder|building|roof|roofing|cleaning|cleaner|repair|contractor|maintenance|construction|trades?)\b/i.test(
+    /\b(?:plumber|plumbing|electrician|electrical|builder|building|roof|roofing|cleaning|cleaner|repair|contractor|maintenance|construction|trades?|property care)\b/i.test(
       textToScan,
     )
   ) {
     return "trades";
+  }
+
+  if (
+    /\b(?:clinic|medical|patient|therapy|dental|doctor|physio|physiotherapy|healthcare|health\s*care|patient\s*care|nursing\s*care|care\s*home|hospital)\b/i.test(
+      textToScan,
+    )
+  ) {
+    return "healthcare";
   }
 
   if (

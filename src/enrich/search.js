@@ -250,9 +250,18 @@ function extractWebsiteContext(html, maxLength = 1800) {
   return details.join('\n').slice(0, maxLength);
 }
 
+function extractUkPostcode(address) {
+  if (!address || typeof address !== 'string') return '';
+  const match = address.match(/\b([A-Z]{1,2}[0-9][A-Z0-9]?\s*[0-9][A-Z]{2})\b/i);
+  return match ? match[1].toUpperCase() : '';
+}
+
 async function searchCompany(scraper, company) {
-  const postCode = company.registered_office_address ? company.registered_office_address.split(',').pop().trim() : '';
-  const query = `${company.company_name} ${postCode}`.trim();
+  const postCode = extractUkPostcode(company.registered_office_address);
+  const cleanAddr = company.registered_office_address || '';
+  const fallbackToken = cleanAddr ? cleanAddr.split(',').slice(-2, -1)[0]?.trim() : '';
+  const location = postCode || (fallbackToken && !/^(?:england|wales|scotland|united kingdom)$/i.test(fallbackToken) ? fallbackToken : '');
+  const query = `${company.company_name} ${location}`.trim();
   
   const res = await scraper.search(query);
   
@@ -260,7 +269,8 @@ async function searchCompany(scraper, company) {
   let websiteUrl = '';
   const socialUrls = [];
   
-  for (const link of res.links) {
+  const links = Array.isArray(res?.links) ? res.links : (Array.isArray(res) ? res : []);
+  for (const link of links) {
     const domain = getDomain(link);
     if (!domain || isBlocked(domain)) continue;
 
@@ -309,6 +319,7 @@ async function searchCompanyLeadership(scraper, companyName) {
 module.exports = {
   searchCompany,
   searchCompanyLeadership,
+  extractUkPostcode,
   isSocialOrDirectory,
   isSocial,
   isDirectory,
