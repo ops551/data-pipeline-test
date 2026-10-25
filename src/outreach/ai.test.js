@@ -1227,3 +1227,77 @@ test('Unit 5.52: Aesthetic Clinic email copy delivers glow-up transformation ree
   assert.ok(email.body.includes('24/7 Consultation & WhatsApp Assistant'));
   assert.ok(email.body.includes("reply with 'yes' and I will send it over"));
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.62: Bulletproof 3-Pillar Guarantee & Auto-Completion
+// -----------------------------------------------------------------------------
+
+test('Unit 5.62: buildPrompt combines 3 pillars cleanly into step 3 and includes mandatory rule', () => {
+  const prompt = buildPrompt({
+    company_name: 'Starlight Detailing Ltd',
+    industry: 'detailing'
+  });
+
+  // Verify unified step 3
+  assert.ok(prompt.includes('3. Value Proposition (Must clearly present our 3 distinct growth pillars on separate lines):'));
+  assert.ok(prompt.includes('1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory)'));
+  assert.ok(prompt.includes('2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)'));
+  assert.ok(prompt.includes('3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)'));
+  assert.ok(!prompt.includes('Core Solution Requirement: You must clearly present our 3-pillar growth system'));
+
+  // Verify mandatory rule
+  assert.ok(prompt.includes("- All 3 Pillars Mandatory: The email body MUST always include all three pillars (1, 2, and 3). Each pillar must be on its own line with a full descriptive sentence. Never truncate or omit any pillar (never write just '24/7' or stop before pillar 3)."));
+});
+
+test('Unit 5.62: cleanEmailContent auto-completes missing Pillar 3 when Pillar 2 is present', () => {
+  const rawJson = JSON.stringify({
+    subject: 'Idea for Starlight Detailing',
+    body: 'Hey Mark,\n\nWe set up automated customer capture systems.\n\n1) AI Social Media Autopilot: 50/50 paint correction Reels.\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n\nWould you be open to a 30-second preview?'
+  });
+
+  const cleaned = cleanEmailContent(rawJson, { companyName: 'Starlight Detailing' });
+
+  assert.ok(cleaned.body.includes('1) AI Social Media Autopilot: 50/50 paint correction Reels.'));
+  assert.ok(cleaned.body.includes('2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.'));
+  assert.ok(cleaned.body.includes('3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.'));
+  assert.ok(cleaned.body.includes('Would you be open to a 30-second preview?'));
+});
+
+test('Unit 5.62: cleanEmailContent heals truncated Pillar 2 and appends Pillar 3', () => {
+  const rawJson = JSON.stringify({
+    subject: 'Idea for Horizon Motors',
+    body: 'Hey Team,\n\nWe build custom automotive systems.\n\n1) AI Social Media Autopilot: Vehicle showcase reels.\n2) 24/7\n\nIf you would like to see a demo, reply yes.'
+  });
+
+  const cleaned = cleanEmailContent(rawJson, { companyName: 'Horizon Motors' });
+
+  assert.ok(cleaned.body.includes('2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.'));
+  assert.ok(cleaned.body.includes('3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.'));
+  assert.ok(cleaned.body.includes('If you would like to see a demo, reply yes.'));
+});
+
+test('Unit 5.62: cleanEmailContent handles dot notation 2. and appends Pillar 3', () => {
+  const rawJson = JSON.stringify({
+    subject: 'Idea for Apex Clinics',
+    body: 'Hey Sarah,\n\nWe build custom systems.\n\n1. AI Social Media Autopilot: Glow-up reels.\n2. 24/7 WhatsApp Assistant: Books consultations.\n\nWould you be open to a demo?'
+  });
+
+  const cleaned = cleanEmailContent(rawJson, { companyName: 'Apex Clinics' });
+
+  assert.ok(cleaned.body.includes('2. 24/7 WhatsApp Assistant: Books consultations.'));
+  assert.ok(cleaned.body.includes('3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.'));
+});
+
+test('Unit 5.62: cleanEmailContent does NOT duplicate Pillar 3 if already present', () => {
+  const rawJson = JSON.stringify({
+    subject: 'Idea for Elite Watches',
+    body: 'Hey Alex,\n\n1) AI Social Media Autopilot: Macro wrist rolls.\n2) 24/7 WhatsApp Booking Assistant: Private viewings.\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Instant catalog.\n\nWould you like a demo?'
+  });
+
+  const cleaned = cleanEmailContent(rawJson, { companyName: 'Elite Watches' });
+
+  // Ensure "3)" only occurs once
+  const occurrences = (cleaned.body.match(/3\)/g) || []).length;
+  assert.equal(occurrences, 1);
+});
+

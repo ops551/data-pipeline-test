@@ -1394,13 +1394,13 @@ function buildPrompt(company = {}, options = {}) {
     hasInspectedWebsite
       ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`
       : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`,
-    "Core Solution Requirement: You must clearly present our 3-pillar growth system tailored to their specific industry (do not condense to just social media posting):",
-    "  1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from their photos/inventory)",
-    "  2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
-    "  3) Dynamic High-Speed Mobile Website & Booking Optimization",
+    "3. Value Proposition (Must clearly present our 3 distinct growth pillars on separate lines):",
+    "   1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory)",
+    "   2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
+    "   3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)",
     hasVerifiedWebsite
-      ? `3. Value Proposition: ${track.pitch}`
-      : `3. Value Proposition: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
+      ? `   Sector-specific details: ${track.pitch}`
+      : `   Sector-specific details: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
     hasInspectedWebsite
       ? `4. Personalization: Include exactly one 10-20 word positive sentence, informed by a service or feature shown in the homepage snapshot, suggesting a website update and relevant automation (such as ${track.focus}) to make a routine task easier. Do not identify or imply any flaw, missing feature, or problem; present it as a helpful improvement idea, not a criticism.`
       : null,
@@ -1411,6 +1411,7 @@ function buildPrompt(company = {}, options = {}) {
     `7. Sign-off: Must end with:\n${signature}`,
     "",
     "Rules:",
+    "- All 3 Pillars Mandatory: The email body MUST always include all three pillars (1, 2, and 3). Each pillar must be on its own line with a full descriptive sentence. Never truncate or omit any pillar (never write just '24/7' or stop before pillar 3).",
     "- Opening & Customization Proposition: Right in the opening after acknowledging their business, clearly explain that to help them interact with more customers and increase client engagement, you set up automated systems, AND explicitly state that in addition to this service, you can custom-build any workflow or feature tailored to their exact preferences and requirements.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
@@ -1546,6 +1547,38 @@ function cleanEmailContent(rawText, options = {}) {
     /(?:^|\n|\b)\s*2[).]\s*24\/7(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi,
     "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n",
   );
+
+  const hasPillar2 =
+    /(?:^|\n|\b)\s*2[).]/i.test(body) ||
+    /2[).]\s*24\/7/i.test(body) ||
+    body.includes("2) 24/7") ||
+    body.includes("2. 24/7");
+
+  const hasPillar3 =
+    /(?:^|\n|\b)\s*3\)/i.test(body) ||
+    /(?:^|\n|\b)\s*3\.(?:\s|$)/i.test(body);
+
+  if (hasPillar2 && !hasPillar3) {
+    const pillar3Addition =
+      "\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.\n";
+
+    if (/(?:^|\n)[ \t]*2[).][\s\S]*?(?=\r?\n\s*\r?\n)/i.test(body)) {
+      body = body.replace(
+        /((?:^|\n)[ \t]*2[).][\s\S]*?)(?=\r?\n\s*\r?\n)/i,
+        (_, p1) => `${p1}${pillar3Addition}`,
+      );
+    } else if (/(?:^|\n)[ \t]*2[).][^\r\n]*/i.test(body)) {
+      body = body.replace(
+        /((?:^|\n)[ \t]*2[).][^\r\n]*)/i,
+        (_, p1) => `${p1}${pillar3Addition}`,
+      );
+    } else {
+      body = body.replace(
+        /(\b2[).][^\r\n]*)/i,
+        (_, p1) => `${p1}${pillar3Addition}`,
+      );
+    }
+  }
 
   body = body
     .replace(/[ \t]+/g, " ")
