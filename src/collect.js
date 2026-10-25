@@ -6,7 +6,7 @@ const PAGE_SIZE = 500;
 // company_number is not in `alreadySeen` and not repeated within this run.
 async function collectCompanies(config, deps = {}) {
   const { alreadySeen = new Set(), search = searchCompanies, pageSize = PAGE_SIZE, log = console.log } = deps;
-  const { apiKey, incorporatedFrom, incorporatedTo, maxResults } = config;
+  const { apiKey, incorporatedFrom, incorporatedTo, maxResults, sicCodes } = config;
 
   const seen = new Set(alreadySeen);
   const collected = [];
@@ -14,7 +14,12 @@ async function collectCompanies(config, deps = {}) {
   let page = 1;
 
   while (collected.length < maxResults) {
-    const result = await search({ apiKey, incorporatedFrom, incorporatedTo, size: pageSize, startIndex });
+    const searchParams = { apiKey, incorporatedFrom, incorporatedTo, size: pageSize, startIndex };
+    if (sicCodes && (Array.isArray(sicCodes) ? sicCodes.length > 0 : String(sicCodes).trim())) {
+      searchParams.sicCodes = sicCodes;
+    }
+    const result = await search(searchParams);
+    if (typeof result.hits === 'number' && result.hits === 0) break;
     const items = result.items || [];
     if (items.length === 0) break;
 
@@ -31,7 +36,7 @@ async function collectCompanies(config, deps = {}) {
 
     startIndex += items.length;
     page += 1;
-   if (typeof result.hits === 'number' && startIndex >= result.hits) break;
+    if (typeof result.hits === 'number' && startIndex >= result.hits) break;
     if (startIndex >= 10000) { log('Reached API limit of 10,000 results. Please narrow date range to get more.'); break; }
   }
 

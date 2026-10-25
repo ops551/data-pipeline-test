@@ -1,6 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { loadConfig } = require('./config');
+const { loadConfig, parseSicCodes } = require('./config');
+const { TARGET_SICS } = require('./enrich/sic');
 
 const today = new Date('2026-09-19T10:00:00Z');
 const base = { COMPANIES_HOUSE_API_KEY: 'abc123' };
@@ -12,6 +13,7 @@ test('defaults: last 10 days and 1000 results', () => {
     incorporatedFrom: '2026-09-09',
     incorporatedTo: '2026-09-19',
     maxResults: 1000,
+    sicCodes: [...TARGET_SICS],
   });
 });
 
@@ -61,4 +63,43 @@ test('bad date, reversed range and bad numbers are errors', () => {
   );
   assert.throws(() => loadConfig({ ...base, MAX_RESULTS: '0' }, today), /MAX_RESULTS/);
   assert.throws(() => loadConfig({ ...base, DAYS_BACK: 'abc' }, today), /DAYS_BACK/);
+});
+
+test('SIC_CODES parses comma-separated values and trims whitespace', () => {
+  const cfg = loadConfig({ ...base, SIC_CODES: '62012, 62020, 73110 ' }, today);
+  assert.deepEqual(cfg.sicCodes, ['62012', '62020', '73110']);
+});
+
+test('SIC_CODES empty string or whitespace disables filter and returns empty array', () => {
+  const cfg1 = loadConfig({ ...base, SIC_CODES: '' }, today);
+  assert.deepEqual(cfg1.sicCodes, []);
+
+  const cfg2 = loadConfig({ ...base, SIC_CODES: '   ' }, today);
+  assert.deepEqual(cfg2.sicCodes, []);
+});
+
+test('SIC_CODES "all", "ALL", or "*" disables filter and returns empty array', () => {
+  assert.deepEqual(loadConfig({ ...base, SIC_CODES: 'all' }, today).sicCodes, []);
+  assert.deepEqual(loadConfig({ ...base, SIC_CODES: 'ALL' }, today).sicCodes, []);
+  assert.deepEqual(loadConfig({ ...base, SIC_CODES: '*' }, today).sicCodes, []);
+  assert.deepEqual(loadConfig({ ...base, SIC_CODES: '  all  ' }, today).sicCodes, []);
+});
+
+test('parseSicCodes returns cloned TARGET_SICS when undefined', () => {
+  const defaultCodes = parseSicCodes(undefined);
+  assert.deepEqual(defaultCodes, TARGET_SICS);
+  assert.notEqual(defaultCodes, TARGET_SICS, 'must be a new array copy');
+
+  defaultCodes.push('99999');
+  assert.ok(!TARGET_SICS.includes('99999'), 'modifying copy should not mutate TARGET_SICS');
+});
+
+test('parseSicCodes handles various edge cases', () => {
+  assert.deepEqual(parseSicCodes(), TARGET_SICS);
+  assert.deepEqual(parseSicCodes(''), []);
+  assert.deepEqual(parseSicCodes('   '), []);
+  assert.deepEqual(parseSicCodes('all'), []);
+  assert.deepEqual(parseSicCodes('*'), []);
+  assert.deepEqual(parseSicCodes('62012'), ['62012']);
+  assert.deepEqual(parseSicCodes('62012, 62020, , 73110'), ['62012', '62020', '73110']);
 });

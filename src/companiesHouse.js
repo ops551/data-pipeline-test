@@ -6,12 +6,25 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function buildUrl({ incorporatedFrom, incorporatedTo, size, startIndex }) {
+function buildUrl({ incorporatedFrom, incorporatedTo, size, startIndex, sicCodes }) {
   const url = new URL('/advanced-search/companies', BASE_URL);
   url.searchParams.set('incorporated_from', incorporatedFrom);
   url.searchParams.set('incorporated_to', incorporatedTo);
   url.searchParams.set('size', String(size));
   url.searchParams.set('start_index', String(startIndex));
+
+  if (sicCodes !== undefined && sicCodes !== null) {
+    let formatted = '';
+    if (Array.isArray(sicCodes)) {
+      formatted = sicCodes.map(String).map((s) => s.trim()).filter(Boolean).join(',');
+    } else {
+      formatted = String(sicCodes).split(',').map((s) => s.trim()).filter(Boolean).join(',');
+    }
+    if (formatted) {
+      url.searchParams.set('sic_codes', formatted);
+    }
+  }
+
   return url.toString();
 }
 

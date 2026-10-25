@@ -56,6 +56,39 @@ test('buildUrl sends only date range, size and start_index', () => {
   });
 });
 
+test('buildUrl formats sicCodes array, string, and numbers with trimming', () => {
+  const urlArray = new URL(buildUrl({ ...params, sicCodes: ['62012', '62020', '73110'] }));
+  assert.equal(urlArray.searchParams.get('sic_codes'), '62012,62020,73110');
+
+  const urlString = new URL(buildUrl({ ...params, sicCodes: '62012, 62020, 73110' }));
+  assert.equal(urlString.searchParams.get('sic_codes'), '62012,62020,73110');
+
+  const urlNumbers = new URL(buildUrl({ ...params, sicCodes: [62012, 62020] }));
+  assert.equal(urlNumbers.searchParams.get('sic_codes'), '62012,62020');
+
+  const urlSingleNumber = new URL(buildUrl({ ...params, sicCodes: 62012 }));
+  assert.equal(urlSingleNumber.searchParams.get('sic_codes'), '62012');
+
+  const urlMessy = new URL(buildUrl({ ...params, sicCodes: ['  62012  ', '', '   ', '62020'] }));
+  assert.equal(urlMessy.searchParams.get('sic_codes'), '62012,62020');
+});
+
+test('buildUrl omits sic_codes when empty, null, or undefined for 100% backward compatibility', () => {
+  for (const emptyVal of [undefined, null, '', '   ', [], ['', '   '], '  ,  ']) {
+    const url = new URL(buildUrl({ ...params, sicCodes: emptyVal }));
+    assert.equal(url.searchParams.has('sic_codes'), false, `Expected no sic_codes for ${JSON.stringify(emptyVal)}`);
+  }
+});
+
+test('searchCompanies includes sic_codes in request URL when provided', async () => {
+  const body = { items: [{ company_number: '1' }], hits: 1 };
+  const { deps, calls } = makeDeps([fakeResponse(200, body)]);
+  await searchCompanies({ ...params, sicCodes: ['62012', '62020'] }, deps);
+  assert.equal(calls.length, 1);
+  const calledUrl = new URL(calls[0].url);
+  assert.equal(calledUrl.searchParams.get('sic_codes'), '62012,62020');
+});
+
 test('200 returns the body and uses Basic auth with key as username', async () => {
   const body = { items: [{ company_number: '1' }], hits: 1 };
   const { deps, calls } = makeDeps([fakeResponse(200, body)]);
