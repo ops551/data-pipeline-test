@@ -199,7 +199,7 @@ test('Unit 5.57: buildPrompt enforces mandatory 3-pillar directive in prompt ins
     sic_codes: '47110'
   });
 
-  assert.ok(prompt.includes('Core Solution Requirement: You must clearly present our 3-pillar growth system'));
+  assert.ok(prompt.includes('3. Value Proposition (Must clearly present our 3 distinct growth pillars on separate lines):'));
   assert.ok(prompt.includes('1) AI Social Media Autopilot'));
   assert.ok(prompt.includes('2) 24/7 WhatsApp Booking Assistant'));
   assert.ok(prompt.includes('3) Dynamic High-Speed Mobile Website & Booking Optimization'));
