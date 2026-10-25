@@ -9,11 +9,12 @@ const {
   generateFollowUpEmail,
   runFollowUpPipeline,
   getEligibleFollowUps,
-  getDailyFollowUpCount
+  getDailyFollowUpCount,
+  FOLLOWUP_SECTOR_TEMPLATES
 } = require('./followup');
 
 const { parseArgs } = require('./followup-cli');
-const { writeCSVAtomic, readFollowUps, appendFollowUp, SENT_LEADS_COLUMNS, LEADS_COLUMNS } = require('./csv');
+const { writeCSVAtomic, readFollowUps, appendFollowUp, SENT_LEADS_COLUMNS, LEADS_COLUMNS, DEFAULT_COMPANIES_PATH } = require('./csv');
 const { parseSmtpPool, sendEmail, resetExhaustedSmtpAccounts } = require('./email');
 const { runOutreachPipeline } = require('./index');
 const { verifyEmail } = require('../enrich/pattern');
@@ -616,4 +617,311 @@ test('Adversarial: runFollowUpPipeline skips entire run cleanly when all leads l
   assert.equal(res.sent, 0);
   assert.equal(res.missingMessageId, 2);
   assert.ok(logs.some(l => l.includes('missing message_id: 2')));
+});
+
+// -----------------------------------------------------------------------------
+// 5. Unit 5.55: Sub-Niche Follow-Up Alignment & Follow-Up SIC Protection Shield
+// -----------------------------------------------------------------------------
+
+test('Adversarial Unit 5.55: FOLLOWUP_SECTOR_TEMPLATES defines and freezes all 18 sectors', () => {
+  const expectedSectors = [
+    'car_showroom',
+    'watch_showroom',
+    'bike_showroom',
+    'detailing',
+    'aesthetics_clinic',
+    'dentistry',
+    'kitchen_interior',
+    'estate_agent',
+    'fitness',
+    'wedding_events',
+    'pet_grooming',
+    'ecommerce',
+    'trades',
+    'hospitality',
+    'healthcare',
+    'b2b',
+    'tech',
+    'general'
+  ];
+
+  assert.ok(FOLLOWUP_SECTOR_TEMPLATES && typeof FOLLOWUP_SECTOR_TEMPLATES === 'object');
+  assert.equal(Object.keys(FOLLOWUP_SECTOR_TEMPLATES).length, 18);
+  assert.ok(Object.isFrozen(FOLLOWUP_SECTOR_TEMPLATES));
+
+  for (const sector of expectedSectors) {
+    const template = FOLLOWUP_SECTOR_TEMPLATES[sector];
+    assert.ok(template, `Template for sector ${sector} must exist`);
+    assert.equal(template.sector, sector);
+    assert.ok(template.touch2Hook && template.touch2Hook.length > 5, `Sector ${sector} touch2Hook missing`);
+    assert.ok(template.hook && template.hook === template.touch2Hook, `Sector ${sector} hook alias missing`);
+    assert.ok(template.breakupPhrase && template.breakupPhrase.length > 5, `Sector ${sector} breakupPhrase missing`);
+    assert.ok(template.touch3Phrase && template.touch3Phrase === template.breakupPhrase, `Sector ${sector} touch3Phrase alias missing`);
+    assert.ok(template.touch2Intro && template.touch2Intro.length > 10, `Sector ${sector} touch2Intro missing`);
+    assert.ok(Object.isFrozen(template));
+  }
+});
+
+test('Adversarial Unit 5.55: generateFollowUpEmail aligns copy and sector metadata across diverse sub-niches', () => {
+  const testCases = [
+    {
+      candidate: {
+        company_name: 'Mayfair Prestige Motors',
+        person_name: 'Charles Bennett',
+        sent_to: 'charles@mayfairmotors.co.uk',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_car@resend.dev>',
+        lead_record: { sic_codes: '45111' }
+      },
+      expectedSector: 'car_showroom',
+      expectedIsTech: false,
+      expectedTouch2Text: /automating vehicle showcase Reels, social scheduling, and 24\/7 test-drive bookings/i
+    },
+    {
+      candidate: {
+        company_name: 'Crown Harley Davidson',
+        person_name: 'Rider Dave',
+        sent_to: 'dave@crownhd.co.uk',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_bike@resend.dev>',
+        lead_record: { sic_codes: '45400' }
+      },
+      expectedSector: 'bike_showroom',
+      expectedIsTech: false,
+      expectedTouch2Text: /bike walkaround Reels, exhaust sound clips, and automated test-ride bookings/i
+    },
+    {
+      candidate: {
+        company_name: 'Glow Dental Studio',
+        person_name: 'Dr. Emily Watson',
+        sent_to: 'emily@glowdental.co.uk',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_dental@resend.dev>',
+        lead_record: { sic_codes: '86230' }
+      },
+      expectedSector: 'dentistry',
+      expectedIsTech: false,
+      expectedTouch2Text: /smile makeover reveal Reels, patient review Stories, and assessment bookings/i
+    },
+    {
+      candidate: {
+        company_name: 'Pulse Fitness & Pilates',
+        person_name: 'Coach Marcus',
+        sent_to: 'marcus@pulsefit.co.uk',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_fit@resend.dev>',
+        lead_record: { sic_codes: '93130' }
+      },
+      expectedSector: 'fitness',
+      expectedIsTech: false,
+      expectedTouch2Text: /transformation Reels, daily motivation Stories, and automated trial pass bookings/i
+    },
+    {
+      candidate: {
+        company_name: 'Paws & Bubbles Dog Spa',
+        person_name: 'Chloe Jenkins',
+        sent_to: 'chloe@pawsbubbles.co.uk',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_pet@resend.dev>',
+        lead_record: { sic_codes: '96090' }
+      },
+      expectedSector: 'pet_grooming',
+      expectedIsTech: false,
+      expectedTouch2Text: /grooming transformation Reels, daily salon Stories, and 24\/7 WhatsApp slot booking/i
+    },
+    {
+      candidate: {
+        company_name: 'CloudSync Solutions Ltd',
+        person_name: 'David Developer',
+        sent_to: 'david@cloudsync.io',
+        due_touch: 2,
+        followup_number: 1,
+        in_reply_to: '<touch1_tech@resend.dev>',
+        lead_record: { sic_codes: '62020' }
+      },
+      expectedSector: 'tech',
+      expectedIsTech: true,
+      expectedTouch2Text: /handling backend API integrations and workload overflow/i
+    }
+  ];
+
+  for (const tc of testCases) {
+    const email = generateFollowUpEmail(tc.candidate);
+    assert.equal(email.sector, tc.expectedSector, `Expected sector ${tc.expectedSector} but got ${email.sector}`);
+    assert.equal(email.isTech, tc.expectedIsTech, `Expected isTech ${tc.expectedIsTech} but got ${email.isTech}`);
+    assert.match(email.text, tc.expectedTouch2Text);
+    assert.match(email.text, /Worth a brief 5-minute chat sometime this week\?/);
+    // Strictly zero WhatsApp in signature
+    assert.doesNotMatch(email.text, /WhatsApp:/i);
+    assert.doesNotMatch(email.text, /\+880/);
+  }
+
+  // Touch 3 Breakup verification for watch showroom
+  const watchCandidateTouch3 = {
+    company_name: 'Geneva Vault Watches Ltd',
+    person_name: 'Arthur Pendelton',
+    sent_to: 'arthur@genevavault.co.uk',
+    due_touch: 3,
+    followup_number: 2,
+    in_reply_to: '<touch2_watch@resend.dev>',
+    lead_record: { sic_codes: '47770' }
+  };
+  const emailTouch3 = generateFollowUpEmail(watchCandidateTouch3);
+  assert.equal(emailTouch3.sector, 'watch_showroom');
+  assert.equal(emailTouch3.due_touch, 3);
+  assert.match(emailTouch3.text, /timepiece showcase automation & private boutique viewing systems/i);
+  assert.match(emailTouch3.text, /closing the loop/i);
+  assert.match(emailTouch3.text, /will not follow up further/i);
+  assert.doesNotMatch(emailTouch3.text, /WhatsApp:/i);
+});
+
+test('Adversarial Unit 5.55: getEligibleFollowUps strictly filters non-target/excluded SIC codes (Protection Shield)', () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    // Excluded / Non-Target Leads (should be blocked)
+    { company_number: '8001', company_name: 'Dormant Holdings Ltd', sent_to: 'admin@dormant.co.uk', sent_at: past3Days, message_id: '<msg_8001@dormant.co.uk>', sic_codes: '99999' },
+    { company_number: '8002', company_name: 'Shell SPV Ltd', sent_to: 'trust@shellspv.co.uk', sent_at: past3Days, message_id: '<msg_8002@shellspv.co.uk>', sic_codes: '64209' },
+    { company_number: '8003', company_name: 'Generic Management Ltd', sent_to: 'info@genmgmt.co.uk', sent_at: past3Days, message_id: '<msg_8003@genmgmt.co.uk>', sic_codes: '70229' },
+    { company_number: '8004', company_name: 'Random Unapproved SIC Ltd', sent_to: 'contact@random.co.uk', sent_at: past3Days, message_id: '<msg_8004@random.co.uk>', sic_codes: '01110' },
+
+    // Approved Target Leads (should pass)
+    { company_number: '8005', company_name: 'Apex Car Sales Ltd', sent_to: 'sales@apexcar.co.uk', sent_at: past3Days, message_id: '<msg_8005@apexcar.co.uk>', sic_codes: '45111' },
+    { company_number: '8006', company_name: 'Elite Smiles Dental Ltd', sent_to: 'hello@elitesmiles.co.uk', sent_at: past3Days, message_id: '<msg_8006@elitesmiles.co.uk>', sic_codes: '86230' }
+  ];
+
+  writeCSVAtomic(sentLeadsPath, sentLeads, [...SENT_LEADS_COLUMNS, 'sic_codes']);
+
+  const res = getEligibleFollowUps(sentLeadsPath, followUpsPath, { now });
+
+  assert.equal(res.eligible.length, 2, 'Should only allow the 2 approved target SIC leads');
+  assert.equal(res.nonTargetSicCount, 4, 'Should record exactly 4 non-target SICs skipped');
+  assert.equal(res.eligible[0].company_number, '8005');
+  assert.equal(res.eligible[1].company_number, '8006');
+  assert.equal(res.eligible[0].lead_record.sic_codes, '45111');
+  assert.equal(res.eligible[1].lead_record.sic_codes, '86230');
+});
+
+test('Adversarial Unit 5.55: getEligibleFollowUps resolves sic_codes from sibling companies.csv', () => {
+  const { dir, sentLeadsPath, followUpsPath } = createTempDir();
+  const siblingCompaniesPath = path.join(dir, 'companies.csv');
+
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  // sent_leads missing sic_codes entirely
+  const sentLeads = [
+    { company_number: '8101', company_name: 'Auto Detail Pros', sent_to: 'info@autodetail.co.uk', sent_at: past3Days, message_id: '<msg_8101@detail.co.uk>' },
+    { company_number: '8102', company_name: 'Holding Shell Corp', sent_to: 'info@holdingshell.co.uk', sent_at: past3Days, message_id: '<msg_8102@shell.co.uk>' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  // companies.csv defines the SIC codes
+  const companies = [
+    { company_number: '8101', company_name: 'Auto Detail Pros', sic_codes: '45200' }, // detailing (target)
+    { company_number: '8102', company_name: 'Holding Shell Corp', sic_codes: '64201' }  // holding (excluded)
+  ];
+  writeCSVAtomic(siblingCompaniesPath, companies, ['company_number', 'company_name', 'sic_codes']);
+
+  const res = getEligibleFollowUps(sentLeadsPath, followUpsPath, { now });
+
+  assert.equal(res.eligible.length, 1);
+  assert.equal(res.eligible[0].company_number, '8101');
+  assert.equal(res.eligible[0].lead_record.sic_codes, '45200');
+  assert.equal(res.nonTargetSicCount, 1);
+});
+
+test('Adversarial Unit 5.55: getEligibleFollowUps handles polymorphic 3rd argument as string path or object and respects filterNonTargetSics: false', () => {
+  const { dir, sentLeadsPath, followUpsPath } = createTempDir();
+  const customCompaniesPath = path.join(dir, 'custom_companies.csv');
+
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '8201', company_name: 'Dormant Company Ltd', sent_to: 'info@dormant8201.co.uk', sent_at: past3Days, message_id: '<msg_8201@resend.dev>' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+
+  const companies = [
+    { company_number: '8201', company_name: 'Dormant Company Ltd', sic_codes: '99999' }
+  ];
+  writeCSVAtomic(customCompaniesPath, companies, ['company_number', 'company_name', 'sic_codes']);
+
+  // Case 1: Polymorphic string path passed as 3rd arg
+  const resStringArg = getEligibleFollowUps(sentLeadsPath, followUpsPath, customCompaniesPath);
+  assert.equal(resStringArg.eligible.length, 0);
+  assert.equal(resStringArg.nonTargetSicCount, 1);
+
+  // Case 2: Object with filterNonTargetSics: false disables protection shield
+  const resShieldDisabled = getEligibleFollowUps(sentLeadsPath, followUpsPath, {
+    now,
+    companiesPath: customCompaniesPath,
+    filterNonTargetSics: false
+  });
+  assert.equal(resShieldDisabled.eligible.length, 1);
+  assert.equal(resShieldDisabled.nonTargetSicCount, 0);
+
+  // Case 3: Explicit companiesMap passed directly as Map or Object
+  const companiesMap = new Map([
+    ['8201', { company_number: '8201', sic_codes: '62012' }] // Overrides with valid tech SIC
+  ]);
+  const resMapOverride = getEligibleFollowUps(sentLeadsPath, followUpsPath, {
+    now,
+    companiesMap
+  });
+  assert.equal(resMapOverride.eligible.length, 1);
+  assert.equal(resMapOverride.eligible[0].lead_record.sic_codes, '62012');
+  assert.equal(resMapOverride.nonTargetSicCount, 0);
+});
+
+test('Adversarial Unit 5.55: runFollowUpPipeline logs skipped non-target SICs and returns nonTargetSic count', async () => {
+  const { sentLeadsPath, followUpsPath } = createTempDir();
+  const now = new Date('2026-10-20T12:00:00Z');
+  const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sentLeads = [
+    { company_number: '8301', company_name: 'Holding Shell', sent_to: 'shell@holdings.co.uk', sent_at: past3Days, message_id: '<msg_8301@shell.co.uk>', sic_codes: '64201' },
+    { company_number: '8302', company_name: 'Modern Aesthetics', sent_to: 'dr@modernaesthetics.co.uk', sent_at: past3Days, message_id: '<msg_8302@clinic.co.uk>', sic_codes: '96020' }
+  ];
+  writeCSVAtomic(sentLeadsPath, sentLeads, [...SENT_LEADS_COLUMNS, 'sic_codes']);
+
+  const logs = [];
+  const mockSendEmail = async () => ({ success: true, messageId: '<sent_msg_8302@resend.dev>' });
+
+  const res = await runFollowUpPipeline({
+    sentLeadsPath,
+    followUpsPath,
+    now,
+    env: {
+      FOLLOWUP_RESEND_API_KEY: 're_valid_key',
+      FOLLOWUP_EMAIL_FROM: 'nahid@nahid.usasocialhubofficial.com'
+    }
+  }, {
+    sendEmail: mockSendEmail,
+    logger: { log: (msg) => logs.push(msg), error: () => {} }
+  });
+
+  assert.equal(res.eligible, 1);
+  assert.equal(res.sent, 1);
+  assert.equal(res.nonTargetSic, 1);
+  assert.ok(logs.some(l => l.includes('skipped non-target SIC: 1')), 'Must log skipped non-target SIC count');
+});
+
+test('Adversarial Unit 5.55: followup-cli parseArgs parses --companies-path in space and equal styles', () => {
+  const res1 = parseArgs(['--companies-path', '/custom/companies.csv']);
+  assert.equal(res1.companiesPath, '/custom/companies.csv');
+  assert.equal(res1.dryRun, false);
+
+  const res2 = parseArgs(['--companies-path=/custom/companies_v2.csv', '--dry-run', '--limit=5']);
+  assert.equal(res2.companiesPath, '/custom/companies_v2.csv');
+  assert.equal(res2.dryRun, true);
+  assert.equal(res2.limit, 5);
 });

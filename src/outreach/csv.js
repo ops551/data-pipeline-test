@@ -7,6 +7,7 @@ const { isValidEmailAddress } = require('../emailAddress');
 const DEFAULT_LEADS_PATH = path.join(process.cwd(), 'leads.csv');
 const DEFAULT_SENT_LEADS_PATH = path.join(process.cwd(), 'sent_leads.csv');
 const DEFAULT_FOLLOWUPS_PATH = path.join(process.cwd(), 'follow_ups.csv');
+const DEFAULT_COMPANIES_PATH = path.join(process.cwd(), 'companies.csv');
 
 const SENT_LEADS_COLUMNS = [
   ...LEADS_COLUMNS,
@@ -637,6 +638,7 @@ function optOutLead(target, options = {}) {
 }
 
 module.exports = {
+  DEFAULT_COMPANIES_PATH,
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH,
   DEFAULT_FOLLOWUPS_PATH,
