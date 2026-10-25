@@ -1448,9 +1448,10 @@ function buildPrompt(company = {}, options = {}) {
     "- Pillar 1 Smart Assets (AI Social Media Autopilot): Emphasize zero manual editing needed (No manual editing needed). State that AI converts their specific visual/inventory assets and manages the schedule so their audience stays continuously engaged on autopilot.",
     "- Pillar 2 Hybrid Assistant (Hybrid 24/7 WhatsApp Assistant): Highlight that the business can chat manually with clients anytime; when they are busy or after-hours, the 24/7 assistant steps in to reply and book directly into their calendar.",
     "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
+    "- Pillar Completeness: Each of the 3 numbered pillars (1, 2, 3) MUST be written out with its full title and complete descriptive sentence. NEVER truncate, cut off, or emit a standalone heading like '2) 24/7' or '2) Hybrid 24/7' or '2) 24/7 WhatsApp Assistant:' without the full explanation.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
-    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 130-160 words before signature total).",
+    "- Length & conciseness: Aim for 100-120 words before the signature; if needed to fully describe all 3 pillars, up to 150 words maximum is allowed, but prefer keeping it concise. Avoid fluffy intros. Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 130-160 words before signature total).",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
@@ -1604,7 +1605,8 @@ function cleanEmailContent(rawText, options = {}) {
 
   // Normalize markdown bold / bullets on pillar numbers (e.g. **2) 24/7**, 2) **24/7**, - 2) 24/7)
   body = body
-    .replace(/(?:^|\n)\s*[-*•]\s*(?:\*\*)?([123][).])/g, "\n$1")
+    .replace(/(?:^|\n)\s*[-*•]\s*(?:\*\*)?([123][).])(?:\*\*)?/g, "\n$1")
+    .replace(/(?:^|\n)[ \t]*\*\*([123][).])(?:\*\*)?/g, "\n$1")
     .replace(/\*\*([123][).][^*]*)\*\*/g, "$1")
     .replace(/(\b[123][).]\s*)\*\*([^*]+)\*\*/g, "$1$2")
     .replace(/(\b[123][).][^\n*]*)\*+/g, "$1");
@@ -1615,11 +1617,51 @@ function cleanEmailContent(rawText, options = {}) {
   // 2) Hybrid 24/7 WhatsApp Assistant, 2) Hybrid 24/7 WhatsApp Assistant:, 2) 24/7 WhatsApp Booking Assistant:, 2) 24/7 WhatsApp Assistant:
   const truncatedPillar2Regex = /(?:^|\n|\b)\s*2[).]\s*(?:(?:Hybrid\s+)?24\/7(?:\s*WhatsApp)?(?:\s*Booking)?(?:\s*Assistant)?|(?:Hybrid\s+)?WhatsApp(?:\s*Booking)?\s*Assistant)(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi;
 
-  const healedPillar2 = (resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar2)
-    ? `\n${sectorPillars.pillar2}\n`
-    : "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n";
+  const isInputDotNotation = /(?:^|\n|\b)\s*1\./i.test(body) && !/(?:^|\n|\b)\s*1\)/i.test(body);
 
-  body = body.replace(truncatedPillar2Regex, healedPillar2);
+  const getHealedPillar2 = (marker = "2)") => {
+    const raw = (resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar2)
+      ? sectorPillars.pillar2
+      : "2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.";
+    return `\n${raw.replace(/^2[).]/, marker)}\n`;
+  };
+
+  const defaultMarker = isInputDotNotation ? "2." : "2)";
+  const healedPillar2 = getHealedPillar2(defaultMarker);
+
+  body = body.replace(truncatedPillar2Regex, (match) => {
+    const marker = (isInputDotNotation || (!/(?:^|\n|\b)\s*1\)/i.test(body) && match.includes("2."))) ? "2." : "2)";
+    return getHealedPillar2(marker);
+  });
+
+  // Line-by-line fail-safe sanitizer for Pillar 2 (Unit 5.67)
+  const lines = body.split(/\r?\n/);
+  const sanitizedLines = lines.map((line) => {
+    const trimmedLine = line.trim();
+    if (!/^(?:[-*•]\s*)?(?:\*\*)?2[).]/i.test(trimmedLine)) {
+      return line;
+    }
+
+    const isDotNotation = /^(?:[-*•]\s*)?(?:\*\*)?2\./i.test(trimmedLine);
+    const lineClean = trimmedLine
+      .replace(/^(?:[-*•]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*/, "")
+      .replace(/[*_~`]/g, "")
+      .trim();
+
+    const colonSplit = lineClean.match(/^([^:\-–—]+)[:\-–—]\s*(.*)$/);
+    const wordsAfterColon = colonSplit && colonSplit[2]
+      ? colonSplit[2].trim().split(/\s+/).filter(Boolean).length
+      : 0;
+    const totalWords = trimmedLine.replace(/[*_~`]/g, "").split(/\s+/).filter(Boolean).length;
+
+    if (trimmedLine.length < 45 || (totalWords < 8 && wordsAfterColon < 2)) {
+      const marker = (isInputDotNotation || (!/(?:^|\n|\b)\s*1\)/i.test(body) && isDotNotation)) ? "2." : "2)";
+      return getHealedPillar2(marker).trim();
+    }
+
+    return line;
+  });
+  body = sanitizedLines.join("\n");
 
   // Layer 2: Structural Guard (<8 words or <45 chars)
   // If any line/block starting with 2) or 2. has fewer than 8 words or fewer than 45 characters, unconditionally replace it with the complete healedPillar2
@@ -1634,7 +1676,8 @@ function cleanEmailContent(rawText, options = {}) {
     const isTruncated = p2Raw.length < 45 || (totalWords < 8 && wordsAfter < 2);
 
     if (isTruncated) {
-      body = body.replace(p2StructuralRegex, healedPillar2);
+      const marker = (isInputDotNotation || (!/(?:^|\n|\b)\s*1\)/i.test(body) && p2Match[0].includes("2."))) ? "2." : "2)";
+      body = body.replace(p2StructuralRegex, getHealedPillar2(marker));
     }
   }
 
