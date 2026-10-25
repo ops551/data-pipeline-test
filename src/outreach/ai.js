@@ -692,7 +692,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a showroom automation developer",
     subject: (name) => `${name} - vehicle showcase & viewings`,
     pitch:
-      "Explain that you set up an automated AI showroom system specifically for car dealerships: 1) Turns vehicle stock photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook. 2) 24/7 WhatsApp assistant replies to buyer enquiries on specs, mileage, or part-exchange and books test-drives and viewings directly into their calendar. 3) Streamlines vehicle inventory pages for seamless mobile reservations.",
+      "Explain that you set up an automated AI showroom system specifically for car dealerships: 1) AI Social Media Autopilot: No manual editing needed—AI converts your vehicle inventory photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; when you're busy or after-hours, an automated assistant replies to buyer enquiries on specs, mileage, or part-exchange and books test-drives and viewings directly into your calendar. 3) Modern High-Speed Mobile Showcase: Streamlines vehicle inventory pages for seamless mobile reservations and 1-tap viewing bookings (or builds a high-speed vehicle showcase from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase showroom footfall or test-drive bookings?",
     focus: "car showcase Reels, automated social scheduling, and 24/7 test-drive booking",
@@ -702,7 +702,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a luxury timepiece automation developer",
     subject: (name) => `${name} - timepiece showcase & viewings`,
     pitch:
-      "Explain that you set up an automated AI showcase system for watch and jewellery dealers: 1) Turns inventory photography into high-definition macro wrist-roll Reels, dial and bezel detail clips, and daily Stories for new arrivals scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers collector questions on authenticity and provenance and books private boutique viewings into their calendar. 3) Optimizes timepiece catalog for seamless high-res viewing.",
+      "Explain that you set up an automated AI showcase system for watch and jewellery dealers: 1) AI Social Media Autopilot: No manual editing needed—AI converts your current timepiece stock and watch photos into high-definition macro wrist-roll Reels, dial and bezel detail clips, and daily Stories for new arrivals, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with collectors anytime; when you're busy or after-hours, an automated assistant answers collector questions on authenticity and provenance and books private boutique viewings into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes timepiece catalog for seamless high-res viewing and 1-tap private viewing requests (or builds a luxury mobile showcase from scratch if none exists).",
     question:
       "Are you currently exploring ways to expand your private client network or showcase timepieces?",
     focus: "macro wrist-roll Reels, automated scheduling, and private boutique viewings",
@@ -712,7 +712,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a motorbike showroom automation developer",
     subject: (name) => `${name} - bike showcase & test-rides`,
     pitch:
-      "Explain that you set up an automated showcase system for motorbike dealerships: 1) Turns bike photos into dynamic walkaround Reels, exhaust sound clips, and daily arrival Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers questions on specs and financing and books test-rides and showroom viewings into their calendar. 3) Streamlines bike inventory listings for fast mobile browsing.",
+      "Explain that you set up an automated showcase system for motorbike dealerships: 1) AI Social Media Autopilot: No manual editing needed—AI converts your motorbike stock and showroom photos into dynamic walkaround Reels, exhaust sound clips, and daily arrival Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with riders anytime; when you're busy or after-hours, an automated assistant answers questions on specs and financing and books test-rides and showroom viewings into your calendar. 3) Modern High-Speed Mobile Showcase: Streamlines bike inventory listings for fast mobile browsing (or builds a fast mobile bike catalog from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase bike showroom visits or test-rides?",
     focus: "bike walkaround Reels, exhaust sound clips, and test-ride bookings",
@@ -722,7 +722,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "an automotive detailing automation developer",
     subject: (name) => `${name} - customer bookings & showcase`,
     pitch:
-      "Explain that you set up an automated social and booking system for detailing studios: 1) Turns bay photos into 50/50 paint correction Reels, ceramic coating showcases, and daily finished-vehicle Stories auto-scheduled across Instagram and Facebook. 2) 24/7 rapid WhatsApp assistant replies to incoming package inquiries and books detailing slots directly into their calendar while they work in the bay. 3) Optimizes detailing package pages for one-tap booking.",
+      "Explain that you set up an automated social and booking system for detailing studios: 1) AI Social Media Autopilot: No manual editing needed—AI converts your paint correction and ceramic bay photos into 50/50 transformation Reels, ceramic coating showcases, and daily finished-vehicle Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; when you're working in the bay or after-hours, a rapid WhatsApp assistant replies to incoming package inquiries and books detailing slots directly into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes detailing package pages for one-tap booking (or builds a modern detailing booking page from scratch if none exists).",
     question:
       "Are you currently looking to fill your detailing bays with high-ticket ceramic packages?",
     focus: "paint correction Reels, ceramic coating showcases, and WhatsApp slot booking",
@@ -732,7 +732,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a clinic automation developer",
     subject: (name) => `${name} - patient bookings & treatments`,
     pitch:
-      "Explain that you set up an automated growth engine for aesthetic and skin clinics: 1) Turns clinic treatment photos into glow-up transformation Reels and daily Stories highlighting client results and last-minute cancellation slots, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers treatment questions and books consultations or patch tests directly into their clinic calendar. 3) Streamlines treatment booking pages for one-tap mobile reservations.",
+      "Explain that you set up an automated growth engine for aesthetic and skin clinics: 1) AI Social Media Autopilot: No manual editing needed—AI converts your treatment showcase and client result photos into glow-up transformation Reels and daily Stories highlighting client results and last-minute cancellation slots, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; when you're with patients or after-hours, an automated assistant answers treatment questions and books consultations or patch tests directly into your clinic calendar. 3) Modern High-Speed Mobile Showcase: Streamlines treatment booking pages for one-tap mobile reservations (or builds a modern clinic booking page from scratch if none exists).",
     question:
       "Are you currently exploring ways to fill your clinic calendar with consultation bookings?",
     focus: "treatment transformation Reels, open appointment Stories, and consultation bookings",
@@ -742,7 +742,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a dental practice automation developer",
     subject: (name) => `${name} - patient consultations & smiles`,
     pitch:
-      "Explain that you set up an automated patient booking system for dental practices: 1) Turns before-and-after smile photos into transformation reveal Reels and daily patient review Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers treatment inquiries (composite bonding, Invisalign, whitening) and books smile assessments directly into the appointment book. 3) Streamlines consultation request pages for mobile patients.",
+      "Explain that you set up an automated patient booking system for dental practices: 1) AI Social Media Autopilot: No manual editing needed—AI converts your smile makeover and patient result photos into transformation reveal Reels and daily patient review Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with patients anytime; when you're in surgery or after-hours, an automated assistant answers treatment inquiries (composite bonding, Invisalign, whitening) and books smile assessments directly into the appointment book. 3) Modern High-Speed Mobile Showcase: Streamlines consultation request pages for mobile patients (or builds a cosmetic dental showcase page from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase private cosmetic patient consultations?",
     focus: "smile makeover Reels, patient review Stories, and assessment bookings",
@@ -752,7 +752,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "an interior design and joinery automation developer",
     subject: (name) => `${name} - bespoke project showcase`,
     pitch:
-      "Explain that you set up an automated showcase system for bespoke kitchen and interior studios: 1) Turns project photos into cinematic room-reveal Reels, material craftsmanship closeups, and daily in-progress Stories auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant captures client dimensions and books home measurement and design consultations into their calendar. 3) Optimizes luxury portfolio galleries for fast mobile viewing.",
+      "Explain that you set up an automated showcase system for bespoke kitchen and interior studios: 1) AI Social Media Autopilot: No manual editing needed—AI converts your bespoke project photography and craftsmanship showcase into cinematic room-reveal Reels, material closeups, and daily in-progress Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with homeowners anytime; when you're on-site or after-hours, an automated assistant captures client dimensions and books home measurement and design consultations into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes luxury portfolio galleries for fast mobile viewing and design consultation requests (or builds a bespoke portfolio showcase from scratch if none exists).",
     question:
       "Are you currently looking to attract more bespoke residential design projects?",
     focus: "room reveal Reels, craftsmanship Stories, and home design visit booking",
@@ -762,7 +762,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a property automation developer",
     subject: (name) => `${name} - property walkthroughs & viewings`,
     pitch:
-      "Explain that you set up an automated property showcase system for estate and letting agents: 1) Turns listing photos into cinematic property walkthrough Reels and daily Stories for new listings and market updates, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers buyer and tenant inquiries and books property viewings into agent calendars directly. 3) Optimizes property listings for fast mobile browsing.",
+      "Explain that you set up an automated property showcase system for estate and letting agents: 1) AI Social Media Autopilot: No manual editing needed—AI converts your property listing photos and walkthrough assets into cinematic property walkthrough Reels and daily Stories for new listings and market updates, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with buyers and tenants anytime; when you're in viewings or after-hours, an automated assistant answers buyer and tenant inquiries and books property viewings into agent calendars directly. 3) Modern High-Speed Mobile Showcase: Optimizes property listings for fast mobile browsing (or builds a modern property portal from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase viewing bookings for your property listings?",
     focus: "property walkthrough Reels, listing Stories, and automated viewing bookings",
@@ -772,7 +772,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a fitness automation developer",
     subject: (name) => `${name} - member signups & trial passes`,
     pitch:
-      "Explain that you set up an automated member acquisition system for gyms, personal trainers, and pilates studios: 1) Turns client progress photos into 12-week body transformation Reels and daily motivational Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers class inquiries and books trial passes and consultations into their calendar. 3) Optimizes class schedules and membership signups for mobile.",
+      "Explain that you set up an automated member acquisition system for gyms, personal trainers, and pilates studios: 1) AI Social Media Autopilot: No manual editing needed—AI converts your client transformation photos and workout highlights into 12-week body transformation Reels and daily motivational Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with prospective members anytime; when you're coaching or after-hours, an automated assistant answers class inquiries and books trial passes and consultations into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes class schedules and membership signups for mobile (or builds a clean mobile studio landing page from scratch if none exists).",
     question:
       "Are you currently looking to increase new member signups and trial pass bookings?",
     focus: "transformation Reels, daily motivation Stories, and trial pass booking",
@@ -782,7 +782,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "an event automation developer",
     subject: (name) => `${name} - event bookings & availability`,
     pitch:
-      "Explain that you set up an automated showcase system for wedding venues, photographers, and event planners: 1) Turns event photos into cinematic highlight Reels and daily behind-the-scenes Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant checks date availability, sends digital brochures, and books venue viewings into their calendar. 3) Optimizes event portfolio galleries for fast mobile browsing.",
+      "Explain that you set up an automated showcase system for wedding venues, photographers, and event planners: 1) AI Social Media Autopilot: No manual editing needed—AI converts your event photography, venue spaces, and portfolio highlights into cinematic highlight Reels and daily behind-the-scenes Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with couples anytime; when you're hosting events or after-hours, an automated assistant checks date availability, sends digital brochures, and books venue viewings into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes event portfolio galleries for fast mobile browsing and date inquiries (or builds a luxury event showcase from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase venue bookings or wedding inquiries?",
     focus: "wedding highlight Reels, date availability checker, and viewing bookings",
@@ -792,7 +792,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a pet business automation developer",
     subject: (name) => `${name} - grooming bookings & schedule`,
     pitch:
-      "Explain that you set up an automated growth system for pet grooming salons and dog spas: 1) Turns salon photos into fluffy grooming transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers breed package questions and books grooming slots into their calendar while groomers are busy with pets. 3) Optimizes mobile booking pages for easy package selection.",
+      "Explain that you set up an automated growth system for pet grooming salons and dog spas: 1) AI Social Media Autopilot: No manual editing needed—AI converts your pet grooming transformations and happy-pet photos into show-ready grooming Reels and daily Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with pet owners anytime; when you're grooming pets or after-hours, an automated assistant answers breed package questions and books grooming slots into your calendar while groomers are busy with pets. 3) Modern High-Speed Mobile Showcase: Optimizes mobile booking pages for easy package selection (or builds a clean mobile grooming booking page from scratch if none exists).",
     question:
       "Are you currently looking to keep your grooming slots fully booked throughout the week?",
     focus: "grooming transformation Reels, daily salon Stories, and WhatsApp appointment booking",
@@ -802,7 +802,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "an e-commerce automation engineer",
     subject: (name) => `${name} - store conversion & customer sales`,
     pitch:
-      "Explain that you set up an automated revenue engine for online brands: 1) Turns product photos into dynamic showcase Reels, unboxing clips, and daily flash-deal Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp shopping assistant answers sizing and shipping questions, recovers pending checkouts, and guides buyers to completed orders. 3) Optimizes mobile storefront pages for lightning-fast 1-tap checkouts.",
+      "Explain that you set up an automated revenue engine for online brands: 1) AI Social Media Autopilot: No manual editing needed—AI converts your product photos into dynamic showcase Reels, unboxing clips, and daily flash-deal Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with shoppers anytime; when you're busy or after-hours, a 24/7 WhatsApp shopping assistant answers sizing and shipping questions, recovers pending checkouts, and guides buyers to completed orders. 3) Modern High-Speed Mobile Showcase: Optimizes mobile storefront pages for lightning-fast 1-tap checkouts (or builds a high-converting mobile storefront from scratch if none exists).",
     question:
       "Are you currently exploring ways to grow your store or looking to automate daily operations?",
     focus: "product showcase Reels, WhatsApp cart recovery, and mobile checkout speed",
@@ -812,7 +812,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a clinic automation developer",
     subject: (name) => `${name} - patient bookings & appointments`,
     pitch:
-      "Explain that you set up an automated patient communication and booking system for clinics and healthcare practices: 1) Turns clinic information into informative patient education Reels and daily clinic Stories auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp digital assistant handles appointment bookings, patient intake form completions, and scheduled reminders directly into your clinic calendar. 3) Streamlines patient consultation pages for one-tap mobile booking.",
+      "Explain that you set up an automated patient communication and booking system for clinics and healthcare practices: 1) AI Social Media Autopilot: No manual editing needed—AI converts your clinic information and patient care highlights into informative patient education Reels and daily clinic Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with patients anytime; when you're in consultations or after-hours, a 24/7 WhatsApp digital assistant handles appointment bookings, patient intake form completions, and scheduled reminders directly into your clinic calendar. 3) Modern High-Speed Mobile Showcase: Streamlines patient consultation pages for one-tap mobile booking (or builds a patient-friendly clinic portal from scratch if none exists).",
     question:
       "Are you currently exploring ways to improve your clinic's daily workflow?",
     focus: "patient education Reels, 24/7 WhatsApp appointment bookings, and intake form completions",
@@ -822,7 +822,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a trade automation developer",
     subject: (name) => `${name} - job enquiries & emergency bookings`,
     pitch:
-      "Explain that you set up an automated growth and booking system for trades and contractors: 1) Turns on-site job photos into before-and-after transformation Reels, completed project clips, and daily Stories auto-scheduled across Instagram and Facebook. 2) 24/7 rapid WhatsApp messaging assistant captures every incoming customer enquiry promptly while your team is on-site and books job estimates directly into your calendar with automated follow-ups. 3) Streamlines trade service landing pages for 1-tap mobile estimate requests.",
+      "Explain that you set up an automated growth and booking system for trades and contractors: 1) AI Social Media Autopilot: No manual editing needed—AI converts your past project photos and on-site job transformations into before-and-after transformation Reels, completed project clips, and daily Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; captures every incoming customer enquiry promptly while your team is on-site with a 24/7 rapid WhatsApp messaging assistant and automated follow-ups to book job estimates directly into your calendar. 3) Modern High-Speed Mobile Showcase: Streamlines trade service landing pages for 1-tap mobile estimate requests (or builds a fast mobile trade landing page from scratch if none exists).",
     question:
       "Are you currently looking to streamline your client communication and fill your job calendar?",
     focus: "before-and-after job Reels, 24/7 on-site WhatsApp quoting, and seamless mobile job booking",
@@ -832,7 +832,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a hospitality automation developer",
     subject: (name) => `${name} - table reservations & guest flow`,
     pitch:
-      "Explain that you set up an automated reservation and social engine for restaurants and hospitality venues: 1) Turns food and venue photos into mouthwatering dish highlight Reels and daily lunch/dinner special Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers menu inquiries, dietary questions, and confirms table reservations directly into your calendar. 3) Optimizes digital menus and booking pages for one-tap mobile reservations.",
+      "Explain that you set up an automated reservation and social engine for restaurants and hospitality venues: 1) AI Social Media Autopilot: No manual editing needed—AI converts your menu highlights and signature dish photography into mouthwatering dish highlight Reels and daily lunch/dinner special Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with guests anytime; when service is busy or after-hours, a 24/7 WhatsApp assistant answers menu inquiries, dietary questions, and confirms table reservations directly into your calendar. 3) Modern High-Speed Mobile Showcase: Optimizes digital menus and booking pages for one-tap mobile reservations (or builds a clean mobile-first reservation page from scratch if none exists).",
     question:
       "Are you currently exploring ways to increase customer retention and table bookings?",
     focus: "dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations",
@@ -842,7 +842,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a business automation developer",
     subject: (name) => `${name} - client onboarding & enquiry flow`,
     pitch:
-      "Explain that you set up an automated client acquisition and onboarding system for professional firms: 1) Turns client case studies and insights into professional highlight Reels and daily company update Stories auto-scheduled across LinkedIn and Twitter. 2) 24/7 WhatsApp consultation assistant answers scope inquiries, collects onboarding information, and books consultations directly into your calendar. 3) Streamlines firm service pages for high-ticket client conversion.",
+      "Explain that you set up an automated client acquisition and onboarding system for professional firms: 1) AI Social Media Autopilot: No manual editing needed—AI converts your core services, case studies, and client deliverables into professional highlight Reels and daily company update Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; when you're in meetings or after-hours, a 24/7 WhatsApp consultation assistant answers scope inquiries, collects onboarding information, and books consultations directly into your calendar. 3) Modern High-Speed Mobile Showcase: Streamlines firm service pages for high-ticket client conversion (or builds a modern corporate landing page from scratch if none exists).",
     question:
       "Are you currently looking to automate your internal operations and client pipeline?",
     focus: "insight Reels, 24/7 WhatsApp consultation booking, and automated client onboarding",
@@ -852,7 +852,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a backend and automation engineer",
     subject: (name) => `${name} - client acquisition & pipeline`,
     pitch:
-      "Explain that you deploy an automated client acquisition engine for digital and tech agencies: 1) Turns portfolio work into case study breakdown Reels and daily client win Stories auto-scheduled across LinkedIn and Instagram. 2) 24/7 WhatsApp qualification assistant answers technical capability questions and books discovery calls directly into agency calendars. 3) Streamlines agency landing pages for high-ticket client conversion.",
+      "Explain that you deploy an automated client acquisition engine for digital and tech agencies: 1) AI Social Media Autopilot: No manual editing needed—AI converts your product features, workflows, and portfolio highlights into case study breakdown Reels and daily client win Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with clients anytime; when you're building or after-hours, a 24/7 WhatsApp qualification assistant answers technical capability questions and books discovery calls directly into agency calendars. 3) Modern High-Speed Mobile Showcase: Streamlines agency landing pages for high-ticket client conversion (or builds a clean, modern developer showcase from scratch if none exists).",
     question:
       "Are you currently exploring ways to expand your agency's client pipeline?",
     focus: "case study Reels, 24/7 WhatsApp qualification, and discovery call bookings",
@@ -862,7 +862,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a business automation developer",
     subject: (name) => `${name} - customer bookings & enquiry flow`,
     pitch:
-      "Explain that you set up an automated 3-part growth system for local businesses: 1) Turns service photos into high-engagement showcase Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot. 2) 24/7 WhatsApp assistant answers customer inquiries on services and availability and books appointments directly into your calendar. 3) Streamlines mobile website pages so visitors can browse services and book appointments with zero lag.",
+      "Explain that you set up an automated 3-part growth system for local businesses: 1) AI Social Media Autopilot: No manual editing needed—AI converts your core services, past work, and visual assets into high-engagement showcase Reels and daily Stories, managing the entire schedule (deciding when to post Reels, Stories, and updates) so your audience stays continuously engaged on autopilot. 2) Hybrid 24/7 WhatsApp Assistant: Chat manually with customers anytime; when you're busy or after-hours, a 24/7 WhatsApp assistant answers customer inquiries on services and availability and books appointments directly into your calendar. 3) Modern High-Speed Mobile Showcase: Streamlines mobile website pages so visitors can browse services and book appointments with zero lag (or builds a clean mobile booking page from scratch if none exists).",
     question:
       "Are you currently exploring ways to streamline your daily operations and client bookings?",
     focus: "showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion",
@@ -878,6 +878,7 @@ function getMockEmail(company = {}, options = {}) {
       company.active_directors ||
       company.contact_name ||
       company.director_name ||
+      company.officer_name ||
       "",
   );
   const isTech =
@@ -1354,6 +1355,7 @@ function buildPrompt(company = {}, options = {}) {
       company?.active_directors ||
       company?.contact_name ||
       company?.director_name ||
+      company?.officer_name ||
       "",
   );
   const senderName = String(
@@ -1412,7 +1414,11 @@ function buildPrompt(company = {}, options = {}) {
     "",
     "Rules:",
     "- All 3 Pillars Mandatory: The email body MUST always include all three pillars (1, 2, and 3). Each pillar must be on its own line with a full descriptive sentence. Never truncate or omit any pillar (never write just '24/7' or stop before pillar 3).",
+    "- Opening Conciseness: Keep the opening under 25 words without wordy fluff before introducing the pillars.",
     "- Opening & Customization Proposition: Right in the opening after acknowledging their business, clearly explain that to help them interact with more customers and increase client engagement, you set up automated systems, AND explicitly state that in addition to this service, you can custom-build any workflow or feature tailored to their exact preferences and requirements.",
+    "- Pillar 1 Smart Assets (AI Social Media Autopilot): Emphasize zero manual editing needed (No manual editing needed). State that AI converts their specific visual/inventory assets and manages the schedule so their audience stays continuously engaged on autopilot.",
+    "- Pillar 2 Hybrid Assistant (Hybrid 24/7 WhatsApp Assistant): Highlight that the business can chat manually with clients anytime; when they are busy or after-hours, the 24/7 assistant steps in to reply and book directly into their calendar.",
+    "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
     "- Keep it under 100-120 words before the signature.",
