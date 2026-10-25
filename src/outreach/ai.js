@@ -658,6 +658,9 @@ const SAFE_WORD_REPLACEMENTS = Object.freeze([
   { pattern: /\binstant\b/gi, replacement: "direct" },
   { pattern: /\bpricing\b/gi, replacement: "rates" },
   { pattern: /\bprices?\b/gi, replacement: "rates" },
+  { pattern: /\ban\s+direct\b/gi, replacement: "a direct" },
+  { pattern: /\ban\s+rapid\b/gi, replacement: "a rapid" },
+  { pattern: /\ba(?:n)?\s+rates\b/gi, replacement: "rates" },
   { pattern: /\bscale(?:s|d|ing)?\b/gi, replacement: "grow" },
   { pattern: /\bwon['’]t\b/gi, replacement: "will not" },
   { pattern: /\bLIMITED\b/g, replacement: "Ltd" },
@@ -693,7 +696,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase showroom footfall or test-drive bookings?",
     focus: "car showcase Reels, automated social scheduling, and 24/7 test-drive booking",
-    cta: "If you would like to see a quick 30-second preview of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
   },
   watch_showroom: {
     role: "a luxury timepiece automation developer",
@@ -703,7 +706,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to expand your private client network or showcase timepieces?",
     focus: "macro wrist-roll Reels, automated scheduling, and private boutique viewings",
-    cta: "If you would like to see a quick 30-second preview of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
   },
   bike_showroom: {
     role: "a motorbike showroom automation developer",
@@ -713,7 +716,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase bike showroom visits or test-rides?",
     focus: "bike walkaround Reels, exhaust sound clips, and test-ride bookings",
-    cta: "If you would like to see a quick 30-second preview of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
   },
   detailing: {
     role: "an automotive detailing automation developer",
@@ -723,7 +726,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to fill your detailing bays with high-ticket ceramic packages?",
     focus: "paint correction Reels, ceramic coating showcases, and WhatsApp slot booking",
-    cta: "If you would like to see a quick 30-second preview of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
   },
   aesthetics_clinic: {
     role: "a clinic automation developer",
@@ -733,7 +736,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to fill your clinic calendar with consultation bookings?",
     focus: "treatment transformation Reels, open appointment Stories, and consultation bookings",
-    cta: "If you would like to see a quick 30-second preview of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
   },
   dentistry: {
     role: "a dental practice automation developer",
@@ -743,7 +746,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase private cosmetic patient consultations?",
     focus: "smile makeover Reels, patient review Stories, and assessment bookings",
-    cta: "If you would like to see a quick 30-second preview of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
   },
   kitchen_interior: {
     role: "an interior design and joinery automation developer",
@@ -753,7 +756,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to attract more bespoke residential design projects?",
     focus: "room reveal Reels, craftsmanship Stories, and home design visit booking",
-    cta: "If you would like to see a quick 30-second preview of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
   },
   estate_agent: {
     role: "a property automation developer",
@@ -763,7 +766,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase viewing bookings for your property listings?",
     focus: "property walkthrough Reels, listing Stories, and automated viewing bookings",
-    cta: "If you would like to see a quick 30-second preview of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
   },
   fitness: {
     role: "a fitness automation developer",
@@ -773,7 +776,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to increase new member signups and trial pass bookings?",
     focus: "transformation Reels, daily motivation Stories, and trial pass booking",
-    cta: "If you would like to see a quick 30-second preview of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
   },
   wedding_events: {
     role: "an event automation developer",
@@ -783,7 +786,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase venue bookings or wedding inquiries?",
     focus: "wedding highlight Reels, date availability checker, and viewing bookings",
-    cta: "If you would like to see a quick 30-second preview of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
   },
   pet_grooming: {
     role: "a pet business automation developer",
@@ -793,7 +796,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to keep your grooming slots fully booked throughout the week?",
     focus: "grooming transformation Reels, daily salon Stories, and WhatsApp appointment booking",
-    cta: "If you would like to see a quick 30-second preview of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
   },
   ecommerce: {
     role: "an e-commerce automation engineer",
@@ -803,7 +806,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to grow your store or looking to automate daily operations?",
     focus: "product showcase Reels, WhatsApp cart recovery, and mobile checkout speed",
-    cta: "If you would like to see a quick 30-second preview of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
   },
   healthcare: {
     role: "a clinic automation developer",
@@ -813,7 +816,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to improve your clinic's daily workflow?",
     focus: "patient education Reels, 24/7 WhatsApp appointment bookings, and intake form completions",
-    cta: "If you would like to see a quick 30-second preview of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
   },
   trades: {
     role: "a trade automation developer",
@@ -823,7 +826,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to streamline your client communication and fill your job calendar?",
     focus: "before-and-after job Reels, 24/7 on-site WhatsApp quoting, and seamless mobile job booking",
-    cta: "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
   },
   hospitality: {
     role: "a hospitality automation developer",
@@ -833,7 +836,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to increase customer retention and table bookings?",
     focus: "dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations",
-    cta: "If you would like to see a quick 30-second preview of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
   },
   b2b: {
     role: "a business automation developer",
@@ -843,7 +846,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently looking to automate your internal operations and client pipeline?",
     focus: "insight Reels, 24/7 WhatsApp consultation booking, and automated client onboarding",
-    cta: "If you would like to see a quick 30-second preview of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
   },
   tech: {
     role: "a backend and automation engineer",
@@ -853,7 +856,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to expand your agency's client pipeline?",
     focus: "case study Reels, 24/7 WhatsApp qualification, and discovery call bookings",
-    cta: "If you would like to see a quick 30-second preview of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
   },
   general: {
     role: "a business automation developer",
@@ -863,7 +866,7 @@ const SECTOR_CONFIGS = Object.freeze({
     question:
       "Are you currently exploring ways to streamline your daily operations and client bookings?",
     focus: "showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion",
-    cta: "If you would like to see a quick 30-second preview of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
+    cta: "If you would like to see a quick 30-second preview demo of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
   },
 });
 
@@ -908,7 +911,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed the vehicle inventory at ${emailCompanyName}.`,
         "",
-        "Running a car showroom means you have incredible vehicles in stock, but nobody has hours each day to film, edit, and post daily showcase reels and stories for every car on your lot.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated AI showroom system specifically for car dealerships:",
         "1. Automated Car Showcase Reels & Stories: Turns your vehicle photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook on complete auto-pilot.",
@@ -917,7 +920,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Showroom Website Optimization: We streamline your vehicle inventory pages so mobile visitors can browse cars and reserve viewings with zero lag."
           : "3. Fast Mobile Inventory Catalog: A modern, high-speed vehicle showcase where buyers can browse available stock and book test-drives directly.",
         "",
-        "If you would like to see a quick 30-second preview of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how an automated car showcase and test-drive setup looks, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -930,7 +933,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed the timepiece collection at ${emailCompanyName}.`,
         "",
-        "In luxury watch retail, collectors want to see every detail—the dial finish, bezel condition, and wrist presence—but filming high-res video reels and daily stories for every piece in your vault takes hours.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated AI showcase system specifically for watch and jewellery dealers:",
         "1. Macro Wrist-Roll Reels & Stories: Turns your inventory photography into high-definition wrist-roll Reels, dial macro clips, and daily Stories for new arrivals scheduled across Instagram and TikTok.",
@@ -939,7 +942,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Boutique Website Optimization: We streamline your timepiece catalog so collectors can inspect high-res photos and request private viewings in one tap."
           : "3. Luxury Inventory Showcase: A modern, high-speed catalog built to showcase available timepieces and capture VIP viewing requests.",
         "",
-        "If you would like to see a quick 30-second preview of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of what an automated timepiece showcase and viewing flow looks like, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -952,7 +955,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "Running a motorcycle showroom means high-demand bikes moving in and out, but nobody has the time to film walkaround clips, capture exhaust sounds, and post daily reels for every bike in stock.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated AI showcase system built for motorbike dealerships:",
         "1. Bike Walkaround Reels & Sound Clips: Turns your bike photos into dynamic walkaround Reels, spec breakdown posts, and daily arrival Stories auto-scheduled across Instagram and TikTok.",
@@ -961,7 +964,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Inventory Speed Tuning: We streamline your bike listings so mobile riders can browse stock and book test-rides with zero delay."
           : "3. Fast Mobile Bike Catalog: A modern showroom site built for riders to browse available bikes and book test-rides directly.",
         "",
-        "If you would like to see a quick 30-second preview of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how an automated bike showcase setup looks, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -974,7 +977,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer package enquiry.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated content and booking engine built for detailing studios:",
         "1. 50/50 Before-After Reels & Daily Stories: Turns quick photos from your bay into high-gloss transformation Reels, ceramic coating showcases, and daily completed-car Stories auto-scheduled across Instagram and Facebook.",
@@ -983,7 +986,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Studio Website Conversion Tuning: We optimize your existing site so car owners can select packages and request dates in one tap."
           : "3. Modern Detailing Booking Page: A high-converting mobile landing page showcasing packages, results, and direct WhatsApp booking.",
         "",
-        "If you would like to see a quick 30-second preview of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -994,9 +997,9 @@ function getMockEmail(company = {}, options = {}) {
       bodyLines = [
         greeting,
         "",
-        `I recently reviewed the treatments offered at ${emailCompanyName}.`,
+        `I recently reviewed the treatments at ${emailCompanyName}.`,
         "",
-        "Treating clients in clinic all day means you rarely have time to edit before-and-after clips, post daily stories, or reply promptly to every inquiry asking about treatment packages.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated growth and booking engine built specifically for aesthetic clinics:",
         "1. Transformation Reels & Daily Stories: Turns quick photos from your clinic into high-converting glow-up Reels and daily Stories (showcasing client results and open cancellation slots) auto-scheduled across Instagram and Facebook.",
@@ -1005,7 +1008,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Clinic Website Optimization: We streamline your treatment pages so mobile visitors can book consultations in one tap."
           : "3. Fast Mobile Booking Page: A clean, modern clinic page built to turn local visitors into booked consultations.",
         "",
-        "If you would like to see a quick 30-second preview of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how the automated clinic reels and consultation assistant work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1018,7 +1021,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed the patient services at ${emailCompanyName}.`,
         "",
-        "Performing treatments chairside means reception and clinical staff rarely have time to film smile makeovers, edit reels, or manage patient direct messages.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated patient booking system for dental practices:",
         "1. Smile Reveal Reels & Patient Stories: Turns before-and-after smile photos into transformation reveal Reels and daily patient review Stories auto-scheduled across Instagram and TikTok.",
@@ -1027,7 +1030,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Practice Website Tuning: We streamline your consultation pages so prospective patients can request smile assessments in one tap."
           : "3. Modern Cosmetic Dental Showcase: A fast mobile booking page designed to showcase smile transformations and capture private consultations.",
         "",
-        "If you would like to see a quick 30-second preview of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how the automated smile showcase and assessment booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1040,7 +1043,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When your team is on-site measuring and fitting bespoke kitchens and joinery, there is no time to film room reveals, edit video reels, or write daily social posts—even though homeowners buy based on visual craftsmanship.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated showcase system designed for bespoke joinery and interior studios:",
         "1. Room Reveal Reels & Craft Stories: Turns your completed project photos into cinematic room-reveal Reels, material closeups, and daily in-progress Stories scheduled across Instagram and Facebook on autopilot.",
@@ -1049,7 +1052,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Portfolio Website Speed Tuning: We streamline your gallery pages so homeowners can inspect high-res projects and request design visits with zero lag."
           : "3. Modern Bespoke Portfolio Showcase: A high-end mobile showcase designed to display your craftsmanship and capture design consultations.",
         "",
-        "If you would like to see a quick 30-second preview of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of what an automated room reveal and design consultation setup looks like, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1062,7 +1065,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "Managing viewings and appraisals all day means agents rarely have hours to edit walkthrough reels, write property copy, or reply promptly to every evening tenant or buyer inquiry.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated property showcase and viewing engine for estate agents:",
         "1. Property Walkthrough Reels & Stories: Turns listing photography into cinematic property walkthrough Reels and daily Stories for new listings and market updates auto-scheduled across Instagram and Facebook.",
@@ -1071,7 +1074,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Property Listing Speed Tuning: We streamline your listing pages so mobile home seekers can browse available properties and book viewings in one tap."
           : "3. Modern Property Showcase: A high-speed mobile portal designed to showcase available listings and capture viewing requests.",
         "",
-        "If you would like to see a quick 30-second preview of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated property walkthroughs and viewing bookings look, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1084,7 +1087,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed ${emailCompanyName}.`,
         "",
-        "Coaching clients on the gym floor all day means trainers and studio owners rarely have time to edit workout clips, post daily motivational stories, or follow up with prospective member inquiries.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated member acquisition setup built for fitness and pilates studios:",
         "1. Body Transformation Reels & Stories: Turns client progress photos into 12-week body transformation Reels, workout technique tips, and daily motivation Stories auto-scheduled across Instagram and TikTok.",
@@ -1093,7 +1096,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Class Schedule Mobile Tuning: We streamline your timetable and signup flow so prospective members can book trial passes in one tap."
           : "3. Modern Studio Landing Page: A clean, mobile-first page built to turn local fitness searchers into booked trial passes.",
         "",
-        "If you would like to see a quick 30-second preview of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated fitness reels and trial pass booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1106,7 +1109,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed ${emailCompanyName}.`,
         "",
-        "Shooting events or managing venues on weekends leaves zero time during the week to edit highlight reels, post daily behind-the-scenes stories, or answer repetitive date-availability inquiries.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated showcase system for wedding venues and event creatives:",
         "1. Cinematic Highlight Reels & Stories: Turns event photography into cinematic highlight Reels and daily behind-the-scenes Stories auto-scheduled across Instagram and TikTok.",
@@ -1115,7 +1118,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Gallery Speed Optimization: We streamline your event gallery pages so couples can browse high-res photos and check dates with zero lag."
           : "3. Modern Event Showcase: A luxury mobile showcase designed to highlight past events and capture private venue viewings.",
         "",
-        "If you would like to see a quick 30-second preview of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated event reels and date-checking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1128,7 +1131,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When you are in the salon washing, drying, and styling pets all day, you cannot stop to answer phone calls, edit transformation clips, or manage appointment inquiries.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated social and booking system for pet grooming salons:",
         "1. Fluffy Grooming Transformation Reels: Turns salon photos into show-ready transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok.",
@@ -1137,7 +1140,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Grooming Menu Mobile Tuning: We streamline your service menu so pet owners can select packages and request appointment dates in one tap."
           : "3. Fast Mobile Grooming Page: A clean, modern booking page built to keep your grooming slots fully booked throughout the week.",
         "",
-        "If you would like to see a quick 30-second preview of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated pet grooming reels and booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1150,7 +1153,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed the online store for ${emailCompanyName}.`,
         "",
-        "Managing inventory and fulfillment every day leaves store owners little time to film product showcases, edit social clips, or recover abandoned shopping carts manually.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated revenue engine built for e-commerce brands:",
         "1. Product Showcase Reels & Stories: Turns product photos into dynamic showcase Reels, unboxing clips, and daily flash-deal Stories auto-scheduled across Instagram and TikTok.",
@@ -1159,7 +1162,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Storefront Speed Tuning: We streamline your product pages and checkout flow so mobile shoppers buy in one tap without cart drop-off."
           : "3. High-Converting Mobile Storefront: A lightning-fast mobile catalog designed to turn visitors into confirmed buyers.",
         "",
-        "If you would like to see a quick 30-second preview of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1170,9 +1173,9 @@ function getMockEmail(company = {}, options = {}) {
       bodyLines = [
         greeting,
         "",
-        `I recently reviewed the services offered at ${emailCompanyName}.`,
+        `I recently reviewed the services at ${emailCompanyName}.`,
         "",
-        "Treating patients all day means clinic staff rarely have time to produce educational clips, post daily clinic updates, or answer after-hours appointment inquiries.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated patient communication and booking system for healthcare practices:",
         "1. Educational Reels & Clinic Stories: Turns clinic information into informative patient education Reels and daily clinic Stories auto-scheduled across Instagram and Facebook.",
@@ -1181,7 +1184,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Patient Booking Portal Tuning: We streamline your appointment request pages for seamless, one-tap mobile booking."
           : "3. Modern Mobile Clinic Portal: A clean, patient-friendly portal designed to simplify appointment requests and reduce administrative overhead.",
         "",
-        "If you would like to see a quick 30-second preview of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1194,7 +1197,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When your team is on-site doing jobs, there is no time to film project transformations, edit video reels, or answer incoming customer calls and estimate requests.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated growth and booking system built for trades and contractors:",
         "1. Before-and-After Job Reels: Turns on-site job photos into high-impact transformation Reels and daily completed-project Stories auto-scheduled across Instagram and Facebook.",
@@ -1203,7 +1206,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Service Page Mobile Tuning: We optimize your service pages so homeowners can request estimates and check availability in one tap."
           : "3. Fast Mobile Trade Landing Page: A high-converting estimate page built to turn local homeowners into booked jobs with direct WhatsApp contact.",
         "",
-        "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1216,7 +1219,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed ${emailCompanyName}.`,
         "",
-        "Running busy meal services leaves kitchen and front-of-house staff with zero time to film food prep, edit daily reels, or manage direct message table inquiries.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated reservation and social engine built for dining and hospitality:",
         "1. Food & Venue Showcase Reels: Turns dish and atmosphere photos into mouthwatering highlight Reels and daily lunch/dinner special Stories auto-scheduled across Instagram and TikTok.",
@@ -1225,7 +1228,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Digital Menu & Booking Tuning: We streamline your online menu and reservation flow for fast mobile booking with zero friction."
           : "3. Fast Mobile Reservation Page: A clean, mobile-first menu and booking portal designed to turn local diners into confirmed reservations.",
         "",
-        "If you would like to see a quick 30-second preview of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1236,9 +1239,9 @@ function getMockEmail(company = {}, options = {}) {
       bodyLines = [
         greeting,
         "",
-        `I recently reviewed the services offered at ${emailCompanyName}.`,
+        `I recently reviewed the services at ${emailCompanyName}.`,
         "",
-        "Managing client deliverables leaves partners and consultants little time to produce weekly content, manage social updates, or handle manual onboarding paperwork.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated client acquisition and onboarding system for professional firms:",
         "1. Insight Reels & Daily Industry Stories: Turns client case studies and insights into professional highlight Reels and daily company updates auto-scheduled across LinkedIn and Twitter.",
@@ -1247,7 +1250,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Firm Website Conversion Tuning: We optimize your service pages so prospective corporate clients can request consultations with zero friction."
           : "3. High-End B2B Showcase: A modern, high-speed corporate landing page designed to attract and capture qualified client inquiries.",
         "",
-        "If you would like to see a quick 30-second preview of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1260,7 +1263,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "Delivering software sprints and client projects means technical founders rarely have time to produce case study content, post daily wins, or chase incoming agency leads.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We deploy an automated client acquisition engine built for tech and digital agencies:",
         "1. Case Study Breakdown Reels & Stories: Turns project launches and client wins into compelling visual Reels and daily Stories auto-scheduled across LinkedIn and Instagram.",
@@ -1269,7 +1272,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Agency Portfolio Speed Tuning: We streamline your project case studies and inquiry pages for rapid mobile performance."
           : "3. High-Converting Agency Portal: A clean, modern developer showcase built to turn prospective tech clients into booked discovery calls.",
         "",
-        "If you would like to see a quick 30-second preview of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1282,7 +1285,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName} and wanted to reach out.`,
         "",
-        "Running day-to-day operations means business owners rarely have time to film daily content, edit video reels, or answer customer inquiries immediately around the clock.",
+        "To help you interact with more customers and increase client engagement, we set up tailored automation workflows to capture more bookings, and in addition to this core setup, we can custom-build any workflow or feature to fit your exact business needs and preferences.",
         "",
         "We set up an automated 3-part growth system built for local businesses:",
         "1. Automated Showcase Reels & Stories: Turns your service photos into engaging Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot.",
@@ -1291,7 +1294,7 @@ function getMockEmail(company = {}, options = {}) {
           ? "3. Website Conversion Optimization: We streamline your website pages so visitors can browse services and book appointments with zero lag."
           : "3. Fast Mobile Booking Page: A modern, high-converting mobile page designed to turn local visitors into confirmed bookings.",
         "",
-        "If you would like to see a quick 30-second preview of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
+        "If you would like to see a quick 30-second preview demo of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1389,11 +1392,11 @@ function buildPrompt(company = {}, options = {}) {
     "Mandatory Structure and Flow:",
     `1. Greeting: Start with "${greeting}"`,
     hasInspectedWebsite
-      ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows.`
-      : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists.`,
+      ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`
+      : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`,
     "Core Solution Requirement: You must clearly present our 3-pillar growth system tailored to their specific industry (do not condense to just social media posting):",
     "  1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from their photos/inventory)",
-    "  2) 24/7 WhatsApp & Instant Booking Assistant (answers pricing/enquiries and books appointments/estimates directly into their calendar)",
+    "  2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
     "  3) Dynamic High-Speed Mobile Website & Booking Optimization",
     hasVerifiedWebsite
       ? `3. Value Proposition: ${track.pitch}`
@@ -1404,10 +1407,12 @@ function buildPrompt(company = {}, options = {}) {
     hasVerifiedWebsite
       ? `5. Question: Ask if they are currently exploring any updates to their website or looking to automate daily operations. Specifically: "${track.question}"`
       : `5. Question: Ask if they are considering a website or looking to automate a relevant daily operation. Specifically: "${track.question}"`,
-    `6. Low-friction Call to Action: Say "${track.cta}"`,
+    `6. Interactive Demo Call to Action: Say "${track.cta}" (Provide a quick 30-second interactive demo preview of how this customized system works for ${emailCompanyName}).`,
     `7. Sign-off: Must end with:\n${signature}`,
     "",
     "Rules:",
+    "- Opening & Customization Proposition: Right in the opening after acknowledging their business, clearly explain that to help them interact with more customers and increase client engagement, you set up automated systems, AND explicitly state that in addition to this service, you can custom-build any workflow or feature tailored to their exact preferences and requirements.",
+    "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
     "- Keep it under 100-120 words before the signature.",
     "- Make the tone professional, helpful, and natural.",
@@ -1532,10 +1537,17 @@ function cleanEmailContent(rawText, options = {}) {
 
   body = body
     .replace(
-      /\[(?:your\s+name\vert{}sender\s+name\vert{}my\s+name)\]/gi,
+      /\[(?:your\s+name|sender\s+name|my\s+name)\]/gi,
       senderName,
     )
-    .replace(/\[[^\]]+\]/g, "")
+    .replace(/\[([^\]]+)\]/g, "$1");
+
+  body = body.replace(
+    /(?:^|\n|\b)\s*2[).]\s*24\/7(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi,
+    "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n",
+  );
+
+  body = body
     .replace(/[ \t]+/g, " ")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
