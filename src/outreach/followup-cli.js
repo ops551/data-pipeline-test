@@ -27,6 +27,10 @@ function parseArgs(args) {
       options.testEmail = args[++i];
     } else if (arg.startsWith('--test-email=')) {
       options.testEmail = arg.split('=')[1];
+    } else if (arg === '--companies-path' && args[i + 1]) {
+      options.companiesPath = args[++i];
+    } else if (arg.startsWith('--companies-path=')) {
+      options.companiesPath = arg.split('=')[1];
     }
   }
 
@@ -38,7 +42,8 @@ async function main() {
   console.log('Starting follow-up outreach engine with options:', {
     dryRun: options.dryRun,
     limit: options.limit,
-    testEmail: options.testEmail || 'none'
+    testEmail: options.testEmail || 'none',
+    companiesPath: options.companiesPath || 'default'
   });
 
   try {

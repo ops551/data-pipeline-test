@@ -1,7 +1,12 @@
+const fs = require('node:fs');
+const path = require('node:path');
 const { isValidEmailAddress } = require('../emailAddress');
+const { isTargetSic: defaultIsTargetSic } = require('../enrich/sic');
+const { parseCSV } = require('../enrich/csvParser');
 const {
   DEFAULT_SENT_LEADS_PATH,
   DEFAULT_FOLLOWUPS_PATH,
+  DEFAULT_COMPANIES_PATH,
   readLeads,
   readFollowUps,
   appendFollowUp
@@ -10,7 +15,8 @@ const { loadFollowUpSmtpConfig, sendEmail, isSmtpQuotaExceeded } = require('./em
 const {
   formatCleanCompanyName,
   extractFirstName,
-  isTechOrSoftwareCompany
+  isTechOrSoftwareCompany,
+  classifySector
 } = require('./ai');
 
 const MAX_FOLLOWUP_AGE_DAYS = 10;
@@ -19,6 +25,153 @@ const DEFAULT_MAX_DAILY_FOLLOWUPS = 100;
 const TOUCH_INTERVALS = Object.freeze({
   touch2: 3 * 24 * 60 * 60 * 1000, // 72 hours after initial outreach (Day 3)
   touch3: 4 * 24 * 60 * 60 * 1000  // 96 hours after follow-up 1 (Day 7)
+});
+
+const FOLLOWUP_SECTOR_TEMPLATES = Object.freeze({
+  car_showroom: Object.freeze({
+    sector: 'car_showroom',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'automating vehicle showcase Reels, social scheduling, and 24/7 test-drive bookings',
+    hook: 'automating vehicle showcase Reels, social scheduling, and 24/7 test-drive bookings',
+    breakupPhrase: 'vehicle showcase automation & test-drive booking systems',
+    touch3Phrase: 'vehicle showcase automation & test-drive booking systems'
+  }),
+  watch_showroom: Object.freeze({
+    sector: 'watch_showroom',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'macro wrist-roll video Reels, social scheduling, and private VIP boutique viewings',
+    hook: 'macro wrist-roll video Reels, social scheduling, and private VIP boutique viewings',
+    breakupPhrase: 'timepiece showcase automation & private boutique viewing systems',
+    touch3Phrase: 'timepiece showcase automation & private boutique viewing systems'
+  }),
+  bike_showroom: Object.freeze({
+    sector: 'bike_showroom',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'bike walkaround Reels, exhaust sound clips, and automated test-ride bookings',
+    hook: 'bike walkaround Reels, exhaust sound clips, and automated test-ride bookings',
+    breakupPhrase: 'motorbike showcase automation & test-ride booking systems',
+    touch3Phrase: 'motorbike showcase automation & test-ride booking systems'
+  }),
+  detailing: Object.freeze({
+    sector: 'detailing',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: '50/50 paint correction Reels, ceramic coating showcases, and 24/7 WhatsApp bay booking',
+    hook: '50/50 paint correction Reels, ceramic coating showcases, and 24/7 WhatsApp bay booking',
+    breakupPhrase: 'detailing studio content automation & WhatsApp slot booking',
+    touch3Phrase: 'detailing studio content automation & WhatsApp slot booking'
+  }),
+  aesthetics_clinic: Object.freeze({
+    sector: 'aesthetics_clinic',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'treatment transformation Reels, open cancellation Stories, and consultation bookings',
+    hook: 'treatment transformation Reels, open cancellation Stories, and consultation bookings',
+    breakupPhrase: 'aesthetic clinic growth automation & consultation booking systems',
+    touch3Phrase: 'aesthetic clinic growth automation & consultation booking systems'
+  }),
+  dentistry: Object.freeze({
+    sector: 'dentistry',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'smile makeover reveal Reels, patient review Stories, and assessment bookings',
+    hook: 'smile makeover reveal Reels, patient review Stories, and assessment bookings',
+    breakupPhrase: 'dental practice patient booking & smile transformation showcases',
+    touch3Phrase: 'dental practice patient booking & smile transformation showcases'
+  }),
+  kitchen_interior: Object.freeze({
+    sector: 'kitchen_interior',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'room reveal Reels, craftsmanship Stories, and free home design visit bookings',
+    hook: 'room reveal Reels, craftsmanship Stories, and free home design visit bookings',
+    breakupPhrase: 'bespoke interior project showcases & design visit automation',
+    touch3Phrase: 'bespoke interior project showcases & design visit automation'
+  }),
+  estate_agent: Object.freeze({
+    sector: 'estate_agent',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'property walkthrough Reels, listing Stories, and automated viewing bookings',
+    hook: 'property walkthrough Reels, listing Stories, and automated viewing bookings',
+    breakupPhrase: 'property walkthrough automation & viewing booking systems',
+    touch3Phrase: 'property walkthrough automation & viewing booking systems'
+  }),
+  fitness: Object.freeze({
+    sector: 'fitness',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'transformation Reels, daily motivation Stories, and automated trial pass bookings',
+    hook: 'transformation Reels, daily motivation Stories, and automated trial pass bookings',
+    breakupPhrase: 'fitness studio member acquisition & trial pass booking automation',
+    touch3Phrase: 'fitness studio member acquisition & trial pass booking automation'
+  }),
+  wedding_events: Object.freeze({
+    sector: 'wedding_events',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'cinematic wedding highlight Reels, date availability checker, and viewing bookings',
+    hook: 'cinematic wedding highlight Reels, date availability checker, and viewing bookings',
+    breakupPhrase: 'wedding venue showcase automation & date booking systems',
+    touch3Phrase: 'wedding venue showcase automation & date booking systems'
+  }),
+  pet_grooming: Object.freeze({
+    sector: 'pet_grooming',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'grooming transformation Reels, daily salon Stories, and 24/7 WhatsApp slot booking',
+    hook: 'grooming transformation Reels, daily salon Stories, and 24/7 WhatsApp slot booking',
+    breakupPhrase: 'pet grooming appointment automation & salon showcase systems',
+    touch3Phrase: 'pet grooming appointment automation & salon showcase systems'
+  }),
+  ecommerce: Object.freeze({
+    sector: 'ecommerce',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'social media scheduling, online store conversion, and pending checkout recovery',
+    hook: 'social media scheduling, online store conversion, and pending checkout recovery',
+    breakupPhrase: 'e-commerce workflow automation & store optimization',
+    touch3Phrase: 'e-commerce workflow automation & store optimization'
+  }),
+  trades: Object.freeze({
+    sector: 'trades',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'capturing customer enquiries promptly on-site via rapid WhatsApp messaging assistant',
+    hook: 'capturing customer enquiries promptly on-site via rapid WhatsApp messaging assistant',
+    breakupPhrase: 'trade enquiry automation & rapid WhatsApp booking systems',
+    touch3Phrase: 'trade enquiry automation & rapid WhatsApp booking systems'
+  }),
+  hospitality: Object.freeze({
+    sector: 'hospitality',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'automating customer enquiries and scheduling social updates',
+    hook: 'automating customer enquiries and scheduling social updates',
+    breakupPhrase: 'hospitality guest engagement & reservation automation',
+    touch3Phrase: 'hospitality guest engagement & reservation automation'
+  }),
+  healthcare: Object.freeze({
+    sector: 'healthcare',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'handling 24/7 appointment bookings, patient intake forms, and automated reminders',
+    hook: 'handling 24/7 appointment bookings, patient intake forms, and automated reminders',
+    breakupPhrase: 'healthcare appointment automation & patient communication systems',
+    touch3Phrase: 'healthcare appointment automation & patient communication systems'
+  }),
+  b2b: Object.freeze({
+    sector: 'b2b',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'automating client onboarding, payment tracking reminders, and pipeline management',
+    hook: 'automating client onboarding, payment tracking reminders, and pipeline management',
+    breakupPhrase: 'web infrastructure & business automation',
+    touch3Phrase: 'web infrastructure & business automation'
+  }),
+  tech: Object.freeze({
+    sector: 'tech',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried under client deadlines.',
+    touch2Hook: 'handling backend API integrations and workload overflow',
+    hook: 'handling backend API integrations and workload overflow',
+    breakupPhrase: 'backend automation & API integrations',
+    touch3Phrase: 'backend automation & API integrations'
+  }),
+  general: Object.freeze({
+    sector: 'general',
+    touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
+    touch2Hook: 'automating customer enquiries and scheduling social updates',
+    hook: 'automating customer enquiries and scheduling social updates',
+    breakupPhrase: 'web infrastructure & business automation',
+    touch3Phrase: 'web infrastructure & business automation'
+  })
 });
 
 /**
@@ -31,11 +184,23 @@ const TOUCH_INTERVALS = Object.freeze({
  * 4. Recency Priority: Freshest leads are prioritized first.
  * 5. Limit: Caps daily follow-ups to limit (default 100).
  */
+function getCompanyFromMap(map, compNum) {
+  if (!map || !compNum) return {};
+  if (map instanceof Map || typeof map.get === 'function') {
+    return map.get(compNum) || {};
+  }
+  return map[compNum] || {};
+}
+
 function getEligibleFollowUps(
   sentLeadsPath = DEFAULT_SENT_LEADS_PATH,
   followUpsPath = DEFAULT_FOLLOWUPS_PATH,
-  options = {}
+  optionsOrCompaniesPath = {}
 ) {
+  const options = typeof optionsOrCompaniesPath === 'string'
+    ? { companiesPath: optionsOrCompaniesPath }
+    : (optionsOrCompaniesPath || {});
+
   const now = options.now instanceof Date
     ? options.now
     : (typeof options.now === 'string' || typeof options.now === 'number' ? new Date(options.now) : new Date());
@@ -46,6 +211,33 @@ function getEligibleFollowUps(
   const touch3DelayMs = typeof options.touch3DelayMs === 'number' ? options.touch3DelayMs : TOUCH_INTERVALS.touch3;
   const limit = typeof options.limit === 'number' ? options.limit : DEFAULT_MAX_DAILY_FOLLOWUPS;
   const requireMessageId = options.requireMessageId !== false;
+  const isTargetSic = typeof options.isTargetSic === 'function' ? options.isTargetSic : defaultIsTargetSic;
+  const filterNonTargetSics = options.filterNonTargetSics !== false;
+
+  let companiesMap = options.companiesMap;
+  if (!companiesMap) {
+    let resolvedCompaniesPath = options.companiesPath;
+    if (!resolvedCompaniesPath) {
+      const siblingPath = path.join(path.dirname(sentLeadsPath), 'companies.csv');
+      if (fs.existsSync(siblingPath)) {
+        resolvedCompaniesPath = siblingPath;
+      } else {
+        resolvedCompaniesPath = DEFAULT_COMPANIES_PATH;
+      }
+    }
+    if (resolvedCompaniesPath && fs.existsSync(resolvedCompaniesPath)) {
+      try {
+        const parsed = parseCSV(resolvedCompaniesPath);
+        companiesMap = new Map(
+          parsed.map(c => [String(c.company_number || '').trim(), c])
+        );
+      } catch (err) {
+        companiesMap = new Map();
+      }
+    } else {
+      companiesMap = new Map();
+    }
+  }
 
   const sentLeads = readLeads(sentLeadsPath);
   if (sentLeads.length === 0) {
@@ -54,6 +246,7 @@ function getEligibleFollowUps(
       totalEligible: 0,
       agedOutCount: 0,
       missingMessageIdCount: 0,
+      nonTargetSicCount: 0,
       touch2Count: 0,
       touch3Count: 0
     };
@@ -72,6 +265,7 @@ function getEligibleFollowUps(
 
   let agedOutCount = 0;
   let missingMessageIdCount = 0;
+  let nonTargetSicCount = 0;
   const eligibleCandidates = [];
   const seenCandidates = new Set();
 
@@ -120,8 +314,18 @@ function getEligibleFollowUps(
       continue;
     }
 
+    // SIC Protection Shield Gate:
+    const companyInfo = getCompanyFromMap(companiesMap, compNum);
+    const companySics = lead.sic_codes || companyInfo.sic_codes || '';
+    if (filterNonTargetSics && companySics && !isTargetSic(companySics)) {
+      nonTargetSicCount++;
+      continue;
+    }
+
     const touch1Fup = previousFollowUps.find(f => f.followup_number === 1);
     const touch2Fup = previousFollowUps.find(f => f.followup_number === 2);
+
+    const mergedLeadRecord = { ...companyInfo, ...lead, sic_codes: companySics };
 
     // Case A: Eligible for Touch 2 (Follow-up 1)
     if (!touch1Fup) {
@@ -129,15 +333,15 @@ function getEligibleFollowUps(
         seenCandidates.add(candidateKey);
         eligibleCandidates.push({
           company_number: compNum,
-          company_name: lead.company_name || '',
-          person_name: lead.person_name || '',
+          company_name: lead.company_name || companyInfo.company_name || '',
+          person_name: lead.person_name || companyInfo.person_name || '',
           sent_to: sentTo,
           due_touch: 2,
           followup_number: 1,
           touch1_sent_at: lead.sent_at,
           sort_timestamp: touch1Date.getTime(),
           in_reply_to: lead.message_id || '',
-          lead_record: lead
+          lead_record: mergedLeadRecord
         });
       }
       continue;
@@ -152,8 +356,8 @@ function getEligibleFollowUps(
           seenCandidates.add(candidateKey);
           eligibleCandidates.push({
             company_number: compNum,
-            company_name: lead.company_name || '',
-            person_name: lead.person_name || '',
+            company_name: lead.company_name || companyInfo.company_name || '',
+            person_name: lead.person_name || companyInfo.person_name || '',
             sent_to: sentTo,
             due_touch: 3,
             followup_number: 2,
@@ -161,7 +365,7 @@ function getEligibleFollowUps(
             touch2_sent_at: touch1Fup.sent_at,
             sort_timestamp: touch2Date.getTime(),
             in_reply_to: touch1Fup.message_id || lead.message_id || '',
-            lead_record: lead
+            lead_record: mergedLeadRecord
           });
         }
       }
@@ -184,6 +388,7 @@ function getEligibleFollowUps(
     totalEligible,
     agedOutCount,
     missingMessageIdCount,
+    nonTargetSicCount,
     touch2Count,
     touch3Count
   };
@@ -220,39 +425,49 @@ function formatThreadSubject(originalSubject, fallbackContext = '') {
  */
 function generateFollowUpEmail(candidate, options = {}) {
   const leadRec = candidate.lead_record || {};
-  const compName = candidate.company_name || leadRec.company_name || '';
+  const companyRec = candidate.company_record || options.companyRec || {};
+  const compName = candidate.company_name || leadRec.company_name || companyRec.company_name || '';
   const cleanCompany = formatCleanCompanyName(compName) || 'there';
-  const rawPerson = candidate.person_name || leadRec.person_name || '';
+  const rawPerson = candidate.person_name || leadRec.person_name || companyRec.person_name || '';
   const firstName = extractFirstName(rawPerson);
 
   const greeting = firstName ? `Hey ${firstName},` : `Hey ${cleanCompany},`;
 
-  const isTech = isTechOrSoftwareCompany(leadRec.sic_codes ? leadRec : candidate);
+  const combinedContext = { ...leadRec, ...companyRec, ...candidate };
+
+  const isTech = options.isTech !== undefined
+    ? Boolean(options.isTech)
+    : (options.sector === 'tech' || isTechOrSoftwareCompany(combinedContext));
+
+  const sector = options.sector || (isTech ? 'tech' : classifySector(combinedContext));
+  const sectorTemplate = FOLLOWUP_SECTOR_TEMPLATES[sector] || FOLLOWUP_SECTOR_TEMPLATES.general;
+
   const touch = candidate.due_touch === 3 ? 3 : 2;
 
   let body = '';
   if (touch === 2) {
-    if (isTech) {
-      body = [
-        'Just floating my previous note back to the top of your inbox in case it got buried under client deadlines.',
-        'Would love to share a quick 2-minute overview on handling backend API integrations and workload overflow if relevant.',
-        'Worth a brief 5-minute chat sometime this week?'
-      ].join('\n\n');
-    } else {
-      body = [
-        'Just floating my previous note back to the top of your inbox in case it got buried.',
-        'Would love to share a quick 2-minute overview on automating customer enquiries and scheduling social updates if helpful.',
-        'Worth a brief 5-minute chat sometime this week?'
-      ].join('\n\n');
-    }
+    const defaultIntro = isTech
+      ? 'Just floating my previous note back to the top of your inbox in case it got buried under client deadlines.'
+      : 'Just floating my previous note back to the top of your inbox in case it got buried.';
+    const intro = sectorTemplate.touch2Intro || defaultIntro;
+    const hook = sectorTemplate.touch2Hook || sectorTemplate.hook;
+    const qualifier = isTech ? 'if relevant' : 'if helpful';
+
+    body = [
+      intro,
+      `Would love to share a quick 2-minute overview on ${hook} ${qualifier}.`,
+      'Worth a brief 5-minute chat sometime this week?'
+    ].join('\n\n');
   } else {
     // Touch 3: Breakup Note
-    const helpPhrase = isTech
+    const defaultBreakup = isTech
       ? 'backend automation & API integrations'
       : 'web infrastructure & business automation';
+    const breakupPhrase = sectorTemplate.breakupPhrase || sectorTemplate.touch3Phrase || defaultBreakup;
+
     body = [
       'Wanted to follow up one last time before closing the loop. I realize you might be focused on other priorities right now, so I will not follow up further.',
-      `If you ever need a hand with ${helpPhrase} down the road, feel free to reach out anytime.`
+      `If you ever need a hand with ${breakupPhrase} down the road, feel free to reach out anytime.`
     ].join('\n\n');
   }
 
@@ -280,7 +495,8 @@ function generateFollowUpEmail(candidate, options = {}) {
     followup_number: candidate.followup_number || (touch === 3 ? 2 : 1),
     inReplyTo,
     references: inReplyTo,
-    isTech
+    isTech,
+    sector
   };
 }
 
@@ -368,8 +584,16 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
     limit: effectiveLimit,
     maxAgeDays: options.maxAgeDays,
     touch2DelayMs: options.touch2DelayMs,
-    touch3DelayMs: options.touch3DelayMs
+    touch3DelayMs: options.touch3DelayMs,
+    companiesPath: options.companiesPath,
+    companiesMap: options.companiesMap,
+    isTargetSic: deps.isTargetSic || options.isTargetSic,
+    filterNonTargetSics: options.filterNonTargetSics
   });
+
+  if (eligibilityResult.nonTargetSicCount > 0) {
+    logger.log(`[FollowUp] skipped non-target SIC: ${eligibilityResult.nonTargetSicCount}`);
+  }
 
   const candidates = eligibilityResult.eligible;
   if (candidates.length === 0) {
@@ -381,6 +605,7 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
       failed: 0,
       agedOut: eligibilityResult.agedOutCount,
       missingMessageId: eligibilityResult.missingMessageIdCount,
+      nonTargetSic: eligibilityResult.nonTargetSicCount,
       details: []
     };
   }
@@ -517,6 +742,7 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
     eligible: candidates.length,
     sent: sentCount,
     failed: failedCount,
+    nonTargetSic: eligibilityResult.nonTargetSicCount,
     quotaExhausted,
     details
   };
@@ -526,6 +752,7 @@ module.exports = {
   MAX_FOLLOWUP_AGE_DAYS,
   DEFAULT_MAX_DAILY_FOLLOWUPS,
   TOUCH_INTERVALS,
+  FOLLOWUP_SECTOR_TEMPLATES,
   getEligibleFollowUps,
   getDailyFollowUpCount,
   formatThreadSubject,
