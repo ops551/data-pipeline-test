@@ -9,7 +9,8 @@ function getDaysOld(creationDateStr) {
   if (!creationDateStr) return -1;
   const created = new Date(creationDateStr);
   const now = new Date();
-  const diffTime = Math.abs(now - created);
+  if (Number.isNaN(created.getTime()) || created > now) return -1;
+  const diffTime = now - created;
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 

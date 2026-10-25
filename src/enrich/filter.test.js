@@ -29,6 +29,75 @@ test('getDaysOld', (t) => {
   assert.ok(days >= 29 && days <= 31);
 });
 
+test('Unit 5.53: getDaysOld handles malformed, missing, future, and boundary dates safely', (t) => {
+  // 1. Missing and invalid dates must return -1
+  assert.strictEqual(getDaysOld(null), -1);
+  assert.strictEqual(getDaysOld(undefined), -1);
+  assert.strictEqual(getDaysOld(''), -1);
+  assert.strictEqual(getDaysOld('not-a-valid-date'), -1);
+  assert.strictEqual(getDaysOld('2025-99-99'), -1);
+
+  // 2. Future dates must return -1
+  const now = new Date();
+  const tomorrow = new Date(now.getTime() + 1 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const future10 = new Date(now.getTime() + 10 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  assert.strictEqual(getDaysOld(tomorrow), -1);
+  assert.strictEqual(getDaysOld(future10), -1);
+
+  // 3. Exact boundary dates: 89, 90, 180, 181 days
+  const past89 = new Date(now.getTime() - 89 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past90 = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past180 = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past181 = new Date(now.getTime() - 181 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  assert.ok(Math.abs(getDaysOld(past89) - 89) <= 1);
+  assert.ok(Math.abs(getDaysOld(past90) - 90) <= 1);
+  assert.ok(Math.abs(getDaysOld(past180) - 180) <= 1);
+  assert.ok(Math.abs(getDaysOld(past181) - 181) <= 1);
+});
+
+test('Unit 5.53: filterCandidates rejects malformed dates, future dates, and out-of-range boundaries (89 & 181 days)', (t) => {
+  const tmpCompanies = path.join(__dirname, 'tmp_comp_553.csv');
+  const tmpEnriched = path.join(__dirname, 'tmp_enr_553.csv');
+  const tmpCandidates = path.join(__dirname, 'tmp_cand_553.csv');
+
+  const now = new Date();
+  const future5 = new Date(now.getTime() + 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past89 = new Date(now.getTime() - 89 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past95 = new Date(now.getTime() - 95 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past175 = new Date(now.getTime() - 175 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past185 = new Date(now.getTime() - 185 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
+1,MALFORMED_DATE,not_a_date,45200,Add1
+2,FUTURE_DATE,${future5},45200,Add2
+3,TOO_YOUNG_89,${past89},45200,Add3
+4,TARGET_95,${past95},45200,Add4
+5,TARGET_175,${past175},45200,Add5
+6,TOO_OLD_185,${past185},45200,Add6
+`;
+
+  fs.writeFileSync(tmpCompanies, companiesContent);
+  fs.writeFileSync(tmpEnriched, 'company_number\n');
+
+  try {
+    const count = filterCandidates(tmpCompanies, tmpEnriched, tmpCandidates);
+    assert.strictEqual(count, 2, 'Only TARGET_95 and TARGET_175 must be included');
+
+    const candidatesData = fs.readFileSync(tmpCandidates, 'utf8');
+    assert.ok(candidatesData.includes('TARGET_95'), 'TARGET_95 should be included');
+    assert.ok(candidatesData.includes('TARGET_175'), 'TARGET_175 should be included');
+    assert.ok(!candidatesData.includes('MALFORMED_DATE'), 'MALFORMED_DATE must be excluded');
+    assert.ok(!candidatesData.includes('FUTURE_DATE'), 'FUTURE_DATE must be excluded');
+    assert.ok(!candidatesData.includes('TOO_YOUNG_89'), 'TOO_YOUNG_89 must be excluded');
+    assert.ok(!candidatesData.includes('TOO_OLD_185'), 'TOO_OLD_185 must be excluded');
+  } finally {
+    if (fs.existsSync(tmpCompanies)) fs.unlinkSync(tmpCompanies);
+    if (fs.existsSync(tmpEnriched)) fs.unlinkSync(tmpEnriched);
+    if (fs.existsSync(tmpCandidates)) fs.unlinkSync(tmpCandidates);
+  }
+});
+
 test('filterCandidates', (t) => {
   const tmpCompanies = path.join(__dirname, 'tmp_companies.csv');
   const tmpEnriched = path.join(__dirname, 'tmp_enriched.csv');
