@@ -35,20 +35,22 @@ test('filterCandidates', (t) => {
   const tmpCandidates = path.join(__dirname, 'tmp_candidates.csv');
 
   const now = new Date();
-  const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past100 = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
   const past5 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past200 = new Date(now.getTime() - 200 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
 1,TOO YOUNG,${past5},45200,Add1
-2,GOOD LEAD,${past30},45200,Add2
-3,DORMANT,${past30},45200;99999,Add3
-4,ALREADY CHECKED,${past30},45200,Add4
+2,GOOD LEAD,${past100},45200,Add2
+3,DORMANT,${past100},45200;99999,Add3
+4,ALREADY CHECKED,${past100},45200,Add4
+5,TOO OLD,${past200},45200,Add5
 `;
   
   // Make 20 companies at AgentAdd to trigger agent_address flag
   let agentCompanies = '';
   for (let i = 100; i < 120; i++) {
-    agentCompanies += `${i},AGENT CO,${past30},45200,AgentAdd\n`;
+    agentCompanies += `${i},AGENT CO,${past100},45200,AgentAdd\n`;
   }
   
   fs.writeFileSync(tmpCompanies, companiesContent + agentCompanies);
@@ -60,16 +62,17 @@ test('filterCandidates', (t) => {
   const lines = candidatesData.trim().split('\n');
   
   // 1 header + 1 GOOD LEAD + 20 agent companies = 22 lines
-  assert.strictEqual(lines.length, 23, 'Should have header + 22 rows');
+  assert.strictEqual(lines.length, 22, 'Should have header + 21 rows (TOO YOUNG and TOO OLD excluded)');
   
   // Check GOOD LEAD
-  assert.ok(lines[1].includes('TOO YOUNG'));
-  assert.ok(lines[2].includes('GOOD LEAD'));
-  assert.ok(lines[2].includes(',no')); // agent_address = no
+  assert.ok(lines[1].includes('GOOD LEAD'));
+  assert.ok(lines[1].includes(',no')); // agent_address = no
+  assert.ok(!candidatesData.includes('TOO YOUNG'), 'Companies < 90 days must be filtered out');
+  assert.ok(!candidatesData.includes('TOO OLD'), 'Companies > 180 days must be filtered out');
   
   // Check AGENT CO
-  assert.ok(lines[3].includes('AGENT CO'));
-  assert.ok(lines[3].includes(',yes')); // agent_address = yes
+  assert.ok(lines[2].includes('AGENT CO'));
+  assert.ok(lines[2].includes(',yes')); // agent_address = yes
 
   // Cleanup
   fs.unlinkSync(tmpCompanies);
@@ -85,12 +88,12 @@ test('filterCandidates excludes companies present in leadsFile and sentLeadsFile
   const tmpSentLeads = path.join(__dirname, 'tmp_sent_2.csv');
 
   const now = new Date();
-  const past30 = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past100 = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-10,IN LEADS,${past30},45200,Add10
-20,IN SENT,${past30},45200,Add20
-30,FRESH LEAD,${past30},45200,Add30
+10,IN LEADS,${past100},45200,Add10
+20,IN SENT,${past100},45200,Add20
+30,FRESH LEAD,${past100},45200,Add30
 `;
 
   fs.writeFileSync(tmpCompanies, companiesContent);
@@ -123,14 +126,14 @@ test('filterCandidates sorts candidates freshest-first by date_of_creation desce
   const tmpEnriched = path.join(__dirname, 'tmp_enr_sort.csv');
   const tmpCandidates = path.join(__dirname, 'tmp_cand_sort.csv');
 
-  // Input file lists older company first (20 days old), then fresh company (5 days old)
+  // Input file lists older company first (120 days old), then fresh company (95 days old)
   const now = new Date();
-  const past20 = new Date(now.getTime() - 20 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-  const past5 = new Date(now.getTime() - 5 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past120 = new Date(now.getTime() - 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+  const past95 = new Date(now.getTime() - 95 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-101,OLD CO,${past20},45200,AddOld
-102,FRESH CO,${past5},45200,AddFresh
+101,OLD CO,${past120},45200,AddOld
+102,FRESH CO,${past95},45200,AddFresh
 `;
 
   fs.writeFileSync(tmpCompanies, companiesContent);
@@ -142,9 +145,9 @@ test('filterCandidates sorts candidates freshest-first by date_of_creation desce
 
     const candidatesData = fs.readFileSync(tmpCandidates, 'utf8').trim().split('\n');
     // Header is line 0
-    // Line 1 MUST be FRESH CO (past5)
+    // Line 1 MUST be FRESH CO (past95)
     assert.ok(candidatesData[1].includes('FRESH CO'), 'Freshest company must be sorted first');
-    // Line 2 MUST be OLD CO (past20)
+    // Line 2 MUST be OLD CO (past120)
     assert.ok(candidatesData[2].includes('OLD CO'), 'Older company must be sorted second');
   } finally {
     if (fs.existsSync(tmpCompanies)) fs.unlinkSync(tmpCompanies);
