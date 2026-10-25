@@ -221,12 +221,18 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Audit', as
     let emailSent = false;
     let sentSubject = '';
     let sentBody = '';
+    let verifyConnectionCalled = false;
 
     const mockSender = async (mailOptions) => {
       emailSent = true;
       sentSubject = mailOptions.subject;
       sentBody = mailOptions.text;
       return { messageId: '<msg-11111111-e2e@resend.com>' };
+    };
+
+    const mockVerifyConnection = async () => {
+      verifyConnectionCalled = true;
+      return true;
     };
 
     const result = await runOutreachPipeline({
@@ -238,10 +244,12 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Audit', as
       aiMock: true
     }, {
       sendEmail: mockSender,
+      verifyConnection: mockVerifyConnection,
       logger: { log: () => {}, warn: () => {}, error: () => {} }
     });
 
     assert.equal(result.sent, 1);
+    assert.ok(verifyConnectionCalled, 'Pre-flight connection verification should be performed');
     assert.ok(emailSent, 'Email must have been dispatched');
     assert.ok(sentBody.includes('Best regards,'), 'Must contain mandatory signature');
     assert.ok(sentBody.includes('Nahid'), 'Must contain Nahid in signature');
@@ -301,7 +309,8 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Audit', as
         followUpsPath: followUpsFile,
         companiesPath: companiesFile,
         now: day4Now,
-        delayMs: 0
+        delayMs: 0,
+        mock: true
       },
       {
         sendEmail: mockFollowUpSender,

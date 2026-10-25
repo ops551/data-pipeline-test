@@ -1133,4 +1133,73 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
   }
 });
 
+test('Unit 5.59: runOutreachPipeline defaults skipVerify: true when deps.sendEmail is provided without transporter or verifyConnection', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
+
+    let emailSent = false;
+
+    // Call without mock: true, without skipVerify, but with deps.sendEmail
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        companiesPath: ws.companiesPath,
+        mock: false,
+        logger: silentLogger
+      },
+      {
+        generateEmail: async () => ({ subject: 'Test', body: 'Best regards,\nNahid' }),
+        sendEmail: async () => {
+          emailSent = true;
+          return { success: true, messageId: '<msg-default-skip@test.com>' };
+        }
+      }
+    );
+
+    assert.equal(result.sent, 1);
+    assert.equal(emailSent, true);
+  } finally {
+    ws.cleanup();
+  }
+});
+
+test('Unit 5.59: runOutreachPipeline invokes deps.verifyConnection when deps.verifyConnection is provided with mock: false', async () => {
+  const ws = createWorkspace();
+  try {
+    writeCSVAtomic(ws.leadsPath, [sampleLeadsData[0]], LEADS_COLUMNS);
+
+    let verifyCalled = false;
+    let emailSent = false;
+
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        companiesPath: ws.companiesPath,
+        mock: false,
+        logger: silentLogger
+      },
+      {
+        generateEmail: async () => ({ subject: 'Test', body: 'Best regards,\nNahid' }),
+        verifyConnection: async () => {
+          verifyCalled = true;
+          return true;
+        },
+        sendEmail: async () => {
+          emailSent = true;
+          return { success: true, messageId: '<msg-injected-verify@test.com>' };
+        }
+      }
+    );
+
+    assert.equal(verifyCalled, true, 'Custom verifyConnection should be invoked');
+    assert.equal(result.sent, 1);
+    assert.equal(emailSent, true);
+  } finally {
+    ws.cleanup();
+  }
+});
+
 
