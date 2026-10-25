@@ -1,4 +1,5 @@
 require('dotenv').config({ quiet: true });
+const { TARGET_SICS } = require('./enrich/sic');
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -29,6 +30,17 @@ function parseNonNegativeInt(name, value, fallback) {
     throw new Error(`${name} must be a whole number of 0 or more, got "${value}"`);
   }
   return n;
+}
+
+function parseSicCodes(value) {
+  if (value === undefined) {
+    return [...TARGET_SICS];
+  }
+  const str = String(value).trim();
+  if (str === '' || str.toLowerCase() === 'all' || str === '*') {
+    return [];
+  }
+  return str.split(',').map((s) => s.trim()).filter(Boolean);
 }
 
 // Reads settings from the environment. `env` and `today` are parameters so tests
@@ -72,8 +84,9 @@ function loadConfig(env = process.env, today = new Date()) {
   }
 
   const maxResults = parsePositiveInt('MAX_RESULTS', env.MAX_RESULTS, 1000);
+  const sicCodes = parseSicCodes(env.SIC_CODES);
 
-  return { apiKey, incorporatedFrom, incorporatedTo, maxResults };
+  return { apiKey, incorporatedFrom, incorporatedTo, maxResults, sicCodes };
 }
 
-module.exports = { loadConfig };
+module.exports = { loadConfig, parseSicCodes };

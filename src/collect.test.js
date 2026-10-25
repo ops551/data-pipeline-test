@@ -72,3 +72,60 @@ test('items without a company_number are ignored', async () => {
   const result = await collectCompanies(config, { ...quiet, search });
   assert.equal(result.length, 1);
 });
+
+test('forwards sicCodes across all pagination rounds', async () => {
+  const all = Array.from({ length: 6 }, (_, i) => company(i + 1));
+  const calls = [];
+  const search = async (params) => {
+    calls.push({ ...params });
+    return { items: all.slice(params.startIndex, params.startIndex + params.size), hits: all.length };
+  };
+
+  const sicCodes = ['62012', '62020'];
+  const result = await collectCompanies({ ...config, sicCodes }, { ...quiet, search, pageSize: 2 });
+
+  assert.equal(result.length, 6);
+  assert.equal(calls.length, 3);
+  for (const call of calls) {
+    assert.deepEqual(call.sicCodes, ['62012', '62020']);
+  }
+});
+
+test('terminates immediately when hits is 0', async () => {
+  const calls = [];
+  const search = async (params) => {
+    calls.push(params);
+    return { items: [], hits: 0 };
+  };
+
+  const result = await collectCompanies({ ...config, sicCodes: ['62012'] }, { ...quiet, search });
+  assert.deepEqual(result, []);
+  assert.equal(calls.length, 1);
+});
+
+test('backward compatibility: does not add sicCodes to search params when omitted or empty', async () => {
+  const calls = [];
+  const search = async (params) => {
+    calls.push(params);
+    return { items: [company(1)], hits: 1 };
+  };
+
+  // Omitted sicCodes
+  await collectCompanies(config, { ...quiet, search });
+  assert.equal('sicCodes' in calls[0], false);
+
+  // Empty array sicCodes
+  calls.length = 0;
+  await collectCompanies({ ...config, sicCodes: [] }, { ...quiet, search });
+  assert.equal('sicCodes' in calls[0], false);
+
+  // Empty string sicCodes
+  calls.length = 0;
+  await collectCompanies({ ...config, sicCodes: '' }, { ...quiet, search });
+  assert.equal('sicCodes' in calls[0], false);
+
+  // Whitespace string sicCodes
+  calls.length = 0;
+  await collectCompanies({ ...config, sicCodes: '   ' }, { ...quiet, search });
+  assert.equal('sicCodes' in calls[0], false);
+});
