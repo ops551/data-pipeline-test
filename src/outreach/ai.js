@@ -392,7 +392,7 @@ function classifySector(company = {}) {
   }
 
   if (
-    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading)\b/i.test(
+    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading|hair salon|beauty salon|nail salon|dreadlocks?|loc extensions?|locs? salon|loc install)\b/i.test(
       textToScan,
     )
   ) {
@@ -416,7 +416,7 @@ function classifySector(company = {}) {
   }
 
   if (
-    /\b(?:wedding photographer|wedding venue|event planner|wedding videograph(?:y|er))\b/i.test(
+    /\b(?:wedding photographer|wedding venue|event planner|wedding videograph(?:y|er)|portrait photograph(?:y|er)|commercial photograph(?:y|er)|photograph(?:y|er))\b/i.test(
       textToScan,
     )
   ) {
