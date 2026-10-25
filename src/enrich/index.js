@@ -93,7 +93,7 @@ async function runEnrichment(options = {}) {
   const scraper = options.scraper || (await createScraper());
 
   try {
-    const BATCH_SIZE = process.env.ENRICH_BATCH_SIZE || 25;
+    const BATCH_SIZE = options.batchSize || process.env.ENRICH_BATCH_SIZE || 25;
     const candidatesToProcess = candidates.slice(0, BATCH_SIZE);
     for (const [index, company] of candidatesToProcess.entries()) {
       console.log(`\nProcessing [${index + 1}/${candidatesToProcess.length}] (Total pending: ${count}): ${company.company_name} (${company.company_number})`);
@@ -105,7 +105,9 @@ async function runEnrichment(options = {}) {
       console.log('  Fetching officers...');
       let rawOfficers, activeOfficers = [], directorsStr = '';
       try {
-        rawOfficers = await getCompanyOfficers(company.company_number);
+        rawOfficers = options.getOfficersFn
+          ? await options.getOfficersFn(company.company_number)
+          : await getCompanyOfficers(company.company_number);
         activeOfficers = getActiveOfficers(rawOfficers);
         directorsStr = extractActiveDirectors(rawOfficers);
         if (activeOfficers.length > 0) {
@@ -117,36 +119,39 @@ async function runEnrichment(options = {}) {
 
       // Search & Social
       console.log('  Searching for website and social profiles...');
-      const searchRes = await searchCompany(scraper, company);
-      let website = { url: searchRes.websiteUrl || '', context: '' };
+      const searchRes = options.searchFn
+        ? await options.searchFn(scraper, company.company_name, company)
+        : (typeof scraper.search === 'function' ? await searchCompany(scraper, company) : { has_website: false, websiteUrl: '', socialUrls: [] });
+      const resolvedWebsiteUrl = (searchRes && (searchRes.websiteUrl || searchRes.website)) || '';
+      let website = { url: resolvedWebsiteUrl, context: '' };
       let peopleFromSite = [];
       
-      if (searchRes.has_website) {
+      if (searchRes && searchRes.has_website && resolvedWebsiteUrl) {
         sources.push('existing_website');
-        console.log(`  Inspecting company homepage: ${searchRes.websiteUrl}`);
-        const page = await scraper.fetchHtml(searchRes.websiteUrl, {
+        console.log(`  Inspecting company homepage: ${resolvedWebsiteUrl}`);
+        const page = await scraper.fetchHtml(resolvedWebsiteUrl, {
           throwOnError: false,
           timeout: 20000
         });
-        if (page.error) {
+        const statusCode = (page && (page.statusCode || page.status)) || 200;
+        if (page && page.error) {
           console.warn(`  Could not inspect company homepage: ${page.error}`);
-        } else if (page.statusCode < 200 || page.statusCode >= 400) {
-          console.warn(`  Company homepage returned HTTP ${page.statusCode}.`);
-        } else {
+        } else if (statusCode < 200 || statusCode >= 400) {
+          console.warn(`  Company homepage returned HTTP ${statusCode}.`);
+        } else if (page && page.html) {
           website = {
-            url: page.finalUrl || searchRes.websiteUrl,
+            url: page.finalUrl || resolvedWebsiteUrl,
             context: extractWebsiteContext(page.html)
           };
           websiteEmails = extractEmails(page.html);
           if (!website.context) {
             console.warn('  Company homepage returned no readable page content.');
           }
-          if (page.html) {
-            peopleFromSite = extractPeople(page.html, activeOfficers, page.finalUrl, company.company_name);
+          peopleFromSite = extractPeople(page.html, activeOfficers, page.finalUrl || resolvedWebsiteUrl, company.company_name);
 
             // Crawl high-value contact & team subpages
             try {
-              const origin = new URL(page.finalUrl || searchRes.websiteUrl).origin;
+              const origin = new URL(page.finalUrl || resolvedWebsiteUrl).origin;
               const htmlSource = page.html.length > 1_500_000 ? page.html.slice(0, 1_500_000) : page.html;
               const linkMatches = [...htmlSource.matchAll(/href=["']([^"'#\s>]+)["']/gi)].map(m => m[1]);
               const subpageLinks = new Set();
@@ -184,7 +189,7 @@ async function runEnrichment(options = {}) {
               for (const subUrl of prioritized) {
                 console.log(`  Inspecting subpage: ${subUrl}`);
                 const subPage = await scraper.fetchHtml(subUrl, { throwOnError: false, timeout: 15000 });
-                if (subPage.html) {
+                if (subPage && subPage.html) {
                   const subEmails = extractEmails(subPage.html);
                   if (subEmails.length > 0) websiteEmails.push(...subEmails);
                   const subPeople = extractPeople(subPage.html, activeOfficers, subUrl, company.company_name);
@@ -194,20 +199,19 @@ async function runEnrichment(options = {}) {
             } catch (subErr) {
               console.warn('  Subpage crawling error:', subErr.message);
             }
-          }
         }
       }
       
       let extractedData = { emails: [], phones: [] };
 
-      if (searchRes.searchResHtml) {
+      if (searchRes && searchRes.searchResHtml) {
         const snippetEmails = extractEmails(searchRes.searchResHtml);
         const snippetPhones = extractPhones(searchRes.searchResHtml);
         if (snippetEmails.length > 0) extractedData.emails.push(...snippetEmails);
         if (snippetPhones.length > 0) extractedData.phones.push(...snippetPhones);
       }
 
-      if (searchRes.socialUrls.length > 0) {
+      if (searchRes && Array.isArray(searchRes.socialUrls) && searchRes.socialUrls.length > 0) {
         console.log(`  Found ${searchRes.socialUrls.length} social/directory URLs. Extracting contacts...`);
         const moreData = await extractContactDetails(scraper, searchRes.socialUrls);
         extractedData.emails.push(...moreData.emails);
@@ -217,7 +221,7 @@ async function runEnrichment(options = {}) {
         if (extractedData.emails.length > 0 || extractedData.phones.length > 0) {
           if (!sources.includes('web_scrape')) sources.push('web_scrape');
         }
-      } else if (searchRes.has_website) {
+      } else if (searchRes && searchRes.has_website) {
         console.log('  Company has an official website but no social profiles found.');
       } else {
         console.log('  No website or social profiles found.');
@@ -227,7 +231,10 @@ async function runEnrichment(options = {}) {
         sources.push('web_scrape');
       }
 
-      const leadershipRes = await searchCompanyLeadership(scraper, company.company_name);
+      let leadershipRes = { html: '', links: [] };
+      if (typeof scraper?.search === 'function') {
+        leadershipRes = await searchCompanyLeadership(scraper, company.company_name);
+      }
       if (leadershipRes.html) {
         const leadEmails = extractEmails(leadershipRes.html);
         if (leadEmails.length > 0) extractedData.emails.push(...leadEmails);
@@ -311,6 +318,13 @@ async function runEnrichment(options = {}) {
       }
 
       let hadExhaustedEmail = false;
+      const trackingVerifyEmail = async (email) => {
+        const res = await verifyEmail(email);
+        if (res && res.reason === 'all_apis_exhausted') {
+          hadExhaustedEmail = true;
+        }
+        return res;
+      };
       let personLeads = [];
       if (peopleList.length > 0) {
         console.log(`  Evaluating potential decision-maker emails for ${peopleList.length} officer(s)...`);
@@ -326,7 +340,7 @@ async function runEnrichment(options = {}) {
            officerCount: activeOfficers.length,
            peopleCount: peopleList.length,
            websiteUrl: website.url,
-           verifyEmailFn: verifyEmail
+           verifyEmailFn: trackingVerifyEmail
          });
          
          const isTrusted = resolved && resolved.verificationStatus &&
@@ -352,6 +366,7 @@ async function runEnrichment(options = {}) {
          }
       }
 
+      let companyHadLead = false;
       if (personLeads.length > 0) {
         for (const lead of personLeads) {
            const leadData = {
@@ -371,14 +386,16 @@ async function runEnrichment(options = {}) {
            const leadObj = formatLead(company, leadData, sources, website);
            if (leadObj.status === 'lead') {
              appendLead(leadsFile, leadObj);
+             companyHadLead = true;
            }
         }
         console.log(`  Saved ${personLeads.length} person leads.`);
       } else {
          let bestGeneric = '';
          let vStatus = '';
+         let validCandidates = [];
          if (allExtractedEmails.length > 0) {
-           const validCandidates = allExtractedEmails.filter(email => {
+           validCandidates = allExtractedEmails.filter(email => {
              const emailDomain = (email.split('@')[1] || '').toLowerCase();
              if (!emailDomain) return false;
              if (DIRECTORY_DOMAINS.some(d => emailDomain === d || emailDomain.endsWith('.' + d))) return false;
@@ -448,6 +465,9 @@ async function runEnrichment(options = {}) {
              vStatus = '';
            } else {
              const v = await verifyEmail(bestGeneric);
+             if (v && v.reason === 'all_apis_exhausted') {
+               hadExhaustedEmail = true;
+             }
              const isCatchAll = Boolean(domainIsCatchAll || /catch[-_ ]?all/i.test(String(v && v.reason || '')));
              const isExplicitlyInvalid = Boolean(v && v.status === 'invalid' && !isCatchAll);
              const isTrustedDeliverable = Boolean(
@@ -491,12 +511,13 @@ async function runEnrichment(options = {}) {
          const leadObj = formatLead(company, leadData, sources, website);
          if (leadObj.status === 'lead') {
            appendLead(leadsFile, leadObj);
+           companyHadLead = true;
            console.log(`  Saved company fallback lead. Status: ${leadObj.status}`);
          } else {
            console.log(`  No contact found for ${company.company_name} (${company.company_number}). Skipped appending to leads.csv.`);
          }
       }
-      if (hadExhaustedEmail && areAllVerificationApisExhausted()) {
+      if (!companyHadLead && hadExhaustedEmail && areAllVerificationApisExhausted()) {
         console.log('\n[QuotaNotice] All email verification API quotas are exhausted for today. Halting batch to preserve un-enriched candidates.');
         break;
       }

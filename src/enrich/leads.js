@@ -48,7 +48,11 @@ function formatLead(company = {}, extractedData = {}, sources = [], website = {}
     website_context: website.context || company?.website_context || '',
     website_url: website.url || company?.website_url || ''
   };
-  const rawType = String(extractedData.type || company?.type || company?.sector || '').trim();
+  const candidateType = String(extractedData.type || company?.sector || '').trim();
+  const rawCompanyType = String(company?.type || '').trim();
+  const isLegalForm = /^(?:ltd|limited|plc|llp|cic|private limited company)$/i.test(rawCompanyType);
+  const companyTypeSector = (!isLegalForm && rawCompanyType) ? rawCompanyType : '';
+  const rawType = candidateType || companyTypeSector;
   const type = rawType || classifySector(combinedCompanyContext);
   
   return {

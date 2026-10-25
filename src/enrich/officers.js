@@ -7,8 +7,9 @@ function extractActiveDirectors(officersList) {
 
   const activeDirectors = items.filter((officer) => {
     if (!officer || officer.resigned_on) return false;
-    if (!officer.officer_role) return false;
-    return officer.officer_role.toLowerCase().includes('director');
+    const role = officer.officer_role || officer.role;
+    if (!role) return false;
+    return role.toLowerCase().includes('director');
   });
 
   return activeDirectors
@@ -42,11 +43,11 @@ function getActiveOfficers(officersList) {
 
   return items.filter(officer => {
     if (!officer || officer.resigned_on) return false;
-    if (!officer.officer_role) return false;
+    if (!officer.officer_role && !officer.role) return false;
     return true;
   }).map(officer => ({
     name: parseOfficerName(officer.name),
-    role: officer.officer_role,
+    role: officer.officer_role || officer.role,
     rawName: officer.name
   }));
 }
