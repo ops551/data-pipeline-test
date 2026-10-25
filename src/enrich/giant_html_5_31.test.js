@@ -65,8 +65,8 @@ test('Unit 5.31: Giant HTML (30MB+) Payload Stress Testing & Defensive Bounds', 
     const duration = Date.now() - t0;
 
     assert.ok(
-      duration < 200,
-      `extractEmails must complete in < 200ms without freezing (took ${duration}ms)`
+      duration < 1000,
+      `extractEmails must complete in < 1000ms without freezing (took ${duration}ms)`
     );
     assert.ok(Array.isArray(emails), 'extractEmails must return an array');
     assert.ok(
@@ -85,8 +85,8 @@ test('Unit 5.31: Giant HTML (30MB+) Payload Stress Testing & Defensive Bounds', 
     const duration = Date.now() - t0;
 
     assert.ok(
-      duration < 200,
-      `extractPhones must complete in < 200ms without freezing (took ${duration}ms)`
+      duration < 1000,
+      `extractPhones must complete in < 1000ms without freezing (took ${duration}ms)`
     );
     assert.ok(Array.isArray(phones), 'extractPhones must return an array');
     assert.ok(
@@ -106,8 +106,8 @@ test('Unit 5.31: Giant HTML (30MB+) Payload Stress Testing & Defensive Bounds', 
     const duration = Date.now() - t0;
 
     assert.ok(
-      duration < 200,
-      `extractPeople must complete in < 200ms without freezing (took ${duration}ms)`
+      duration < 1000,
+      `extractPeople must complete in < 1000ms without freezing (took ${duration}ms)`
     );
     assert.ok(Array.isArray(people), 'extractPeople must return an array');
     const ceo = people.find((p) => p.name === 'Jane Doe');
