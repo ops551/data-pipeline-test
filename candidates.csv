@@ -1,54 +1,162 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17214020,ST GEORGE'S CAFE LTD,2026-05-12,active,ltd,56102,"St George's Church, Barnett Wood Lane, Ashtead, KT21 2DA, United Kingdom",no
-17214035,L&A VAN CENTRE LTD,2026-05-12,active,ltd,45190,"259 Copnor Road, Portsmouth, Hampshire, PO3 5EE, United Kingdom",no
-17214031,RAHAND BARBERS LTD,2026-05-12,active,ltd,96020,"57 High Street, Holbeach, Spalding, PE12 7DY, England",no
-17214152,PROPOSALFLOWZ LTD,2026-05-12,active,ltd,62012,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17214151,MUGG&BEAN CAFE LTD,2026-05-12,active,ltd,56102;56103;56290,"115 London Road, Morden, SM4 5HP, England",no
-17214158,SWITA GLOBAL LTD,2026-05-12,active,ltd,62012;63120;79909,"275 New N Rd, Unit 3051, London, London, N1 7AA, United Kingdom",no
-17214558,BLACKCREST FACILITIES GROUP LIMITED,2026-05-12,active,ltd,81210,"8 Coed-Yr-Ynn, Cardiff, CF14 6PH, Wales",no
-17214560,EAO FARM LTD,2026-05-12,active,ltd,41201;49410,"90 Rhodeswell Road, London, E14 7TL, England",no
-17214515,A BARBERS LTD,2026-05-12,active,ltd,96020,"218 Oldham Road, Failsworth, Manchester, M35 0HH, England",no
-17214522,AFERTIX LIMITED,2026-05-12,active,ltd,47910;63120;96090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17214546,REDVERS LOVE LTD,2026-05-12,active,ltd,43290,"57 Southend Road, Grays, RM17 5NL, United Kingdom",no
-17214578,MISSED TO BOOKED LTD,2026-05-12,active,ltd,62090,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17214511,BINARY INTELLIGENCE LIMITED,2026-05-12,active,ltd,62020,"51 Middleton Street, Derby, DE23 8QJ, England",no
-17214532,BRISTOL KEBAB HOUSE LTD,2026-05-12,active,ltd,56103,"140 Ashley Road, Bristol, BS6 5PA, England",no
-17214992,TRANSPORTMGR LTD,2026-05-12,active,ltd,58290,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17215001,ML AUTO PARTS LTD,2026-05-12,active,ltd,45310;45320;45400,"4 First Drive, London, NW10 8LG, England",no
-17214997,TELECODE SOLUTIONS LTD,2026-05-12,active,ltd,61900;62090,"Office 12 Initial Business Centre, Wilson Business Park, Manchester, M40 8WN, United Kingdom",no
-17214990,YORKSHIRE DRYLINING SOLUTIONS LIMITED,2026-05-12,active,ltd,43310,"53 Lumley Avenue, Kingswood, Hull, HU7 3GX, England",no
-17214996,BYBAEFII LTD,2026-05-12,active,ltd,96020,"6 Aldersley Walk, Plymouth, PL6 5LQ, England",no
-17215012,PRIMECORE IT SOLUTIONS LTD,2026-05-12,active,ltd,62020;62090,"5 Harrys Place, Buckles Lane, South Ockendon, RM15 6RZ, England",no
-17215026,RADIATE LONDON LTD,2026-05-12,active,ltd,93290;94990,"17 Partridge Road, St. Albans, AL3 6HH, England",no
-17212429,GM RETROFIT LTD,2026-05-12,active,ltd,43220;43999,"50 Beechfield Road, Swinton, Manchester, M27 5RA, England",no
-17212690,GARETH DAVIES INTERIORS LTD,2026-05-12,active,ltd,74100,"Highmead, 107 Park Street, Bridgend, CF31 4AZ, Wales",no
-17212670,PERI KINGDOM LTD,2026-05-12,active,ltd,56102,"Suite Ss Avon House, 435 Stratford Road, Shirley, Solihul, B90 4AA, England",no
-17212673,JJ-BRICKWORK & BUILDING LTD,2026-05-12,active,ltd,41202,"14 Brookfield, Edenbridge, TN8 6NJ, United Kingdom",no
-17212816,TRUST THE CRUST LTD,2026-05-12,active,ltd,56103,"91 Barrowcliff Road, Scarborough, YO12 6EX, England",no
-17212818,LOVE THE PROCESS LTD,2026-05-12,active,ltd,86900;96090,"71 Knoll Crescent, Northwood, HA6 1HH, England",no
-17212813,TSZS-UK LIMITED,2026-05-12,active,ltd,56103,"42 Brougham Street, Burnley, BB12 0AT, England",no
-17212824,INTERNATIONAL UROLOGY CANCER SUMMIT C.I.C.,2026-05-12,active,private-limited-guarant-nsc,85590;86900,"38 Cotton Way, Havant, PO9 3FT, England",no
-17212942,FILIPPE SERVICE LIMITED,2026-05-12,active,ltd,41201;41202,"8 St. Clair Street, Crewe, CW2 6HB, England",no
-17212944,86B BEAUTY BAR LTD,2026-05-12,active,ltd,96020,"86b High Street, Huntingdon, PE29 3DP, England",no
-SC889289,KERR SMITH LTD,2026-05-12,active,ltd,68310;69102,"139 Liberton Brae, Edinburgh, EH16 6LD, United Kingdom",no
-17212931,ODAGIU CONSTRUCTION LTD,2026-05-12,active,ltd,41202,"213 Chislehurst Road, Petts Wood, Kent, BR5 1NP, England",no
-17212932,W1 DIGITAL LTD,2026-05-12,active,ltd,62012;62020;73110,"57a Wimpole Street, London, W1G 8YP, United Kingdom",no
-17212921,BONBON BOOM LTD,2026-05-12,active,ltd,55209,"29 Thorneycroft Lane, Downhead Park, Milton Keynes, MK15 9BB, England",no
-17212922,LANDON DECOR LTD,2026-05-12,active,ltd,43341;43390,"21 Hornbeam Terrace Winchcombe Road, Carshalton, SM5 1RU, England",no
-17212915,ZEBA GROUP LIMITED,2026-05-12,active,ltd,96090,"Unit 33 Bridport Place, London, N1 5FH, United Kingdom",no
-17212930,BASSETLAW SPECIALIST JOINERY LTD,2026-05-12,active,ltd,43320,"The Warehouse, Canal Street, Retford, Nottinghamshire, DN22 6EZ, United Kingdom",no
-17212929,SUDAA LTD,2026-05-12,active,ltd,62020,"7 Augustine Grove, Birmingham, B18 5HA, England",no
-NI740529,C RICHARDSON VENTURES LTD,2026-05-12,active,ltd,96020,"6 Fairfields Avenue, Lisburn, BT28 3WF, Northern Ireland",no
-17213299,RESONANCE TECHNOLOGY LIMITED,2026-05-12,active,ltd,62012,"30 Bankside, Kidlington, OX5 1JE, England",no
-17213304,P & P INTEGRATED LIMITED,2026-05-12,active,ltd,43390;49420;81100;81210,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17213364,STREET CRUNCH LTD,2026-05-12,active,ltd,56103,"43 Masshouse Lane, Kings Norton, Birmingham, B38 9AS, England",no
-17213367,QUALITY DUCTWORK SOLUTIONS LIMITED,2026-05-12,active,ltd,43390,"27 Larch Close, London, N11 3NU, England",no
-17213577,CCC ENGINEERING LIMITED,2026-05-12,active,ltd,43999,"Cabourn House, Station Street, Bingham, Nottinghamshire, NG13 8AQ, England",no
-17213587,LULO DIGITAL MEDIA LTD,2026-05-12,active,ltd,59112;73110;90030,"Flat 123 The Warehouse Memorial Avenue, Slough, SL1 3HY, England",no
-SC889325,ABKRISPYK LIMITED,2026-05-12,active,ltd,56103,"230 Smithycroft Road, Glasgow, G33 2QZ, Scotland",no
-17213569,MAETH LTD,2026-05-12,active,ltd,62012,"58 Llanmead Gardens, Rhoose, Barry, CF62 3HX, Wales",no
-17213991,A-PLAYER AI LTD,2026-05-12,active,ltd,62012,"21a Hormead Road 21 Hormead Road, Flat A, London, W9 3NQ, United Kingdom",no
-17214002,VOHOLABS LTD,2026-05-12,active,ltd,62012;62020;62090,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17224447,OUTERWORKS LTD,2026-05-16,active,ltd,43999,"41 Northdown Close, Ruislip, HA4 6JY, United Kingdom",no
+SC889896,BAKESTER ONTHEGO LIMITED,2026-05-16,active,ltd,47240,"94/10 West Ferryfield, Edinburgh, EH5 2PU, Scotland",no
+17224522,ALL IN ONE FLOORING LTD,2026-05-16,active,ltd,43330,"69 Fleming Mead, Mitcham, CR4 3LZ, England",no
+17221768,SPELLBROOK HAND CARWASH LTD,2026-05-15,active,ltd,81299,"The Sidings Spellbrook Lane East, Spellbrook, Bishop's Stortford, CM22 7SE, United Kingdom",no
+17221802,THE GREENSLATE COLLECTIVE CIC,2026-05-15,active,private-limited-guarant-nsc,85590;85600;96040,"8 Sandy Lane, Orrell, Wigan, WN5 7AY, England",no
+17222111,CH MICKLETHWAITE LTD,2026-05-15,active,ltd,41202,"Wharfe View Chapel Hill Lane, Castley, Otley, West Yorkshire, LS21 2ST, England",no
+17221836,JDH TECH CONSULTING LIMITED,2026-05-15,active,ltd,62020,"17 Moor Park Avenue, Preston, PR1 6AS, England",no
+17222249,EMERGENCY HEALTHCARE ACCESS JAMAICA CIC,2026-05-15,active,private-limited-guarant-nsc,85590;86900;88990,"61 Bridge Street, Kington, HR5 3DJ, United Kingdom",yes
+17222267,COX ROOFING AND CONSTRUCTION SERVICES LTD,2026-05-15,active,ltd,43910,"137 Parklands, Malmesbury, SN16 0QL, England",no
+17222253,K&L PROPERTY SERVICES LTD,2026-05-15,active,ltd,55209,"61 Bridge Street, Kington, HR5 3DJ, United Kingdom",yes
+17222331,PRISTINE POLISH PRO LTD,2026-05-15,active,ltd,81210;81222,"36 Hazlemere Marina, Waltham Abbey, EN9 1FJ, England",no
+17222325,3D GROUNDWORKS LTD,2026-05-15,active,ltd,43999,"70 Maes Y Dre, Abergelle, LL22 7HP, United Kingdom",no
+17222323,KMG GLOBAL SERVICES LTD,2026-05-15,active,ltd,46420;46900;47910;73110,"571 Uppingham Road, Leicester, LE5 6QA, England",no
+17222502,MELEK DRYWALL LTD,2026-05-15,active,ltd,43290,"9 Chadview Court, Chadwell Heath Lane, Chawell Heath, RM6 4BF, England",no
+17222498,ONESTYLE TRADING LIMITED,2026-05-15,active,ltd,96090,"72 Halliwick Road, London, N10 1AB, United Kingdom",no
+17222482,NODE CLINICAL LAB LTD,2026-05-15,active,ltd,86900,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17222780,CLAIMREADY LTD,2026-05-15,active,ltd,58290,"20 Wenlock Road, London, N1 7GU, England",yes
+17222760,YAMATO MEDIA LTD,2026-05-15,active,ltd,62020;70210;73110;73120,"20 Wenlock Road, London, N1 7GU, England",yes
+17222757,MTP HEATING AND PLUMBING SERVICES LTD,2026-05-15,active,ltd,43220,"14 Tolworth Rise South, Surbiton, KT5 9NN, England",no
+17222763,REHMAN MASTER BUTCHERS LTD,2026-05-15,active,ltd,47220,"92 Manningham Lane, Bradford, BD1 3ES, England",no
+17222980,THE ASSEMBLY ROOMS NEWARK LIMITED,2026-05-15,active,ltd,56102;68202;82301;90040,"Assemble Church, Barnby Gate, Newark, NG24 1PX, United Kingdom",no
+17222982,HEXADIUS CONSULTING LIMITED,2026-05-15,active,ltd,62090,"4th Floor Office, 205 Regent Street, London, W1B 4HB, England",yes
+17222972,C R PLUMBING CONTRACTORS LIMITED,2026-05-15,active,ltd,43220,"23 Fletcher Way, Angmering, Littlehampton, BN16 4HG, England",no
+17222987,PLUM BEAUTY LTD,2026-05-15,active,ltd,96020,"Plum Beauty Ltd Hair& Beauty Lounge, Ground Floor Mercia House, London, SE13 6BJ, United Kingdom",no
+17222989,AH&SON CONSTRUCTION LTD,2026-05-15,active,ltd,16230;41201;41202,"203 West Street, Fareham, Hampshire, PO16 0EN, England",no
+17222996,RWTQ LTD,2026-05-15,active,ltd,86900,"2-4 Gerston Road, Paignton, Devon, TQ4 5EA, England",no
+17223173,PLATINUM VEHICLE ASSISTANCE LTD,2026-05-15,active,ltd,45112;45200;66220;77110,"Unit 2 237 Ilford Lane, Ilford, IG1 2SB, England",no
+NI740668,Z-COIN LTD,2026-05-15,active,ltd,62090;63120;72190;72200,"108 Carrickvale Manor, Craigavon, County Armagh, BT66 8QH, Northern Ireland",no
+17223193,STONEBNK DEVELOPMENTS LTD,2026-05-15,active,ltd,41202,"27 Westbury Street, Elland, HX5 9AT, United Kingdom",no
+NI740667,ZENITH-TITAN LTD,2026-05-15,active,ltd,62090;63120;72190;72200,"108 Carrickvale Manor, Craigavon, County Armagh, BT66 8QH, Northern Ireland",no
+17223162,RECALL LABS LIMITED,2026-05-15,active,ltd,62090,"Henwood House, Henwood, Ashford, Kent, TN24 8DH, United Kingdom",no
+17223370,ROBUST POLISHING LTD,2026-05-15,active,ltd,43390,"3 The Mill Stuart Works, High Street, Stourbridge, DY8 4FA, England",no
+17223379,AATHAVAN CATERING LTD,2026-05-15,active,ltd,56102;56103;56210,"4 Dominion Building, Dominion Road, Worthing, BN14 8LE, United Kingdom",no
+17223387,UPPER CELESTIAL LIMITED,2026-05-15,active,ltd,47710,"Office 18493 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
+17223389,AHKIRAH LTD,2026-05-15,active,ltd,14190;46420;47710;47910,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17223692,STK CONVENIENCE LTD,2026-05-15,active,ltd,47110,"3-5 Town Street, Pinxton, Nottingham, NG16 6HH, England",no
+17223690,WELLPEP LTD,2026-05-15,active,ltd,86900,"142 Cromwell Road, London, SW7 4EF, England",no
+17223685,JG TYRE AND EXHAUSTS LIMITED,2026-05-15,active,ltd,45200,"Boston House, 2a Boston Road, Henley-On-Thames, Oxfordshire, RG9 1DY, United Kingdom",no
+17223681,MEDS2YOU(DUDLEY) LTD,2026-05-15,active,ltd,47730,"Unit 2 Carnegie Court The Broadway, Farnham Common, Slough, SL2 3GQ, England",no
+17223688,AR UK SOLUTIONS LIMITED,2026-05-15,active,ltd,62090,"27 The Mount, Rickmansworth, WD3 4DW, England",no
+17223790,FACES BY PARIS LTD,2026-05-15,active,ltd,96020,"Bizspace Earl Business Centre, Suite 103a Dowry Street, Oldham, OL8 2PF, England",no
+17223793,WAKEFIELD ROAD STORE LTD,2026-05-15,active,ltd,47190,"87-89 Wakefield Road, Huddersfield, HD5 9AB, England",no
+17223794,ROOT COMMERCE LTD,2026-05-15,active,ltd,62012;62020;62090,"Flat 11 Marina Towers, The Marina, Bournemouth, BH5 1BJ, England",no
+17223975,NORTHSTARSOLUTIONZ LTD,2026-05-15,active,ltd,62012,"5 Sandstone Rise, Chatham, ME5 9DH, England",no
+17223972,STANTON CATERING SERVICES LTD,2026-05-15,active,ltd,56210,"3 West Street, Leighton Buzzard, LU7 1DA, United Kingdom",no
+17224063,BALKAN GAMES LTD,2026-05-15,active,ltd,45112;45310;62012,"Flat 2 218 Burnt Oak Broadway, Edgware, HA8 0AP, England",no
+17224060,FOEB LIMITED,2026-05-15,active,ltd,62020,"Flat 58 Arrol House, Rockingham Street, London, SE1 6QL, England",no
+17224045,HALAL CATERING SERVICES LTD,2026-05-15,active,ltd,56103;56210;56290,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17224257,THE WHOLE HEART PRACTICE LIMITED,2026-05-15,active,ltd,86900;87200,"167-169 Great Portland Street, London, W1W 5PF, England",yes
+17224258,STYLINGINBLOOM LTD,2026-05-15,active,ltd,74100,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17224286,PREMIUM DETAILING UK LTD,2026-05-15,active,ltd,96090,"42 Rayleigh Road, Woodford Green, IG8 7HF, England",no
+17220384,THESWANINNMARYPORT LIMITED,2026-05-14,active,ltd,56302,"The Swan Inn, Main Street, Maryport, CA15 7DX, United Kingdom",no
+17220371,GENERAL GROCERS PRIVATE LIMITED,2026-05-14,active,ltd,96090,"2 Keats Avenue, London, E16 1TW, United Kingdom",no
+17220393,MIDLAND ENERGY LTD,2026-05-14,active,ltd,43220,"51 Common Road, Wolverhampton, West Midlands, WV5 0HE, United Kingdom",no
+17220392,KRAVE & CO UK LTD,2026-05-14,active,ltd,56290,"7a Alexandra Terrace, Northampton, NN2 7SJ, United Kingdom",no
+17220505,0XOS1 TECK LTD,2026-05-14,active,ltd,61300;62012,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17220504,TRAFIKIO LIMITED,2026-05-14,active,ltd,58290;63110;73110,"Dixcart House Addlestone Road, Bourne Business Park, Addlestone, Surrey, KT15 2LE, United Kingdom",no
+17220757,BARRACK CONVENIENCE LIMITED,2026-05-14,active,ltd,47110,"29a Barrack Road, Hounslow, TW4 6AF, England",no
+17220756,RG AESTHETICS LTD,2026-05-14,active,ltd,96020,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17220766,MESOPOTAMIA ISLAMIC ARTS LTD,2026-05-14,active,ltd,47791;74909;96090,"Octavia House, 8 Homer Street, London, W1H 4NX, England",no
+17220778,JBNHOLDINGS LTD,2026-05-14,active,ltd,47190,"215 West End Lane, London, NW6 1XJ, England",no
+17221042,FALCON FELT ROOFING LIMITED,2026-05-14,active,ltd,43910,"171 Avenue Parade, Accrington, BB5 6QA, United Kingdom",no
+17221045,CLARENTIX LIMITED,2026-05-14,active,ltd,62012;62020,"Suite A, James Carter Road, Mildenhall, IP28 7DE, England",no
+17221037,LOCATE CLOTHING LTD,2026-05-14,active,ltd,14190;47910;74100,"Border Cottage, 168 High Street, Wickham Market, Suffolk, IP13 0QY, United Kingdom",no
+17221034,HANDI LOUNGE LTD,2026-05-14,active,ltd,56102,"34, Unit - R4 Plashet Grove, London, E6 1AE, United Kingdom",no
+17221055,TXCRYPTO LTD,2026-05-14,active,ltd,62012,"124 City Road, London, EC1V 2NX, United Kingdom",yes
+17221057,LAVIE NAILS & BEAUTY LTD,2026-05-14,active,ltd,96020,"12 Shoe Market, Pontefract, WF8 1AP, England",no
+17221310,YEHSSUB LTD,2026-05-14,active,ltd,56103,"Upper Flat, 17 Pains Road, Southsea, PO5 1HE, England",no
+SC889740,HARVEYSONS LTD,2026-05-14,active,ltd,41202,"Flat 34 3 Greenhill Court, Rutherglen, Glasgow, G73 2DH, Scotland",no
+17221305,PAINTMATCHUK LTD,2026-05-14,active,ltd,73110,"0ffice 4, Bridgwater Baptist Church, St Mary Street, Bridgwater, TA6 3EQ, United Kingdom",no
+17221306,TOMORI KITCHEN LTD,2026-05-14,active,ltd,56103,"812 Mercer West St. Cecilia Street, Leeds, LS2 7FB, England",no
+17221323,ROMEYS RESTAURANT LIMITED,2026-05-14,active,ltd,56101,"125 Featherstone Court Dudley Road, Southall, UB2 5GR, England",no
+17221302,AE SERVICES LTD,2026-05-14,active,ltd,56103,"40 Enville Road, Salford, M6 7JU, England",no
+17221417,LVO CONSULTING LTD,2026-05-14,active,ltd,62020,"4th Floor Office, 205 Regent Street, London, W1B 4HB, England",yes
+17221542,DECIDR LTD,2026-05-14,active,ltd,58290,"82, Suite A James Carter Road, Bury St. Edmunds, IP28 7DE, United Kingdom",no
+17216510,ELITE FADE LIMITED,2026-05-13,active,ltd,96020,"29-31 B Market Street, Bridgend, CF31 1LJ, Wales",no
+17216526,THE MOOR CLUB LTD,2026-05-13,active,private-limited-guarant-nsc,56301,"35 Heaton Moor Road, Stockport, SK4 4PB, England",no
+17216515,SSL ENVIRONMENTAL GROUP LTD,2026-05-13,active,ltd,25990;43341;84250,"Unit 7a Ash Park Business Centre Ash Lane, Little London, Tadley, RG26 5FL, England",no
+17216517,BORISUPPLY LTD,2026-05-13,active,ltd,46450;47750;47799;47890,"61 Bridge Street, Kington Herefordshire, HR5 3DJ, United Kingdom",no
+17216605,KLUMBO STUDIO LTD,2026-05-13,active,ltd,74100,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17216594,LEGENDS CARNIVAL (GB) LTD,2026-05-13,active,ltd,93290,"4 Newmans Row Lincoln Road, Cressex Business Park, High Wycombe, HP12 3RE, England",no
+17216600,RACHEL GREEN DONOVAN LTD,2026-05-13,active,ltd,73110,"16 School Road, Hampton Hill, Hampton, TW12 1QL, England",no
+17216591,ONESOURCE PROPERTY SOLUTIONS LTD,2026-05-13,active,ltd,81210;81300,"Pandle House, 70 Grange Road East, Wirral, CH41 5FE, United Kingdom",no
+SC889455,NESTBABY LIMITED,2026-05-13,active,ltd,85590;86900,"22c Corstorphine Road, Edinburgh, Midlothian, EH12 6HP, Scotland",no
+17216596,THE BAREFOOT COLLECTIVE LTD,2026-05-13,active,ltd,55209;96040,"5 Brayford Square, London, E1 0SG, United Kingdom",yes
+17216734,HWD SYSTEMS LTD,2026-05-13,active,ltd,62012,"82a James Carter Road, Mildenhall, Bury St. Edmunds, IP28 7DE, England",yes
+SC889463,CODEXWAY LTD,2026-05-13,active,ltd,62012,"Office 1580 3 Fitzroy Place, 1/1 Sauchiehall Street, Finnieston, Glasgow Central, G3 7RH, United Kingdom",no
+17216879,THE OLD BOY BARBERS LTD,2026-05-13,active,ltd,96020,"47 Church Street, Sheffield, S1 2GL, England",no
+17216877,BOCLAIR SITE SERVICES LIMITED,2026-05-13,active,ltd,43290,"192 Victoria Street, Grimsby, DN31 1NX, England",no
+17216875,NORDEL LTD,2026-05-13,active,ltd,73110,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17216842,MALLETT SOLUTIONS LTD,2026-05-13,active,ltd,62020,"Chantry House, 22 Upperton Road, Eastbourne, East Sussex, BN21 1BF, United Kingdom",no
+17216861,B.C DRIVEWAYS AND BRICKWORK LTD,2026-05-13,active,ltd,43390;43999,"Unit 2 Carnegie Court The Broadway, Farnham Common, Slough, SL2 3GQ, England",no
+17216845,MISS GAS LIMITED,2026-05-13,active,ltd,43220,"Unit 1.25 Cannock Chase Enterprise Centre, Hednesford, Cannock, WS12 0QU, England",no
+SC889480,VICTORIA BOLES LIMITED,2026-05-13,active,ltd,86230,"Dental Accountants Scot - Cornerstone House Station Road, Td7 5dj, Selkirk, Scottish Borders, TD7 5DJ, United Kingdom",no
+17217013,ELECTRIC NIGHTS LTD,2026-05-13,active,ltd,56302,"70 Botchergate, Carlisle, CA1 1QL, United Kingdom",no
+17217022,OLIVIA CROFT LTD,2026-05-13,active,ltd,47750;47770;47910,"21 Brentbridge Road, Manchester, M14 6AU, England",no
+17217024,HIMALAYAN SPICE LIMITED,2026-05-13,active,ltd,56101,"42 Church Gate, Loughborough, LE11 1UE, England",no
+17217023,REBATE NEST LIMITED,2026-05-13,active,ltd,69203;73110,"International House, 66 Lavender Hill, London, SW11 5RQ, United Kingdom",no
+17217261,GMB SHOPLOCAL LTD,2026-05-13,active,ltd,47110,"37 Brighton Road, Derby, Derbyshire, DE24 8SZ, United Kingdom",no
+17217875,HAIRITAGE SPLIT ENDS LTD,2026-05-13,active,ltd,96020,"43 Round Hill Road, Pudsey, West Yorkshire, LS28 8BJ, United Kingdom",no
+17217876,MUDASIR SHEERYAKH LTD,2026-05-13,active,ltd,56102,"20-22 Stafford Street, Stoke-On-Trent, ST1 1JQ, England",no
+17218057,TEKI BIRD LTD,2026-05-13,active,ltd,47770;47890;47910,"167-169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
+17218048,LITM - PROPERTY MAINTENANCE SERVICES LTD,2026-05-13,active,ltd,43390,"Flat 305 93 Princess Road, Manchester, Greater Manchester, M14 4BR, England",no
+17218064,AARATHI LTD,2026-05-13,active,ltd,47110,"174 Union Street, Dunstable, LU6 1HB, United Kingdom",no
+17218272,NORTH COAST PHYSIO GROUP LIMITED,2026-05-13,active,ltd,96040,"52 Fore Street, Callington, Cornwall, PL17 7AJ, United Kingdom",no
+17218270,WARWICK MEZE MANGAL ( CYPRUS MANGAL ) LTD,2026-05-13,active,ltd,56101,"45 Warwick Way, London, SW1V 1QS, England",no
+SC889563,LAMONT & LAMONT LTD,2026-05-13,active,ltd,74100,"8 Mitchell Street, Dalkeith, EH22 1JQ, Scotland",no
+SC889579,CLAYMORE KILTS LIMITED,2026-05-13,active,ltd,47710,"46-52 Sandgate, Ayr, KA7 1BX, Scotland",no
+17218389,PARTYGAME LTD,2026-05-13,active,ltd,62012,"167-169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
+17218392,KIRKLEESATHEART LTD,2026-05-13,active,ltd,86900;88100;88990,"22 Holmfield Drive, Golcar, Huddersfield, HD7 4AY, England",no
+17218598,ARLO PROJECTS LTD,2026-05-13,active,ltd,41201,"47 Durrants Lane, Berkhamsted, HP4 3PL, England",no
+17218581,EXPERIENCE MAPBOOK LTD,2026-05-13,active,ltd,62012;72200;85600;86900,"65 Mumford Road, West Bergholt, Colchester, CO6 3BL, England",no
+17218584,ANN'S NAILS & SPA LTD,2026-05-13,active,ltd,96020,"300 Wells Road, Bristol, BS4 2QG, England",no
+17218580,WPC AI LIMITED,2026-05-13,active,ltd,62012;63110,"112-116 Whitechapel Road, London, E1 1JE, England",no
+17218692,M1 DETAILING LTD,2026-05-13,active,ltd,81222,"8 Adrian Avenue, London, NW2 1LX, United Kingdom",no
+17218733,JK26 FASHION LTD,2026-05-13,active,ltd,47710,"46 Laburnum Street, Taunton, TA1 1LB, England",no
+17218833,SHADOW OPERATIONS LTD,2026-05-13,active,ltd,73110,"7 Bracadale Avenue, Birmingham, B24 9HJ, United Kingdom",no
+17218838,SIGNATURE BARBERS (PLYMOUTH) LIMITED,2026-05-13,active,ltd,96020,"89 South Street, Exeter, EX1 1EQ, England",no
+17218951,AMBER CHICKEN LIMITED,2026-05-13,active,ltd,56103,"99 High Street, Southend-On-Sea, SS1 1HS, England",no
+17218942,HOODS BASKETBALL LTD,2026-05-13,active,ltd,93199,"1 Dart Court, Bingham, Nottingham, NG13 8YP, England",no
+17216080,CURIOSITY MATRIX LTD,2026-05-13,active,ltd,62012;72190,"20 Ashley Way, Market Harborough, LE16 7XD, England",no
+17216074,THE FORGE TELFORD LTD,2026-05-13,active,ltd,96090,"167-169 Great Portland Street, London, W1W 5PF, England",yes
+17216899,STANMORE FOOD CENTRE LTD,2026-05-13,active,ltd,47110,"565 Green Lanes, London, N8 0RL, England",no
+17216904,MOONELA LIMITED,2026-05-13,active,ltd,47770,"27 Old Gloucester Street, London, WC1N 3AX, United Kingdom",yes
+17216892,L&C INNS LIMITED,2026-05-13,active,ltd,56302,"47 Ansdell Road, Blackpool, FY1 6PW, England",no
+17216891,PROPER PROJECTS LTD,2026-05-13,active,ltd,41202,"43-45 High Road, Bushey Heath, WD23 1EE, England",no
+17216886,THE AGENT LIST LTD,2026-05-13,active,ltd,93199,"7 Bell Yard, London, WC2A 2JR, England",no
+17217153,THE SISTERS PUB CO LTD,2026-05-13,active,ltd,56302,"100 Westgate Street, Gloucester, GL1 2PE, England",no
+17217159,CITY CONSTRUCTION & ROOFING LTD,2026-05-13,active,ltd,41202;43910,"757 City Road, Sheffield, S12 2AA, England",no
+17217160,THE COFFEE EDIT WITH GATHER BY GRAY LIMITED,2026-05-13,active,ltd,56102,"22 Latimer Park Latimer, Chesham, HP5 1TU, England",no
+17217145,DONCASTER FRIENDLY SHOP LTD,2026-05-13,active,ltd,47110;47260,"57 Beckett Road, Doncaster, DN2 4AD, England",no
+17217152,WHOLESOME CARE SERVICES LTD,2026-05-13,active,ltd,86900,"27 Almond Avenue, Peterborough, PE7 2GS, United Kingdom",no
+SC889502,M J JOINERY SERVICES SCOTLAND LTD,2026-05-13,active,ltd,43320,"270 Airbles Road, Motherwell, ML1 3AT, Scotland",no
+17216128,FRONISI CONSULTING SERVICES LIMITED,2026-05-13,active,ltd,62020,"Flat 11 Hampton Court, Ormskirk, Lancashire, L39 5RJ, England",no
+17217281,DOABA LOGISTICS LIMITED,2026-05-13,active,ltd,41202;49390;49410,"12 Callaghan Drive Tividale, Oldbury, West Midlands, B69 3NG, England",no
+17217292,KK KITCHEN AND BEDROOMS LTD,2026-05-13,active,ltd,43320,"77 Parlaunt Road, Slough, Berkshire, SL3 8BE, United Kingdom",no
+17217468,BYANCHORPRODUCTS LTD,2026-05-13,active,ltd,96020,"133b Deptford High Street, London, SE8 4NS, United Kingdom",no
+17217455,LA BARBERA BARBERS LIMITED,2026-05-13,active,ltd,47990;96020,"11 Rugby Road Cubbington, Leamington Spa, Warwickshire, CV32 7HZ, United Kingdom",no
+17217454,BRIEFLOW LTD,2026-05-13,active,ltd,62090,"5 Mount Grace Road, Daventry, NN11 2HD, England",no
+17217578,ALPHA SEC LABS LIMITED,2026-05-13,active,ltd,62012;62020;63110;72190,"7 Whitworth Court, Norwich, NR6 6GN, England",no
+17217969,BENEDITO SOVEREIGN NETWORKS LTD,2026-05-13,active,ltd,61900;62012;62020;63110,"Flat 4, 100 Mare Street, London, E8 3FG, England",no
+SC889554,ROSEWELLCHIP LIMITED,2026-05-13,active,ltd,56103,"122 Carnethie Street, Rosewell, EH24 9AL, Scotland",no
+17218130,MUD EQUESTRIAN LTD,2026-05-13,active,ltd,47710,"Office 6984 58 Peregrine Road, Hainault, Ilford, Essex, IG6 3SZ, United Kingdom",no
+17218136,BOULTON BUILDING SERVICES LTD,2026-05-13,active,ltd,41202,"16 Parkhall Croft, Birmingham, B34 7BU, England",no
+17218137,TEMPO HQ LTD,2026-05-13,active,ltd,93290,"42 Portsmouth Crescent, Basingstoke, RG22 6HJ, England",no
+17218156,CKR TECHNOLOGY GROUP LTD,2026-05-13,active,ltd,62012;62020;62090,"Unit A, 82 James Carter Road, Mildenhall, IP28 7DE, United Kingdom",yes
+17218458,ALLAND TIMBER LIMITED,2026-05-13,active,ltd,43330;46900;47910;74100,"7 Copperfield Road, Coventry, West Midlands, England, CV2 4AQ, United Kingdom",yes
+17218455,TEAMDAVE LTD,2026-05-13,active,private-limited-guarant-nsc,96090,"4 Church Street, Ducklington, Witney, OX29 7UG, England",no
+17218470,SAFEMOTION BALTIC LTD,2026-05-13,active,ltd,46690;47710,"Apartment 61, The Riverside, The Riverside, Derwent Street, Salford, M5 4SU, United Kingdom",no
+17218473,ALHANA MEDIA LTD,2026-05-13,active,ltd,62020;62090;63990,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17218577,HELMSMAN IMPORTS LTD,2026-05-13,active,ltd,46342;62012,"The Grain Barn, London Road, Binsted, Hampshire, GU34 4NU, United Kingdom",no
+17218566,DEXUS LTD,2026-05-13,active,ltd,43290,"36 Aston Road, Waterlooville, PO7 7XF, United Kingdom",no
+17218644,SEB PROJECTS LIMITED,2026-05-13,active,ltd,41202;43320;43341;43999,"57 Sutcliffe Street, Liverpool, L6 6AS, England",no
+17218654,NOBLE INTERIORS GROUP LIMITED,2026-05-13,active,ltd,41201,"5 St. Annes Road, Doncaster, DN4 5DY, England",no
+17218647,TANSLEY CERAMICS LIMITED,2026-05-13,active,ltd,41202,"Admirals Offices, The Historic Dockyard, Chatham, ME4 4TZ, United Kingdom",no
+17218776,VILLAGE COLCHESTER LIMITED,2026-05-13,active,ltd,56103,"319 Harwich Road, Colchester, CO4 3HR, England",no
+17218879,CJW MOTORSPORT LIMITED,2026-05-13,active,ltd,45200,"10 Westland Drive, Newark, Nottinghamshire, NG24 5BJ, England",no
+17218890,CK DESSERTS LTD,2026-05-13,active,ltd,56103,"18 Talbot Terrace, Birtley, Chester Le Street, DH3 2PQ, England",no
 17214091,L&J WIGGINTON LTD,2026-05-12,active,ltd,43330;43341,"23a The Precinct, London Road, Waterlooville, Hampshire, PO7 7DT, United Kingdom",no
 17214109,POKHARA KITCHEN LTD,2026-05-12,active,ltd,56102;56103;56290,"11/12 Hallmark Trading Centre Fourth Way, Wembley, Middlesex, HA9 0LB, United Kingdom",no
 17214110,RA ELECTRICS LIMITED,2026-05-12,active,ltd,43210,"15 Tilney Road, Southall, UB2 5LT, England",no
@@ -166,6 +274,81 @@ SC889384,LUXE BODY EDIT LIMITED,2026-05-12,active,ltd,96020,"80 Main Street, Ale
 17214821,IDLE SHARK LIMITED,2026-05-12,active,ltd,73110,"70 St Stephen's Road, London, E6 1AW, United Kingdom",no
 17214819,SYNTRAMARKET LTD,2026-05-12,active,ltd,58290;62012,"46 Sheffield Street, Carlisle, CA2 5DT, United Kingdom",no
 17214837,DAVID VLAD LIMITED,2026-05-12,active,ltd,43290,"66 Top Fair Furlong, Redhouse Park, Milton Keynes, MK14 5FT, England",no
+17212445,KEYSTONE FIRE SOLUTIONS LTD,2026-05-12,active,ltd,43290;43330,"33 Aylward Close, Ipswich, IP7 5SE, United Kingdom",no
+17212449,VIVIENT TECHNOLOGY LIMITED,2026-05-12,active,ltd,46510;62011;73110;77330,"Dd006 1 Dock Road, London, E16 1AH, England",no
+17212448,PROJECT SEND LIMITED,2026-05-12,active,ltd,62012,"102 Bromstone Road, Broadstairs, CT10 2HX, England",no
+17212607,N GREENAWAY CONSTRUCTION LTD,2026-05-12,active,ltd,41202,"10 Stoke Talmage, Thame, OX9 7EY, England",no
+17212603,FIZIUS LTD,2026-05-12,active,ltd,62012;62020;63110;63120,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17212779,MOS PARMOS LTD,2026-05-12,active,ltd,56101,"C/O Universal Accountants, 184, Normanton Road, Derby, DE23 6UX, United Kingdom",no
+SC889300,GREEN AURA NATURAL SKINCARE LTD,2026-05-12,active,ltd,96020,"C/O 21b High Street, Musselburgh, East Lothian, EH21 7AD, Scotland",no
+NI740532,WOODLAND & COASTAL PLAY - TRAINING & CONSULTANCY LTD,2026-05-12,active,ltd,85590;96040,"21 The Anchorage, Killyleagh, Downpatrick, BT30 9UH, Northern Ireland",no
+17213037,STRUCTURED DIGITAL CONSULTING LTD,2026-05-12,active,ltd,62020;62090;85590,"6 The Terrace Rugby Road, Lutterworth, Leicestershire, LE17 4BW, United Kingdom",no
+17213071,XARO LTD,2026-05-12,active,ltd,46900;81222,"Flat 2 55a High Street, London, E17 7AD, England",no
+17213048,LBR BESPOKE JOINERY LTD,2026-05-12,active,ltd,16230;43320,"319 Acton Lane, London, W3 8NT, England",no
+17213051,AMBS HOSPITALITY LTD,2026-05-12,active,ltd,56302,"Flat 22 Tyndal Court, Transom Square, London, E14 3TQ, England",no
+17213319,LIVLUVEAT LTD,2026-05-12,active,ltd,56102,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+SC889315,REALITY ENDS LTD,2026-05-12,active,ltd,47650;56102;93290,"23b Prospect Terrace, Aberdeen, AB11 7TB, Scotland",no
+17213314,ALL THE A'S WELLNESS LTD,2026-05-12,active,ltd,96040,"6 Ryton Close, Coventry, CV4 8HF, England",no
+17213487,TCC CH LTD,2026-05-12,active,ltd,93290,"Unit 17 Orbital 25 Business Park, Dwight Road, Watford, WD18 9DA, England",no
+17213491,MOSAZ CART LIMITED,2026-05-12,active,ltd,46450;47910;73110,"115 Croxton Avenue, Rochdale, OL16 2YE, England",no
+17213471,DOVE STUDIOS LTD,2026-05-12,active,ltd,74202,"146 Beckfield Lane, York, YO26 5QT, England",no
+17213514,SAXAN SOUL LTD,2026-05-12,active,ltd,56103,"55 Queens Market, London, E13 9BA, England",no
+17213517,CJEP ELECTRICAL LIMITED,2026-05-12,active,ltd,43210,"26 Westgate, Monk Bretton, Barnsley, S71 2DJ, England",no
+17213521,SPORTS MOTORS LTD,2026-05-12,active,ltd,45112;45200,"Unit 7 Wilsons Park, Monsall Road, Manchester, M40 8WN, England",no
+17213477,CLOTHING SUPPLY AND CO LTD,2026-05-12,active,ltd,47710,"8.3.1 Triumph House Blake Avenue, Gillingham, ME7 1FZ, United Kingdom",no
+17213931,MEADOWS HOLIDAY LETS (GOWER) LTD,2026-05-12,active,ltd,55209,"32/34 Victoria Gardens, Neath, West Glamorgan, SA11 3BH, Wales",no
+17213927,MADE IN GERMANY GLOBAL LIMITED,2026-05-12,active,ltd,58290;62090;63110;63120,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17213925,PROPERTY NET MAINTENANCE SERVICES LTD,2026-05-12,active,ltd,43390,"1st Floor 62 Duckworth Lane, Bradford, BD9 5HA, England",no
+17214141,THE GREATEST PEOPLE LTD,2026-05-12,active,ltd,62012,"9 Clark Drive, St. Neots, PE19 6DL, England",no
+17214226,BLAKEWOOD AUTOMOTIVE LTD,2026-05-12,active,ltd,45112;45190,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17214229,ROCKSTONE TECH LTD,2026-05-12,active,ltd,62090,"66 Saffron Way, Whiteley, Fareham, PO15 7LQ, England",no
+17214592,EDXSIM LTD,2026-05-12,active,ltd,58210;62090;63120,"Flat 6 1 Rathbone Market, London, E16 1GS, England",no
+17214610,NOODLE GRANTHAM LIMITED,2026-05-12,active,ltd,56103,"51 Bridge End Road, Grantham, NG31 6JN, England",no
+17214581,NK NAILS SPA LTD,2026-05-12,active,ltd,96020,"11 Hermit Road, London, E16 4HP, England",no
+17214596,RFS ELECTRICAL LTD,2026-05-12,active,ltd,43210,"2a Franklin Avenue, Whitwell, Worksop, S80 4PS, England",no
+17214934,PETER NEWMAN CLADDING LIMITED,2026-05-12,active,ltd,43999,"Unit A310 Liverpool Business Centre, 25 Goodlass Road, Liverpool, L24 9HJ, England",no
+17214989,APL INSULATION LTD,2026-05-12,active,ltd,43290,"14 Nero Way, Lincoln, LN6 8JP, United Kingdom",no
+17214987,MTSHARE LTD,2026-05-12,active,ltd,58290;62012;62020;62090,"49 College Road, Haywards Heath, RH16 1QR, England",no
+17214924,SWEETIFY LTD,2026-05-12,active,ltd,47110,"68 Merthyr Road, Cardiff, South Glamorgan, CF14 1DJ, United Kingdom",no
+17214949,BETTERBLOCK ELECTRICAL LIMITED,2026-05-12,active,ltd,43210,"24 Ellgreave Street, Stoke-On-Trent, ST6 4DH, England",no
+17214950,NETTORA LTD,2026-05-12,active,ltd,81222,"Flat 301, 3 Bowl Court, London, EC2A 3BH, United Kingdom",no
+17214957,HEXON ENERGY GROUP LTD,2026-05-12,active,ltd,41201;43210,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17215257,AFB VENTURES LTD,2026-05-12,active,ltd,47190,"47 Pine Street, Bolton, Lancashire, BL1 8JY, United Kingdom",no
+17215207,BUDGIES ELECTRICAL LTD,2026-05-12,active,ltd,43210,"295 Bridgend Road, Maesteg, Mid Glamorgan, CF34 0AX, United Kingdom",no
+17215252,RSG MOTORSPORT LTD,2026-05-12,active,ltd,73110;93199,"Gold Care Homes 2 Vine Street, First Floor, Uxbridge, UB8 1QE, United Kingdom",no
+17215472,KIT.APP LTD,2026-05-12,active,ltd,62012;62090,"84 Marryat Road, London, SW19 5BN, England",no
+17215468,MLN ECOM LTD,2026-05-12,active,ltd,70210;73110;73200,"Office 12 Initial Business Centre, Wilson Business Park, Manchester, M40 8WN, United Kingdom",no
+17215485,HEALTH MEDICAL INTELLIGENCE (HEMI) LIMITED,2026-05-12,active,ltd,46510;62012;62020;86900,"Belgrave House, 39-43 Monument Hill, Weybridge, KT13 8RN, United Kingdom",no
+17215454,JOINERYOS LTD,2026-05-12,active,ltd,16230;62012,"66 Paul Street, London, EC2A 4NA, England",yes
+17215457,OFB FINTECH LTD,2026-05-12,active,ltd,62020;62090,"Office 1247 60 Tottenham Court Road, Fitzrovia, London, W1T 2EW, United Kingdom",no
+17215476,LIFENEX LTD,2026-05-12,active,ltd,46900;47910;62020;62090,"29 Drove Road, Weston-Super-Mare, BS23 3NN, England",no
+17215478,TANTYLOU LTD,2026-05-12,active,ltd,86900,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17215707,GLA AESTHETICS LTD,2026-05-12,active,ltd,96020,"7 Horsham Road, Crawley, RH11 7AY, England",no
+17215774,NABBLY LTD,2026-05-12,active,ltd,62012,"1, 21 Denmark Terrace, Brighton, BN1 3AN, United Kingdom",no
+17215767,MBB PROJECTS LIMITED,2026-05-12,active,ltd,41202,"5 Cameo Court, Aylesbury, HP18 0RJ, England",no
+17215848,TALEJU NEWA KITCHEN LTD,2026-05-12,active,ltd,56101,"237 Plumstead High Street, London, SE18 1HF, England",no
+17215862,THE SHAPE STUDIO MK LTD,2026-05-12,active,ltd,96020,"7 Middle Weald, Calverton, Milton Keynes, MK19 6EJ, England",no
+17215955,GMCI GROUP UK LTD,2026-05-12,active,ltd,47910;62012;62090;63110,"66 Paul Street, London, EC2A 4NA, England",yes
+17216040,INCENTIVE CONSULTING LTD,2026-05-12,active,ltd,62020,"42 Rudolph Road, London, E13 0DP, England",no
+17216050,R & R INDIA LIMITED,2026-05-12,active,ltd,56102,"29 Church Street, Warrington, WA1 2SS, England",no
+SC889442,JAISHAN JENOSH LTD,2026-05-12,active,ltd,47110,"104 Gibb Street, Chapelhall, Airdrie, ML6 8UG, Scotland",no
+17216043,SHINE CONSTRUCTION LONDON LTD,2026-05-12,active,ltd,41202;43390,"86 London Road, Barking, IG11 8DD, England",no
+17216042,UNA FRESH AND CO LTD,2026-05-12,active,ltd,81299,"3 Lancing Road, Feltham, TW13 4LN, England",no
+17215344,KJEMPETANKE LIMITED,2026-05-12,active,ltd,46450;81299,"Piccadilly Business Centre  Unit C Aldow Enterpris Park, Blackett Street, Manchester, M12 6AE, United Kingdom",no
+17215327,CLICKVERSE LTD,2026-05-12,active,ltd,47540;47710;47721;47722,"Office 18759 182-184 High Street North, East Ham, London, E6 2JA, United Kingdom",no
+17215335,WAXMONKEY LTD,2026-05-12,active,ltd,81222,"20 Emlyn Road, London, W12 9TD, United Kingdom",no
+17215567,MATILDA’S GROUP LTD,2026-05-12,active,ltd,56103,"43c Buckingham Street, Aylesbury, HP20 2NQ, England",no
+17215572,BOLDOVANSKI LIMITED,2026-05-12,active,ltd,46770;56290;86900,"41 Reams Close, Fishtoft, Boston, PE21 0LL, England",no
+17215545,WELLI PROPERTIES 36 LIMITED,2026-05-12,active,ltd,68310,"448 Lower Broughton Road, Salford, M7 2FG, England",no
+17215546,LA DOLCE DELI LTD,2026-05-12,active,ltd,56102,"66 Almond Avenue, London, W5 4AB, England",no
+17215719,AVALON FENCING LTD,2026-05-12,active,ltd,43999,"30 Strawberry Hill, Street, BA16 9NB, United Kingdom",no
+17215727,PHOTOGRAPHY TODAY LTD,2026-05-12,active,ltd,74201;74202,"66 Bridgewater Road, Altrincham, WA14 1LZ, United Kingdom",no
+17215801,THE GOLDEN HOUSE OF SHAMPOO LTD,2026-05-12,active,ltd,58210;59112;61200;62020,"Director's Office No.50, Unit C Aldow Enterprise Park, Blackett Street Manchester, M12 6AE, United Kingdom",no
+17215800,KP AUTO SALES LTD,2026-05-12,active,ltd,45112,"36 Cornwall Avenue, Southall, UB1 2TB, England",no
+17215807,720 DEGREES CIC,2026-05-12,active,private-limited-guarant-nsc,88990;93110;96040,"Kingham Chambers, 5 Nelson Street, Liverpool, Merseyside, L1 5DW, United Kingdom",no
+17215806,D&E CAFE LTD,2026-05-12,active,ltd,56102,"124-128 City Road, London, EC1V 2NX, England",yes
+SC889433,WHITBURN SHOP LTD,2026-05-12,active,ltd,96020,"38 Mayfield Drive, Armadale, Bathgate, EH48 2JE, Scotland",no
+17216064,TOWER PLUMBING & HEATING SERVICES LTD,2026-05-12,active,ltd,43220,"40 Salisbury Avenue, Gillingham, ME8 0BH, England",no
 17209279,BGR GROUP LTD,2026-05-11,active,ltd,56290,"367 Hanworth Road, Hounslow, TW4 5LF, United Kingdom",no
 17209300,CLEANIX SOLUTIONS CIC,2026-05-11,active,ltd,81210,"1 Duncan Street, Salford, M7 2FU, England",no
 17209643,KENDAL LOCAL STORE LTD,2026-05-11,active,ltd,47190,"70 Stramongate, Kendal, LA9 4BD, England",no
@@ -532,6 +715,63 @@ SC889224,O.ERSKINE SERVICES LTD,2026-05-11,active,ltd,41202,"17 Elm Road, Bathga
 17212169,JB DECOR KENT LTD,2026-05-11,active,ltd,43341,"1 Evans Close, Greenhithe, Kent, DA9 9PG, United Kingdom",no
 17212400,46R LTD,2026-05-11,active,ltd,56101,"91 High Street, Cefn Coed, Merthyr Tydfil, CF48 2PN, Wales",no
 17212404,READING MEAT LIMITED,2026-05-11,active,ltd,47220,"319 London Road, Reading, RG1 3NZ, England",no
+SC889086,HELLOTECH LTD,2026-05-11,active,ltd,62020,"1 Queens Lane, Bridge Of Allan, Stirling, FK9 4NY, Scotland",no
+17209482,QUANTERRA LTD,2026-05-11,active,ltd,62090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17209543,NOVA CYCLE LTD,2026-05-11,active,ltd,62012,"34 Yarrow Close, Crowborough, TN6 2GP, England",no
+17209544,TRIVIUM SOLUTIONS LTD,2026-05-11,active,ltd,58290;62012;62020,"124 City Road, London, EC1V 2NX, United Kingdom",yes
+17209548,SIMSFY UK LTD,2026-05-11,active,ltd,62090;63120;73110,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17209550,JASEEA LTD,2026-05-11,active,ltd,45112,"273 Flat # 02,, Perry Barr, Birmingham, West Midlands, B20 3DD, United Kingdom",no
+17209553,100 POWER PILATES SHREWSBURY LTD,2026-05-11,active,ltd,96040,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17209811,BIDDY'S MEDICALS LTD,2026-05-11,active,ltd,86101;86210;86900,"14 Tudor Close, Hatfield, Hertfordshire, AL10 9EJ, United Kingdom",no
+17209816,SMART RENEWABLES LIMITED,2026-05-11,active,ltd,35140;42220;43210,"Bospebo Cottage, Nancemellin, Camborne, TR14 0DW, England",no
+17209826,THE BRAINSAFE STANDARD LTD,2026-05-11,active,ltd,62020,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17209808,GORMSPLEJE APS LTD,2026-05-11,active,ltd,86900,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17210013,CB CAPITAL PARTNERS LTD,2026-05-11,active,ltd,73110,"Twenty4 Secure Storage, Twenty4 Secure Storage, Chelsea Close, Leeds, LS12 4HP, United Kingdom",no
+17210009,WALTHAM ABBEY PROPERTY MAINTENANCE LTD,2026-05-11,active,ltd,96090,"70 Bounces Road, London, N9 8JS, England",no
+17210001,C&R GROUNDWORKS AND LANDSCAPING LIMITED,2026-05-11,active,ltd,43999,"Unit 29 Highcroft Industrial Estate Enterprise Road, Horndean, Waterlooville, PO8 0BT, United Kingdom",no
+17210253,LISTENR LTD,2026-05-11,active,ltd,62012;63120,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17210239,STYLEZ AI LTD,2026-05-11,active,ltd,62090,"167-169 Great Portland Street, London, W1W 5PF, England",yes
+17210257,CAVERSHAM HUT LTD,2026-05-11,active,ltd,56103,"15 Prospect Street, Reading, Berkshire, RG4 8JB, United Kingdom",no
+17210396,HUZIE LOCUM LTD,2026-05-11,active,ltd,86900,"32 Gorse Road, Blackburn, BB2 6LZ, England",no
+17210393,TWSG PARTNERS LIMITED,2026-05-11,active,ltd,56210,"41 Chester Street, Flint, Flintshire, CH6 5BL, Wales",no
+17210397,SPACE TECHNOLOGY LTD,2026-05-11,active,ltd,62020,"80 Sterling Gardens, London, SE14 6DZ, England",no
+17210552,TCC HEAD OFFICE LTD,2026-05-11,active,ltd,93290,"Unit 17 Orbital 25 Business Park, Dwight Road, Watford, WD18 9DA, England",no
+17210555,ALL IN RENTALS LTD,2026-05-11,active,ltd,55201,"14 Southfield Road, High Wycombe, HP13 5LA, United Kingdom",no
+17210566,DAYMA GROUP LTD,2026-05-11,active,ltd,41201;41202;42220;43390,"142 New Town Street, Luton, LU1 3ED, England",no
+17210744,THINK ESCAPES LIMITED,2026-05-11,active,ltd,55100;55209,"Seymour Chambers, 92 London Road, Liverpool, Merseyside, L3 5NW, United Kingdom",no
+17210750,NUMA LASER CLINIC WOKINGHAM LIMITED,2026-05-11,active,ltd,96020,"16 Thamesfield Gardens, Marlow, SL7 1PZ, England",no
+17210749,THEAPPCOLLECTION LTD,2026-05-11,active,ltd,62012,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17211072,2ND CHANCES ZONE LTD,2026-05-11,active,private-limited-guarant-nsc,96090,"Balman House, Flat 20, Rotherhithe New Road, London, SE16 2AF, United Kingdom",no
+17211071,DXB-UK LTD,2026-05-11,active,ltd,14190;47710;47910,"171 Chatsworth Road, Stretford, Manchester, M32 9PY, England",no
+17211074,BIONET14 LTD,2026-05-11,active,ltd,47750,"C/O Nexus Solicitors Ltd Carlton House, 16-18 Albert Square, Manchester, M2 5PE, United Kingdom",no
+17211073,MERIDIAN ANALYTICA LTD,2026-05-11,active,ltd,62090,"Willowbank The Shoal, Irstead, Norwich, NR12 8XS, England",no
+17211068,TZITZIKAS LIMITED,2026-05-11,active,ltd,56102,"573 Chester Road, Sutton Coldfield, West Midlands, B73 5HU, England",no
+17211087,JASON SAMOSA LTD,2026-05-11,active,ltd,59112;62020,"23 Wine Street, Frome, BA11 1EN, England",no
+17211298,CURVY BABS LTD,2026-05-11,active,ltd,74202,"25 Heol-Y-Twyn, Porth, CF39 0PS, Wales",no
+17211287,SECTOR PROCESSING LTD,2026-05-11,active,ltd,62012;62090;63110;80200,"321 Clifton House Broadway, Peterborough, PE1 2FF, England",no
+17211293,COXALL INNS LTD,2026-05-11,active,ltd,56290,"16 Meadow Way, Stevenage, SG1 1QB, United Kingdom",no
+17211346,BOW BIKES AND CYCLES LTD,2026-05-11,active,ltd,95290;96090,"246/A Bow Road, London, E3 3AP, England",no
+17211345,GBLP PROPERTY LIMITED,2026-05-11,active,ltd,55209,"22 Bellflower Road, Walton Cardiff, Tewkesbury, GL20 7SB, England",no
+17211344,DEDICATED DECOR LIMITED,2026-05-11,active,ltd,43341;43390,"590 Green Lanes, London, N13 5RY, United Kingdom",no
+17211343,365 AUTOMOTIVE GROUP LTD,2026-05-11,active,ltd,45112;45200,"Suite Ra01, 195-197 Wood Street, London, E17 3NU, England",no
+17211334,POP PASSPORT LTD,2026-05-11,active,ltd,47240,"62 Conifer Avenue, Poole, BH14 8RU, England",no
+17211664,KWAVE LTD,2026-05-11,active,ltd,41202,"1a Kingsholm Square, Gloucester, GL1 2QJ, United Kingdom",no
+17211783,BASHICODE LTD,2026-05-11,active,ltd,62012,"17 Plumbers Row, Unit D, Upper Ground Floor, London, E1 1EQ, United Kingdom",no
+17211774,SMARTPROPERTYANDMANAGEMENT LTD,2026-05-11,active,ltd,68310,"196 Albert Road, Stechford, Birmingham, B33 8UE, England",no
+17211768,BLUEWHALECLOTHINGLONDON LIMITED,2026-05-11,active,ltd,46420;47710;47910,"9 Beddow Close, Shrewsbury, SY1 2NX, United Kingdom",no
+17211769,SUGAR RUSH EXPRESS LTD,2026-05-11,active,ltd,56290,"21 Blackhills Road, Horden, Peterlee, SR8 4DW, England",no
+17211938,ENIGMA AIR CONDITIONING LTD,2026-05-11,active,ltd,43220,"Fairseat Nursery Gravesend Road, Wrotham, Sevenoaks, TN15 7JL, England",no
+17211927,BI MIGRATION TECHNOLOGIES LTD,2026-05-11,active,ltd,62012;62090;63110,"213 Woodrow Avenue, Hayes, UB4 8QR, England",no
+17211933,LDEM INDUSTRIAL SERVICES LIMITED,2026-05-11,active,ltd,43210;71129,"7 St. Teresas Close, Hartlepool, TS25 3FA, England",no
+17211923,GERRARD MEDIA AND MARKETING LTD,2026-05-11,active,ltd,73110,"10 Windsor Crescent, Little Houghton, Barnsley, S72 0HG, England",no
+17211934,LA ITALIA LIMITED,2026-05-11,active,ltd,56101,"17 Nethercroft Road, Timperley, Altrincham, WA15 7HW, England",no
+17212099,QUICKHEAT ENTERPRISES LTD,2026-05-11,active,ltd,43220,"Suite Ra01 195-197 Wood Street, London, E17 3NU, United Kingdom",yes
+17212107,RENOVATION BY TK LTD,2026-05-11,active,ltd,41201;41202,"24 Sherington Avenue, Pinner, HA5 4DT, England",no
+17212106,BY MAGU LTD,2026-05-11,active,ltd,47910;85590;86900;96090,"Flat 52 Erken Plaza, Abbey Road, Barking, IG11 7EP, England",no
+SC889267,BUILT WITH TIMBER LTD,2026-05-11,active,ltd,43320,"144 Westray Street, Glasgow, G22 7AZ, United Kingdom",no
+SC889277,NORTHVALE CLEANING LTD,2026-05-11,active,ltd,81210;81222;81299,"Flat 63 20 Dumbreck Court, Glasgow, G41 5NJ, Scotland",no
+17212361,MAH VENTURES LTD,2026-05-11,active,ltd,86230,"Apartment 22 Chiffon Apartments, 1 Cendal Crescent, London, E1 2FS, England",no
+17211940,NINJAPCN LTD,2026-05-11,active,ltd,62012;63110,"124 City Road, London, EC1V 2NX, England",yes
 17208886,ALLROVIA LTD,2026-05-10,active,ltd,45111;45112;45190;45400,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
 17208975,ARYA INFINITY LTD,2026-05-10,active,ltd,62012,"30 Harvey Road, Whitton, Hounslow, TW4 5LU, England",no
 17208970,DAUGHTERS OF KHADIJAH LIMITED,2026-05-10,active,ltd,96090,"167 Blackmoor Gate, Milton Keynes, MK4 1DW, United Kingdom",no
@@ -591,6 +831,18 @@ SC889072,BARE CLINICAL SPMU LTD,2026-05-10,active,ltd,96020,"39 King Robert's Wa
 17209187,JCH OTLEY LIMITED,2026-05-10,active,ltd,96090,"Wjs Group, Joys House, Fox Lane Fox Lane, Wrenthorpe, Wakefield, WF1 2AJ, United Kingdom",no
 17209183,ECOTECH MECHANICAL LIMITED,2026-05-10,active,ltd,43220,"Panelrite House, First Avenue, Southampton, Hampshire, SO15 0LG, United Kingdom",no
 17209184,LITETXT AI LTD,2026-05-10,active,ltd,58290,"10, Stonecross House 21-27 Churchgate, Bolton, BL1 1HR, United Kingdom",no
+17208893,GRIND FOOD & COFFEE LTD,2026-05-10,active,ltd,56103,"64 St Georges Park, Preston, Lancashire, PR4 2DZ, United Kingdom",no
+17208896,T&A RIGGING LTD,2026-05-10,active,ltd,43999,"26 Perebrown Avenue, Great Yarmouth, NR30 4BE, England",no
+SC889061,LIMITLESS BATHROOMS LTD,2026-05-10,active,ltd,43220;43320;43390,"22a Edinburgh Road, Dalkeith, EH22 1JR, Scotland",no
+17208950,NEAVES BAKES LTD,2026-05-10,active,ltd,47240,"52 Lewes Road, Darlington, DL1 4AX, England",no
+SC889067,R&M OUTSIDE CATERING LTD,2026-05-10,active,ltd,56210,"9 The Cross, Dalry, KA24 5AW, Scotland",no
+17209044,PERION SERVICES LTD,2026-05-10,active,ltd,69201;69202;96090,"1 Church Hill, Bristol, BS4 4LT, England",no
+17209041,CARZ TECH LTD,2026-05-10,active,ltd,45200,"73 Victoria Street, Slough, SL1 1TJ, England",no
+17209112,TIMTOM STUDIO LIMITED,2026-05-10,active,ltd,62012,"Bryn Awel Cilsanws Lane, Cefn Coed, Merthyr Tydfil, CF48 2NU, Wales",no
+17209115,TC REFRIGERATION LTD,2026-05-10,active,ltd,43220,"23 High Park Drive, Bradford, BD9 6HS, England",no
+17209122,WAYSIDE SERVICE STATION LIMITED,2026-05-10,active,ltd,45320;47190,"152a Agar Grove, London, NW1 9TY, England",no
+17209138,GRAFTED STUDIOS LTD,2026-05-10,active,ltd,47710,"24-26 Regent Place, Birmingham, B1 3NJ, England",no
+17209130,LUXURI CLEANING BY ANA LTD,2026-05-10,active,ltd,81210,"75 Hornsey Road, Liverpool, L4 2TW, England",no
 17208507,LB DRYLINING UK LIMITED,2026-05-09,active,ltd,41202,"24 Montgomery Drive, Cheshunt, Waltham Cross, EN8 0LB, England",no
 17208506,LIFELENS AI LTD,2026-05-09,active,ltd,62012;72190;86900,"The Lodge Grange Lane, Downham, Billericay, CM11 1LE, England",no
 17208519,MOONI SOLUTIONS LTD,2026-05-09,active,ltd,62012,"204 Bromyard Avenue, London, W3 7FN, England",no
@@ -647,6 +899,17 @@ NI740473,SERRONUS LTD,2026-05-09,active,ltd,62012,"22 Windermere Park, Belfast, 
 17208793,VISION CUPBOARD LTD,2026-05-09,active,ltd,58210;62011;62012,"314 Cambria Watkiss Way, Cardiff, CF11 0SA, Wales",no
 17208792,PBW PROPERTIES LTD,2026-05-09,active,ltd,68310,"1, Unit 3.11 Quality Court, London, WC2A 1HR, United Kingdom",no
 17208796,IYAZ CONSTRUCTION LTD,2026-05-09,active,ltd,41201,"55 Claridge Road, Manchester, M21 9WQ, England",no
+17208487,HSKG LTD,2026-05-09,active,ltd,62090,"7 Hollywell Road, Birmingham, B26 3BS, England",no
+17208511,MAISON DE PIERCE LTD,2026-05-09,active,ltd,96020,"137 Washwood Heath Road, Birmingham, B8 1RW, United Kingdom",no
+17208563,CURRY GARDEN ERDINGTON LTD,2026-05-09,active,ltd,56103;56290,"16 York Road, Birmingham, B23 6TE, United Kingdom",no
+17208565,ILES RENOVATIONS PROPERTY SERVICES LTD,2026-05-09,active,ltd,41202,"11 Common Road, Pontypridd, CF37 4AE, Wales",no
+SC889039,INACTRA LTD,2026-05-09,active,ltd,58290,"11 Granton View, Edinburgh, EH5 1BP, Scotland",no
+17208574,ASTON MORGAN MOTORS LTD,2026-05-09,active,ltd,45112,"Unit 16 New Road, Wennington, Rainham, RM13 9EB, England",no
+17208713,ORQESTRA LTD,2026-05-09,active,ltd,62012;62020;62090,"488 Rotherhithe Street, London, SE16 5EG, England",no
+17208708,ANGELA ENTERPRISES LTD,2026-05-09,active,ltd,47750,"3 Spreadbury Street, Manchester, M40 9DR, United Kingdom",no
+17208803,PEPTICORE HEALTH LTD,2026-05-09,active,ltd,86900,"97 Ribchester Road, Clayton Le Dale, Blackburn, BB1 9HT, England",no
+17208797,RUCHI CATERS AND EVENT MAKERS LIMITED,2026-05-09,active,ltd,56210,"2 Elliot Close, Yeovil, BA21 4FD, England",no
+17208808,EIGHT CIRCLES LTD,2026-05-09,active,ltd,47190;47990,"14 Surbiton Square, Nottingham, NG8 6EG, England",no
 17206033,ROSSY DIVA HAIR LIMITED,2026-05-08,active,ltd,96020,"132 A High Street, Bromsgrove, B61 8ES, United Kingdom",no
 17206018,LONDON PRIME CARPET CLEANING LTD,2026-05-08,active,ltd,81210;81222,"149 Autumn Drive, Sutton, SM2 5FA, England",no
 17206034,APEX BUILD INSTALLATIONS LTD,2026-05-08,active,ltd,43290,"61 Bridge Street, Kington, HR5 3DJ, United Kingdom",yes
@@ -936,6 +1199,42 @@ NI740455,USA IRELAND YOUTH SPORTS CIC,2026-05-08,active,private-limited-guarant-
 17208295,UNIFIED SOLUTIONS TEAM LTD,2026-05-08,active,ltd,93290,"34 Darlington Road, London, SE27 0UD, England",no
 17208358,VOLTSCORE LTD,2026-05-08,active,ltd,62012,"38 Rock Road, Midsomer Norton, Radstock, BA3 2AQ, England",no
 17208349,A S EVENTS LTD,2026-05-08,active,ltd,56210;96090,"31 Robinson Road, London, E2 9LX, England",no
+SC888907,MCCOUAIG & CO LTD,2026-05-08,active,ltd,47789;56302,"1 Main Street, Clackmannan, FK10 4JA, Scotland",no
+17206076,MJP CONSTRUCTION SOLUTIONS LTD,2026-05-08,active,ltd,43999;74100;74202,"Hats Gloucester Ltd, 48 Hucclecote Road, Gloucester, GL3 3RS, United Kingdom",no
+17206087,PAKISTAN FAST FOOD LTD,2026-05-08,active,ltd,56103,"121 Halifax Road, Todmorden, OL14 5BE, United Kingdom",no
+17206098,CUTTING-EDGE FLOORING & DECORATING LIMITED,2026-05-08,active,ltd,43330;43341,"12 Lancashire Drive, Buckshaw Village, Chorley, PR7 7BJ, England",no
+17206251,WILTSHIRE INCLUSIVE DANCE CIC,2026-05-08,active,ltd,93199,"Westfield House,, Bratton Road, Westbury, BA13 3EP, United Kingdom",no
+17206248,PEST SMART SOLUTIONS & CONSULTANCY LIMITED,2026-05-08,active,ltd,81291,"24 Tetbury Drive, Shepshed, Loughborough, LE12 9NF, England",no
+17206409,SLEEP WELL BLACKPOOL LTD,2026-05-08,active,ltd,55100,"54 Wood Street, Lytham St. Annes, FY8 1QG, England",no
+17206412,DANIAL SPICE HUT LTD,2026-05-08,active,ltd,56103,"1 Common Road, Low Moor, Bradford, BD12 0TN, England",no
+17206583,HAN TABLE LTD,2026-05-08,active,ltd,10710;46380;56101;56102,"74 Jamie Marcus Way, Oadby, Leicester, LE2 4RZ, England",no
+17206574,RAINITE LTD,2026-05-08,active,ltd,58290,"57 Riverpark Way, Birmingham, B31 2GA, United Kingdom",no
+17206744,NARRATE LTD,2026-05-08,active,ltd,73110,"4a High St N, London, E6 2HJ, United Kingdom",no
+17206738,FORCE BIDCO II LIMITED,2026-05-08,active,ltd,96090,"2 Babmaes Street, London, SW1Y 6HD, England",no
+17206742,THE HONEST LOAF ARTISAN BAKERY LIMITED,2026-05-08,active,ltd,10890;56103;56290,"27 Brackenwood Road, Woking, GU21 8XF, England",no
+17207113,ADWORX LIMITED,2026-05-08,active,ltd,43220,"The Barn At Baginton Bubbenhall Road, Baginton, Coventry, CV8 3BB, England",no
+17207121,WINDSOR & SON LTD,2026-05-08,active,ltd,43320,"Meryll House, 57 Worcester Road, Bromsgrove, Worcestershire, B61 7DN, England",no
+17207112,ARIA SOFTWARE LTD,2026-05-08,active,ltd,62012,"9 Woodthorpe Lea, Beverley, HU17 0ZB, England",no
+17207119,YAMANEE MASSAGE & SPA LTD,2026-05-08,active,ltd,96020,"55a Broughton Lane, Salford, Manchester, M8 9UE, United Kingdom",no
+17207257,MUSCLE BOUND GYM MANCHESTER LTD,2026-05-08,active,ltd,93130,"31a Dewsbury Gate Road, Dewsbury, WF13 4AX, England",no
+17207259,APIARY ELECTRICAL LTD,2026-05-08,active,ltd,43210,"5 North Court, Armstrong Road, Maidstone, Kent, ME15 6JZ, England",no
+17207260,COPPER FIG HOSPITALITY LIMITED,2026-05-08,active,ltd,56101,"2 Inverness Street, London, London, NW1 7HJ, England",no
+17207405,HOME COUNTIES RENOVATIONS LIMITED,2026-05-08,active,ltd,43390,"C/O Atlas Accountancy Ltd Suite 7 Europa House, 11 Marsham Way, Gerrards Cross, SL9 8BQ, England",no
+SC888989,CA CAR SALES LIMITED,2026-05-08,active,ltd,45112,"4 Broughton Market, Edinburgh, EH3 6NU, Scotland",no
+17207409,VASCO & CO ESTATES LTD,2026-05-08,active,ltd,68310,"12 Stainforth Road, London, E17 9RD, United Kingdom",no
+17207386,LUCKY HOUSE GOURMET LTD,2026-05-08,active,ltd,56103,"42 Stroud Green Road, Finsbury Park, London, N4 3ES, England",no
+17207401,HOA NAILS LTD,2026-05-08,active,ltd,96020,"Unit 41d Merrion Centre, Leeds, LS2 8LY, England",no
+17207664,CROSSBORDER ELITE CONSULTING LTD,2026-05-08,active,ltd,73110,"33 Montague Road, London, N15 4BD, United Kingdom",no
+17207790,MIM CONSULTANT LTD,2026-05-08,active,ltd,86900,"Annecy Court, Ferry Works, Summer Road, Thames Ditton, Surrey, KT7 0QJ, England",no
+17207900,SECURE VIEW WINDOWS & DOORS LTD,2026-05-08,active,ltd,41202,"19 St. Margarets Way, Huntingdon, PE29 6DG, United Kingdom",no
+17207899,PRIME TRADING INTERNATIONAL LTD,2026-05-08,active,ltd,46900;47190;73110,"Piccadilly Business Centre Unit C Aldow Enterprise Park, Blackett Street, Manchester, M12 6AE, United Kingdom",no
+17207887,ANP HOSPITALITY LTD,2026-05-08,active,ltd,56102;56103,"27 Kingston Road, South Wimbledon, London, SW19 1JX, England",no
+17208158,KIRSTEN MUNOZ LTD,2026-05-08,active,ltd,47910;73110;73120,"4 Shrub Road, Hampton Vale, Peterborough, PE7 8LW, England",no
+17208164,EMX GROUP LTD,2026-05-08,active,ltd,41100;41201;43390,"Umit E, Unit E, Parc Bryn Lwyd, Bangor, LL57 4SP, United Kingdom",no
+17208340,TEQ CONSULTING LTD,2026-05-08,active,ltd,62020,"49 London Road, Hassocks, BN6 9NU, England",no
+17208337,WALMZ LTD,2026-05-08,active,ltd,43999,"47 Manor Gardens North Ash Road, Longfield, DA3 8AJ, United Kingdom",no
+17208331,FEASTHUB LIMITED,2026-05-08,active,ltd,56103,"15 Abigail Close, Luton, LU3 1ND, England",no
+17206224,LONDON ACTONIANS WOMEN LIMITED,2026-05-08,active,ltd,93120,"The Retreat 406 Roding Lane South, Woodford Green, IG8 8EY, England",no
 17203641,VECTRA DISTRIBUTION LTD,2026-05-07,active,ltd,46900;47190;47650;47910,"4 Spice Chase, King's Lynn, Norfolk, PE34 4RD, United Kingdom",no
 17203693,BEARCLAW GAMES LTD,2026-05-07,active,ltd,47910;58210;62011;73110,"82a James Carter Road, Mildenhall Suffolk, IP28 7DE, United Kingdom",yes
 17203694,CRABBY'S COASTAL DECORATION LTD,2026-05-07,active,ltd,43341;43390,"23a The Precinct, London Road, Waterlooville, Hampshire, PO7 7DT, United Kingdom",no
@@ -1210,6 +1509,41 @@ SC888818,HUSARIA HOMES LTD,2026-05-07,active,ltd,43999,"67 Thorndean Avenue, Bel
 17205790,MIMU TECHNICAL SERVICES LTD,2026-05-07,active,ltd,43999,"35 Tuck Road, Rainham, RM13 7HB, United Kingdom",no
 17205788,AZ ELITE BARBERS LTD,2026-05-07,active,ltd,96020,"22a Linkways, Stevenage, SG1 1PR, England",no
 17205845,BESCO GE LTD,2026-05-07,active,ltd,47240;56103,"Preston House, Preston Street, Bradford, BD7 1JE, England",no
+17203941,WALKIN TECHNOLOGIES LTD,2026-05-07,active,ltd,62012;62090,"67 Jackson Road, Barnet, EN4 8UU, England",no
+17203940,READY SET PLAY LTD,2026-05-07,active,ltd,93290,"5 Appledore Terrace, Walsall, WS5 3DU, United Kingdom",no
+17203947,SAFEWIRE TECHNOLOGIES LTD,2026-05-07,active,ltd,62012,"20 Wenlock Road, London, N1 7GU, England",yes
+17203945,MM  SALES LTD,2026-05-07,active,ltd,45112,"97 Lower Heath, Congleton, Cheshire, CW12 1NJ, United Kingdom",no
+17203936,RJH ELECTRICAL SERVICES (HEREFORD) LTD,2026-05-07,active,ltd,43210,"Sunny Acres Breinton Lane, Swainshill, Hereford, HR4 7PX, United Kingdom",no
+17203935,CROKER CLEANING SERVICES LTD,2026-05-07,active,ltd,81299,"19 Harsnett Road, Colchester, CO1 2HS, England",no
+17203950,KENT CLEANS SOUTH EAST LTD,2026-05-07,active,ltd,81210;81222;81229;81299,"2a Herons Close, Canterbury, CT4 8DN, United Kingdom",no
+17204161,CHECKLORA PRODUCT STABILITY LTD,2026-05-07,active,ltd,62012;62020;62090;63120,"Unit 82a James Carter Road, Mildenhall, Bury St. Edmunds, IP28 7DE, England",yes
+SC888807,ALPINE ROOFING (1995) LTD,2026-05-07,active,ltd,43910,"Antonine Hub Antonine House, Callendar Road, Falkirk, FK1 1XE, Scotland",no
+17204288,K.B. HOME AND BUILDING LTD,2026-05-07,active,ltd,41100;41202;43390,"3 Peterlee Way, Bootle, L30 1SH, England",no
+17204293,PARRHESIA ACTUARIAL CONSULTING LTD,2026-05-07,active,ltd,62012;62020,"Unit 501 Leroy House, 434-436 Essex Road, London, N1 3FY, United Kingdom",no
+17204269,YUANMORE 2026 LIMITED,2026-05-07,active,ltd,56101,"198 Edlington Lane, Edlington, Doncaster, DN12 1BX, England",no
+17204292,CRAFTCLIENTS LTD,2026-05-07,active,ltd,73110,"47 Shelley Road, Marlow, SL7 1LZ, England",no
+17204408,LAS RESTAURANT AND CAFE LIMITED,2026-05-07,active,ltd,56102,"381 High Road Leyton, London, E10 5NA, England",no
+17204506,TANK WORKS LTD,2026-05-07,active,ltd,96090,"27 Old Gloucester Street, London, WC1N 3AX, United Kingdom",yes
+17204499,BOB SHOP 4D LTD,2026-05-07,active,ltd,47110,"487 Green Lane, Small Heath, Birmingham, B9 5PR, England",no
+17204637,ALBITOR LTD,2026-05-07,active,ltd,62012;62020,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+17204646,BRIDGEGATE PROPERTY SERVICES LTD,2026-05-07,active,ltd,43390;43999;81100,"Old Post Office Thorpe Lane, Thorpe Audlin, Pontefract, WF8 3EW, England",no
+17204695,GILMORTON ENERGY SOLUTIONS LTD,2026-05-07,active,ltd,43210,"43 Chandler Drive, Gilmorton, Lutterworth, LE17 5FS, England",no
+17204945,SWM SERVICING LTD,2026-05-07,active,ltd,45200,"5 Beauchamp Court Victors Way, Barnet, London, EN5 5TZ, United Kingdom",no
+17204946,OSBORNE HOSPITALITY LTD,2026-05-07,active,ltd,46342;46360;56290,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17205141,SABAH GROUP ACCOUNT LIMITED,2026-05-07,active,ltd,56302,"The Five Bridges, Thomsett Way, Queenborough, ME11 5AR, England",no
+17205129,INSIGHT PIPELINE LTD,2026-05-07,active,ltd,62090,"Flat 4 90 Abington Street, Northampton, NN1 2AP, England",no
+17205498,COLLECTIVE 93 LTD,2026-05-07,active,ltd,96090,"72 North Street, Romford, RM1 1DA, England",no
+17205494,PRISTINE CLEAN HOMES LTD,2026-05-07,active,ltd,81222,"John White Community Centre Grange Avenue, Binley, Coventry, CV3 2ED, United Kingdom",no
+17205492,ASAD ALI FOODS LTD,2026-05-07,active,ltd,56103,"22a Preston Street, Brighton, BN1 2HN, England",no
+17205480,JB PINNACLE LTD,2026-05-07,active,ltd,43999;71129,"9 Freeman Road, South Gosforth, Newcastle Upon Tyne, NE3 1SS, United Kingdom",no
+17205470,VICTORR CONSTRUCT LTD,2026-05-07,active,ltd,41201,"249 Torbay Road, Harrow, HA2 9QE, England",no
+17205672,JOY PAWS DOG HOTEL LTD,2026-05-07,active,ltd,96090,"104 Quantock Road, Weston-Super-Mare, BS23 4DW, United Kingdom",no
+17205667,BITFOX TECH LTD,2026-05-07,active,ltd,26400;47910;62012,"4 Winchester Close, Bromley, BR2 0PX, England",no
+17205686,FABAL GROUP LTD,2026-05-07,active,ltd,41201,"27 Old Gloucester Street, London, WC1N 3AX, England",no
+17205692,CROWN JEWELZ LTD,2026-05-07,active,private-limited-guarant-nsc,47770,"59 Dene Gardens, Stanmore, HA7 4TB, England",no
+NI740433,PREMIER TURKISH BARBERS LTD,2026-05-07,active,ltd,96020,"86 Stranmillis Road, Belfast, BT9 5AD, Northern Ireland",no
+17205689,RIWAAZ COUTURE LIMITED,2026-05-07,active,ltd,47710,"14 Highfield Avenue, Wolverhampton, WV10 8NP, England",no
+17204421,DVNT LIMITED,2026-05-07,active,ltd,73110,"2 Southam Road, Dunchurch, Rugby, Warwickshire, CV22 6NL, England",no
 17201205,VMAX PCODE LTD,2026-05-06,active,ltd,45200,"3 Hawthorne Terrace, Pine Place, Hayes, UB4 8FL, England",no
 17201220,VIRAJ TRANSPORT SERVIC LTD,2026-05-06,active,ltd,33170;56290;82920,"59 St. Andrews Way, Slough, SL1 5NL, England",no
 17201227,HAIR  & HOME LTD,2026-05-06,active,ltd,96020,"Landmark House 43-45 Merton Road, Bootle, L20 7AP, England",no
@@ -1501,20 +1835,48 @@ SC888638,SORA LC LTD,2026-05-06,active,ltd,96090,"Oakfield House 376-378 Brandon
 17201988,DST BUILD SOLUTIONS LIMITED,2026-05-06,active,ltd,41100;41202;43390,"10a Penerley Road, London, SE6 2LQ, England",no
 17202002,VASHIRA TECHNOLOGIES LIMITED,2026-05-06,active,ltd,33140;62012,"33 Croxley View, Watford, WD18 6NY, England",no
 17202130,KORE DIGITAL LTD,2026-05-06,active,ltd,74100,"82, Suite A James Carter Road, Mildenhall, IP28 7DE, United Kingdom",no
+17202131,A.O KRISPY LIMITED,2026-05-06,active,ltd,56102;56103,"5 Long Lover Lane, Halifax, HX1 4QF, England",no
+17202188,CAPONE SOLUTIONS LTD,2026-05-06,active,ltd,62012;62020;62090;74100,"The Gate, Waterside Village, Falcon Street, Loughborough, LE11 1GJ, England",no
+17202186,IKODENT DESIGN LTD,2026-05-06,active,ltd,86230,"39 Hendon Lane, London, N3 1RY, England",no
+17202489,BRADMORE NEWSAGENTS LTD,2026-05-06,active,ltd,46341;47110,"Bradmore Post Office 17 Broad Lane, Bradmore, Wolverhampton, WV3 9BN, United Kingdom",no
+17202499,SURREY WINDOWS & GLASS LTD,2026-05-06,active,ltd,43290;43342,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
+SC888704,RAINBOW FIZZ LTD,2026-05-06,active,ltd,47240,"62 Fort Street, Ayr, KA7 1EH, Scotland",no
+17202479,WEBBS WONDERFUL WORLD OF CLEANING LIMITED,2026-05-06,active,ltd,81210,"Hill House, Cock Hill, Haverhill, Suffolk, CB9 7QW, England",no
+17202626,MAKTURA LTD,2026-05-06,active,ltd,58290,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
+17202634,GODSEII MINERAL COMMERCE LTD,2026-05-06,active,ltd,96090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
+17202632,HANIF SECURITY LIMITED,2026-05-06,active,ltd,45200,"82 Alleyne Road, Birmingham, B24 8EN, England",no
+17202731,DRISKETS LOUNGE LTD,2026-05-06,active,ltd,56102,"118 Impreial Way, Chislehurst, BR7 6JS, England",no
+17202733,SAINT KATERINA LIMITED,2026-05-06,active,ltd,56101;56102;56103,"6th Floor, Amp House, Dingwall Road, Croydon, CR0 2LX, United Kingdom",no
+17202738,PRAVEEN STAFFING LTD,2026-05-06,active,ltd,96090,"94 Laburnum Road, Hayes, UB3 4JZ, England",no
+17202877,J D LEATHARD ELECTRICAL LTD,2026-05-06,active,ltd,43210;71122,"7 Boscombe Drive, Wallsend, NE28 9DW, United Kingdom",no
+17202976,PURPLE MONSTER TV LIMITED,2026-05-06,active,ltd,93290,"16 Goldings Crescent, Hatfield, AL10 8UE, United Kingdom",no
+17202985,AC TRADERS LTD,2026-05-06,active,ltd,45112,"17 Blackthorn Avenue, West Drayton, UB7 9EU, England",no
+17202984,AX3 MOTORS LTD,2026-05-06,active,ltd,45112;45190;45200,"11 Wauthier Close, London, N13 5HU, United Kingdom",no
+17203060,CRF COMMUNICATIONS LTD,2026-05-06,active,ltd,43290,"108 Buckleigh Road, Wath Upon Dearne, Rotherham, South Yorkshire, S63 7HU, England",no
+17203128,PYZEN TECHNOLOGY SOLUTIONS LIMITED,2026-05-06,active,ltd,62020,"167-169 Great Portland Street, Fifth Floor, London, W1W 5PF, United Kingdom",no
+NI740384,REVITALISE HEALTH AND PERFORMANCE LTD,2026-05-06,active,ltd,93130,"7 Hillcrest Park, Newtownabbey, BT36 6EG, Northern Ireland",no
+17203534,DNC SOLUTIONS LIMITED,2026-05-06,active,ltd,81210,"Silverstream House, 45 Fitzroy Street, London, W1T 6EB, England",no
+17203545,ELA HAVUTCU LIMITED,2026-05-06,active,ltd,59112;70210;73110;74209,"551 Green Lanes, London, N13 4DR, England",no
 17197863,CAFE KARACHII LIMITED,2026-05-05,active,ltd,56101;56102;56103;56210,"Unit 121 Barking Enterprise Centre, 50 Cambridge Road, Barking, Essex, IG11 8FG, England",no
 17199196,MADE BY ARTHUR LTD,2026-05-05,active,ltd,74201,"Unit 4b (Office 1) Oldknows Factory, St. Anns Hill Road, Nottingham, NG3 4GN, England",no
 17199407,FURINKAZAN KESHOHIN LIMITED,2026-05-05,active,ltd,47750,"19 Sparrow Farm Road, Epsom, KT17 2JJ, England",no
+17200992,ELITE PROPERTY & COMMERCIAL SERVICES LTD,2026-05-05,active,ltd,43220,"11 Lambourne Drive, Hutton, Brentwood, CM13 1QP, England",no
 17195882,R-E INNOVATION CLADDING LTD,2026-05-01,active,ltd,41201;41202,"Flat 9 Hale House, Berber Parade, London, SE18 4GG, England",no
 17194664,LSJ DIGITAL VENTURES LIMITED,2026-05-01,active,ltd,62012;73110,"401 Westleigh Lane, Leigh, WN7 5PU, England",no
 17194906,VILLAGE TRADE CARS LIMITED,2026-05-01,active,ltd,45112,"Unit G.05 93-101 Greenfield Road, London, E1 1EJ, England",no
+17195546,MÖBIUS STREAM LTD,2026-05-01,active,ltd,73110,"25a Landrock Road 25a Landrock Road, Flat A, London, N8 9HR, England",no
+17193727,AFGHAN KABUL CATERING LTD,2026-05-01,active,ltd,56210,"Flat 19 Nartynside, The Concourse, London, NW9 5UT, England",no
 17192667,PILLAR FACILITIES & MAINTENANCE LTD,2026-04-30,active,ltd,81100;81210;81222,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
 17192998,STERLING CLEANING LTD,2026-04-30,active,ltd,81221;81299,"167-169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
 17192265,HILDA DECORATION LTD,2026-04-30,active,ltd,43999,"8.8 Cavendish Court South Parade, Doncaster, South Yourkshire, DN1 2DJ, United Kingdom",no
 17192196,NOBLE ATHAR LTD,2026-04-30,active,ltd,47750,"18 Markham Road, Luton, LU3 2BS, England",no
 17192038,UK ELECTRICAL SOLUTIONS LTD,2026-04-30,active,ltd,41100;41201;41202;43210,"22 Handsworth Crescent, Coventry, CV5 7GE, England",no
+17190928,A YOUNG ROOFING LTD,2026-04-30,active,ltd,43910,"The Old Courthouse, Clark Street, Morecambe, LA4 5HR, England",no
 17189470,GLAMOUR VALUE LTD,2026-04-29,active,ltd,62020;73110;73200;96090,"1 Woodside Road, High Wycombe, HP13 7JE, England",no
 17190196,OBLEE LIMITED,2026-04-29,active,ltd,62012;63120;77291;82301,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
 17189533,KADIM LTD,2026-04-29,active,ltd,56103,"11 Wendover Road, Messingham, Scunthorpe, DN17 3SN, England",no
+17189233,SELIM BARBERS LIMITED,2026-04-29,active,ltd,96020,"15 Milestone Way Precinct, Reading, Berkshire, RG4 8XW, England",no
+17189042,RASN FRANCHISE LTD,2026-04-29,active,ltd,56102;56103,"515-519 High Road,, Tottenham,, London, N17 6SB, United Kingdom",no
 17185732,MASSALA TWIST LIMITED,2026-04-28,active,ltd,56103,"1 Steyning Road, Birmingham, B26 1HH, England",no
 17185842,SELECTIVE ROOFING SOLUTIONS LTD,2026-04-28,active,ltd,43910,"32 The Crescent, Spalding, PE11 1AF, England",yes
 17187103,MANN TRADE SERVICES LIMITED,2026-04-28,active,ltd,43210;43220;43290,"47 Grasholm Way, Slough, Berkshire, SL3 8WE, England",no
