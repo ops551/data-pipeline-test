@@ -532,8 +532,14 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
   const testEmail = options.testEmail || options['test-email'];
   const delayMs = typeof options.delayMs === 'number' ? options.delayMs : 2000;
   const limit = typeof options.limit === 'number' ? options.limit : DEFAULT_MAX_DAILY_FOLLOWUPS;
+  const isMock = Boolean(
+    options.mock ||
+    options['mock'] ||
+    isDryRun ||
+    (deps.sendEmail && !options.transporter)
+  );
 
-  const smtpConfig = loadFollowUpSmtpConfig(env, { mock: isDryRun, ...options });
+  const smtpConfig = loadFollowUpSmtpConfig(env, { mock: isMock, ...options });
   if (!smtpConfig.enabled) {
     logger.log(`[FollowUp] Account 2 not configured (${smtpConfig.reason}). Skipping follow-ups.`);
     return {

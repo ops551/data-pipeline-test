@@ -158,8 +158,12 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   const isSmtpQuotaExceededFn = deps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
   const isTargetSic = deps.isTargetSic || defaultIsTargetSic;
 
-  // Pre-flight connection check via verifyConnection (skip if dry-run or mock)
-  if (!dryRun && !mock && !options.skipVerify) {
+  const skipVerify = options.skipVerify !== undefined
+    ? Boolean(options.skipVerify)
+    : Boolean(mock || (deps.sendEmail && !options.transporter && !deps.verifyConnection));
+
+  // Pre-flight connection check via verifyConnection (skip if dry-run, mock, or skipVerify)
+  if (!dryRun && !mock && !skipVerify) {
     try {
       logger.log('Performing pre-flight SMTP connection verification...');
       await verify(
