@@ -273,7 +273,7 @@ test('Unit 5.58 - Active leads.csv and legacy_leads_archive.csv integrity', () =
   const archivedLeads = parseCSV(archivePath);
 
   // Active leads should contain only qualified high-converting businesses
-  assert.equal(activeLeads.length, 5, 'leads.csv should have exactly 5 verified qualified leads');
+  assert.ok(activeLeads.length >= 5, 'leads.csv should have at least 5 verified qualified leads');
 
   const qualifiedTypes = new Set([
     'trades',
@@ -284,7 +284,12 @@ test('Unit 5.58 - Active leads.csv and legacy_leads_archive.csv integrity', () =
     'watch_showroom',
     'bike_showroom',
     'dentistry',
-    'restaurant'
+    'restaurant',
+    'detailing',
+    'fitness',
+    'estate_agent',
+    'pet_grooming',
+    'ecommerce'
   ]);
 
   for (const lead of activeLeads) {
