@@ -26,6 +26,8 @@ const FORBIDDEN_SPAM_WORDS = Object.freeze([
   "regarding",
   "save",
   "quote",
+  "instant",
+  "price"
 ]);
 
 const TECH_SIGNATURE_TITLE = "Backend & Automation Developer";
@@ -653,6 +655,9 @@ const SAFE_WORD_REPLACEMENTS = Object.freeze([
   { pattern: /\bregarding\b/gi, replacement: "about" },
   { pattern: /\bperformance\b/gi, replacement: "results" },
   { pattern: /\b(?:immediately|instantly)\b/gi, replacement: "promptly" },
+  { pattern: /\binstant\b/gi, replacement: "direct" },
+  { pattern: /\bpricing\b/gi, replacement: "rates" },
+  { pattern: /\bprices?\b/gi, replacement: "rates" },
   { pattern: /\bscale(?:s|d|ing)?\b/gi, replacement: "grow" },
   { pattern: /\bwon['’]t\b/gi, replacement: "will not" },
   { pattern: /\bLIMITED\b/g, replacement: "Ltd" },
@@ -684,7 +689,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a showroom automation developer",
     subject: (name) => `${name} - vehicle showcase & viewings`,
     pitch:
-      "Explain that you set up an automated AI showroom system specifically for car dealerships: 1) Turns vehicle stock photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook. 2) 24/7 WhatsApp assistant replies to buyer enquiries on price, mileage, or part-exchange and books test-drives and viewings directly into their calendar. 3) Streamlines vehicle inventory pages for instant mobile reservations.",
+      "Explain that you set up an automated AI showroom system specifically for car dealerships: 1) Turns vehicle stock photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook. 2) 24/7 WhatsApp assistant replies to buyer enquiries on specs, mileage, or part-exchange and books test-drives and viewings directly into their calendar. 3) Streamlines vehicle inventory pages for seamless mobile reservations.",
     question:
       "Are you currently exploring ways to increase showroom footfall or test-drive bookings?",
     focus: "car showcase Reels, automated social scheduling, and 24/7 test-drive booking",
@@ -694,7 +699,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a luxury timepiece automation developer",
     subject: (name) => `${name} - timepiece showcase & viewings`,
     pitch:
-      "Explain that you set up an automated AI showcase system for watch and jewellery dealers: 1) Turns inventory photography into high-definition macro wrist-roll Reels, dial and bezel detail clips, and daily Stories for new arrivals scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers collector questions on price and provenance and books private boutique viewings into their calendar. 3) Optimizes timepiece catalog for instant high-res viewing.",
+      "Explain that you set up an automated AI showcase system for watch and jewellery dealers: 1) Turns inventory photography into high-definition macro wrist-roll Reels, dial and bezel detail clips, and daily Stories for new arrivals scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers collector questions on authenticity and provenance and books private boutique viewings into their calendar. 3) Optimizes timepiece catalog for seamless high-res viewing.",
     question:
       "Are you currently exploring ways to expand your private client network or showcase timepieces?",
     focus: "macro wrist-roll Reels, automated scheduling, and private boutique viewings",
@@ -754,7 +759,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a property automation developer",
     subject: (name) => `${name} - property walkthroughs & viewings`,
     pitch:
-      "Explain that you set up an automated property showcase system for estate and letting agents: 1) Turns listing photos into cinematic property walkthrough Reels and daily Stories for new listings and price adjustments, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers buyer and tenant inquiries and books property viewings into agent calendars instantly. 3) Optimizes property listings for fast mobile browsing.",
+      "Explain that you set up an automated property showcase system for estate and letting agents: 1) Turns listing photos into cinematic property walkthrough Reels and daily Stories for new listings and market updates, auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp assistant answers buyer and tenant inquiries and books property viewings into agent calendars directly. 3) Optimizes property listings for fast mobile browsing.",
     question:
       "Are you currently exploring ways to increase viewing bookings for your property listings?",
     focus: "property walkthrough Reels, listing Stories, and automated viewing bookings",
@@ -784,7 +789,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a pet business automation developer",
     subject: (name) => `${name} - grooming bookings & schedule`,
     pitch:
-      "Explain that you set up an automated growth system for pet grooming salons and dog spas: 1) Turns salon photos into fluffy grooming transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers breed pricing questions and books grooming slots into their calendar while groomers are busy with pets. 3) Optimizes mobile booking pages for easy package selection.",
+      "Explain that you set up an automated growth system for pet grooming salons and dog spas: 1) Turns salon photos into fluffy grooming transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers breed package questions and books grooming slots into their calendar while groomers are busy with pets. 3) Optimizes mobile booking pages for easy package selection.",
     question:
       "Are you currently looking to keep your grooming slots fully booked throughout the week?",
     focus: "grooming transformation Reels, daily salon Stories, and WhatsApp appointment booking",
@@ -817,7 +822,7 @@ const SECTOR_CONFIGS = Object.freeze({
       "Explain that you set up an automated growth and booking system for trades and contractors: 1) Turns on-site job photos into before-and-after transformation Reels, completed project clips, and daily Stories auto-scheduled across Instagram and Facebook. 2) 24/7 rapid WhatsApp messaging assistant captures every incoming customer enquiry promptly while your team is on-site and books job estimates directly into your calendar with automated follow-ups. 3) Streamlines trade service landing pages for 1-tap mobile estimate requests.",
     question:
       "Are you currently looking to streamline your client communication and fill your job calendar?",
-    focus: "before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking",
+    focus: "before-and-after job Reels, 24/7 on-site WhatsApp quoting, and seamless mobile job booking",
     cta: "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
   },
   hospitality: {
@@ -854,7 +859,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a business automation developer",
     subject: (name) => `${name} - customer bookings & enquiry flow`,
     pitch:
-      "Explain that you set up an automated 3-part growth system for local businesses: 1) Turns service photos into high-engagement showcase Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot. 2) 24/7 WhatsApp assistant answers customer inquiries on pricing and availability and books appointments directly into your calendar. 3) Streamlines mobile website pages so visitors can browse services and book appointments with zero lag.",
+      "Explain that you set up an automated 3-part growth system for local businesses: 1) Turns service photos into high-engagement showcase Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot. 2) 24/7 WhatsApp assistant answers customer inquiries on services and availability and books appointments directly into your calendar. 3) Streamlines mobile website pages so visitors can browse services and book appointments with zero lag.",
     question:
       "Are you currently exploring ways to streamline your daily operations and client bookings?",
     focus: "showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion",
@@ -907,7 +912,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated AI showroom system specifically for car dealerships:",
         "1. Automated Car Showcase Reels & Stories: Turns your vehicle photos into cinematic walkaround Reels, interior showcase clips, and daily arrival Stories auto-scheduled across Instagram, TikTok, and Facebook on complete auto-pilot.",
-        "2. 24/7 Test-Drive & WhatsApp Booking: When prospective buyers message asking about price, mileage, or part-exchange, an automated assistant replies promptly and books test-drives directly into your calendar.",
+        "2. 24/7 Test-Drive & WhatsApp Booking: When prospective buyers message asking about specs, mileage, or part-exchange, an automated assistant replies promptly and books test-drives directly into your calendar.",
         hasVerifiedWebsite
           ? "3. Showroom Website Optimization: We streamline your vehicle inventory pages so mobile visitors can browse cars and reserve viewings with zero lag."
           : "3. Fast Mobile Inventory Catalog: A modern, high-speed vehicle showcase where buyers can browse available stock and book test-drives directly.",
@@ -929,7 +934,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated AI showcase system specifically for watch and jewellery dealers:",
         "1. Macro Wrist-Roll Reels & Stories: Turns your inventory photography into high-definition wrist-roll Reels, dial macro clips, and daily Stories for new arrivals scheduled across Instagram and TikTok.",
-        "2. 24/7 VIP Viewing & Inquiries: When collectors message asking about price, box/papers, or provenance, an automated assistant replies promptly and books private boutique viewings into your calendar.",
+        "2. 24/7 VIP Viewing & Inquiries: When collectors message asking about authenticity, box/papers, or provenance, an automated assistant replies promptly and books private boutique viewings into your calendar.",
         hasVerifiedWebsite
           ? "3. Boutique Website Optimization: We streamline your timepiece catalog so collectors can inspect high-res photos and request private viewings in one tap."
           : "3. Luxury Inventory Showcase: A modern, high-speed catalog built to showcase available timepieces and capture VIP viewing requests.",
@@ -951,7 +956,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated AI showcase system built for motorbike dealerships:",
         "1. Bike Walkaround Reels & Sound Clips: Turns your bike photos into dynamic walkaround Reels, spec breakdown posts, and daily arrival Stories auto-scheduled across Instagram and TikTok.",
-        "2. 24/7 Test-Ride & Viewing Booking: When riders message about price, mileage, or financing, an automated assistant replies promptly and books showroom viewings or test-rides into your calendar.",
+        "2. 24/7 Test-Ride & Viewing Booking: When riders message about specs, mileage, or financing, an automated assistant replies promptly and books showroom viewings or test-rides into your calendar.",
         hasVerifiedWebsite
           ? "3. Inventory Speed Tuning: We streamline your bike listings so mobile riders can browse stock and book test-rides with zero delay."
           : "3. Fast Mobile Bike Catalog: A modern showroom site built for riders to browse available bikes and book test-rides directly.",
@@ -969,14 +974,14 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer pricing enquiry.",
+        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer package enquiry.",
         "",
         "We set up an automated content and booking engine built for detailing studios:",
         "1. 50/50 Before-After Reels & Daily Stories: Turns quick photos from your bay into high-gloss transformation Reels, ceramic coating showcases, and daily completed-car Stories auto-scheduled across Instagram and Facebook.",
         "2. 24/7 Rapid WhatsApp Assistant: Replies promptly to incoming inquiries and books detailing packages directly into your schedule so you never lose a booking while working on a car.",
         hasVerifiedWebsite
           ? "3. Studio Website Conversion Tuning: We optimize your existing site so car owners can select packages and request dates in one tap."
-          : "3. Modern Detailing Booking Page: A high-converting mobile landing page showcasing packages, results, and instant WhatsApp booking.",
+          : "3. Modern Detailing Booking Page: A high-converting mobile landing page showcasing packages, results, and direct WhatsApp booking.",
         "",
         "If you would like to see a quick 30-second preview of how automated detailing reels and booking work, just reply with 'yes' and I will send it over.",
         "",
@@ -991,7 +996,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently reviewed the treatments offered at ${emailCompanyName}.`,
         "",
-        "Treating clients in clinic all day means you rarely have time to edit before-and-after clips, post daily stories, or reply promptly to every inquiry asking about treatment prices.",
+        "Treating clients in clinic all day means you rarely have time to edit before-and-after clips, post daily stories, or reply promptly to every inquiry asking about treatment packages.",
         "",
         "We set up an automated growth and booking engine built specifically for aesthetic clinics:",
         "1. Transformation Reels & Daily Stories: Turns quick photos from your clinic into high-converting glow-up Reels and daily Stories (showcasing client results and open cancellation slots) auto-scheduled across Instagram and Facebook.",
@@ -1060,8 +1065,8 @@ function getMockEmail(company = {}, options = {}) {
         "Managing viewings and appraisals all day means agents rarely have hours to edit walkthrough reels, write property copy, or reply promptly to every evening tenant or buyer inquiry.",
         "",
         "We set up an automated property showcase and viewing engine for estate agents:",
-        "1. Property Walkthrough Reels & Stories: Turns listing photography into cinematic property walkthrough Reels and daily Stories for new listings and price adjustments auto-scheduled across Instagram and Facebook.",
-        "2. 24/7 Automated Viewing Assistant: Replies promptly to buyer and tenant inquiries and books property viewings into agent calendars instantly via WhatsApp.",
+        "1. Property Walkthrough Reels & Stories: Turns listing photography into cinematic property walkthrough Reels and daily Stories for new listings and market updates auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 Automated Viewing Assistant: Replies promptly to buyer and tenant inquiries and books property viewings into agent calendars directly via WhatsApp.",
         hasVerifiedWebsite
           ? "3. Property Listing Speed Tuning: We streamline your listing pages so mobile home seekers can browse available properties and book viewings in one tap."
           : "3. Modern Property Showcase: A high-speed mobile portal designed to showcase available listings and capture viewing requests.",
@@ -1127,7 +1132,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated social and booking system for pet grooming salons:",
         "1. Fluffy Grooming Transformation Reels: Turns salon photos into show-ready transformation Reels and daily happy-pet Stories auto-scheduled across Instagram and TikTok.",
-        "2. 24/7 WhatsApp Appointment Assistant: Answers breed pricing questions and books grooming slots directly into your calendar while you work.",
+        "2. 24/7 WhatsApp Appointment Assistant: Answers breed package questions and books grooming slots directly into your calendar while you work.",
         hasVerifiedWebsite
           ? "3. Grooming Menu Mobile Tuning: We streamline your service menu so pet owners can select packages and request appointment dates in one tap."
           : "3. Fast Mobile Grooming Page: A clean, modern booking page built to keep your grooming slots fully booked throughout the week.",
@@ -1152,7 +1157,7 @@ function getMockEmail(company = {}, options = {}) {
         "2. 24/7 WhatsApp Shopping Assistant: Answers sizing and shipping questions, recovers pending checkouts, and guides buyers to completed orders.",
         hasVerifiedWebsite
           ? "3. Storefront Speed Tuning: We streamline your product pages and checkout flow so mobile shoppers buy in one tap without cart drop-off."
-          : "3. High-Converting Mobile Storefront: A lightning-fast mobile catalog designed to turn visitors into instant buyers.",
+          : "3. High-Converting Mobile Storefront: A lightning-fast mobile catalog designed to turn visitors into confirmed buyers.",
         "",
         "If you would like to see a quick 30-second preview of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
         "",
@@ -1196,7 +1201,7 @@ function getMockEmail(company = {}, options = {}) {
         "2. 24/7 On-Site WhatsApp Quoting: Captures every incoming customer enquiry promptly while your team is on-site with a rapid WhatsApp messaging assistant and automated follow-ups to book job estimates directly into your calendar.",
         hasVerifiedWebsite
           ? "3. Service Page Mobile Tuning: We optimize your service pages so homeowners can request estimates and check availability in one tap."
-          : "3. Fast Mobile Trade Landing Page: A high-converting estimate page built to turn local homeowners into booked jobs with instant WhatsApp contact.",
+          : "3. Fast Mobile Trade Landing Page: A high-converting estimate page built to turn local homeowners into booked jobs with direct WhatsApp contact.",
         "",
         "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
         "",
@@ -1217,7 +1222,7 @@ function getMockEmail(company = {}, options = {}) {
         "1. Food & Venue Showcase Reels: Turns dish and atmosphere photos into mouthwatering highlight Reels and daily lunch/dinner special Stories auto-scheduled across Instagram and TikTok.",
         "2. 24/7 WhatsApp Table Assistant: Answers menu questions and confirms reservations directly into your reservation calendar around the clock.",
         hasVerifiedWebsite
-          ? "3. Digital Menu & Booking Tuning: We streamline your online menu and reservation flow for instant mobile booking with zero friction."
+          ? "3. Digital Menu & Booking Tuning: We streamline your online menu and reservation flow for fast mobile booking with zero friction."
           : "3. Fast Mobile Reservation Page: A clean, mobile-first menu and booking portal designed to turn local diners into confirmed reservations.",
         "",
         "If you would like to see a quick 30-second preview of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
@@ -1261,7 +1266,7 @@ function getMockEmail(company = {}, options = {}) {
         "1. Case Study Breakdown Reels & Stories: Turns project launches and client wins into compelling visual Reels and daily Stories auto-scheduled across LinkedIn and Instagram.",
         "2. 24/7 WhatsApp Qualification Assistant: Qualifies incoming client scope, answers technical capability questions, and books discovery calls directly into your calendar.",
         hasVerifiedWebsite
-          ? "3. Agency Portfolio Speed Tuning: We streamline your project case studies and inquiry pages for instant mobile performance."
+          ? "3. Agency Portfolio Speed Tuning: We streamline your project case studies and inquiry pages for rapid mobile performance."
           : "3. High-Converting Agency Portal: A clean, modern developer showcase built to turn prospective tech clients into booked discovery calls.",
         "",
         "If you would like to see a quick 30-second preview of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
@@ -1281,7 +1286,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated 3-part growth system built for local businesses:",
         "1. Automated Showcase Reels & Stories: Turns your service photos into engaging Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot.",
-        "2. 24/7 WhatsApp Booking Assistant: Answers customer inquiries on pricing and availability, booking appointments directly into your calendar.",
+        "2. 24/7 WhatsApp Booking Assistant: Answers customer inquiries on services and availability, booking appointments directly into your calendar.",
         hasVerifiedWebsite
           ? "3. Website Conversion Optimization: We streamline your website pages so visitors can browse services and book appointments with zero lag."
           : "3. Fast Mobile Booking Page: A modern, high-converting mobile page designed to turn local visitors into confirmed bookings.",

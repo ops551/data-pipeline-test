@@ -60,7 +60,7 @@ function loadConfig(env = process.env, today = new Date()) {
     incorporatedFrom = parseDate('INCORPORATED_FROM', env.INCORPORATED_FROM);
     incorporatedTo = parseDate('INCORPORATED_TO', env.INCORPORATED_TO);
   } else if (env.DAYS_BACK_MIN !== undefined || env.DAYS_BACK_MAX !== undefined) {
-    const minDays = parseNonNegativeInt('DAYS_BACK_MIN', env.DAYS_BACK_MIN, 90);
+    const minDays = parseNonNegativeInt('DAYS_BACK_MIN', env.DAYS_BACK_MIN, 30);
     const maxDays = parsePositiveInt('DAYS_BACK_MAX', env.DAYS_BACK_MAX || env.DAYS_BACK, 180);
     if (minDays > maxDays) {
       throw new Error(`DAYS_BACK_MIN (${minDays}) cannot be greater than DAYS_BACK_MAX (${maxDays}).`);

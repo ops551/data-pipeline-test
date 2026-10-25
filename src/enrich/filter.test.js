@@ -81,7 +81,7 @@ test('Unit 5.53: filterCandidates rejects malformed dates, future dates, and out
   fs.writeFileSync(tmpEnriched, 'company_number\n');
 
   try {
-    const count = filterCandidates(tmpCompanies, tmpEnriched, tmpCandidates);
+    const count = filterCandidates(tmpCompanies, tmpEnriched, tmpCandidates, { minDaysOld: 90, maxDaysOld: 180 });
     assert.strictEqual(count, 2, 'Only TARGET_95 and TARGET_175 must be included');
 
     const candidatesData = fs.readFileSync(tmpCandidates, 'utf8');

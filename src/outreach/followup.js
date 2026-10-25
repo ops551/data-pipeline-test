@@ -79,8 +79,8 @@ const FOLLOWUP_SECTOR_TEMPLATES = Object.freeze({
   kitchen_interior: Object.freeze({
     sector: 'kitchen_interior',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'room reveal Reels, craftsmanship Stories, and free home design visit bookings',
-    hook: 'room reveal Reels, craftsmanship Stories, and free home design visit bookings',
+    touch2Hook: 'room reveal Reels, craftsmanship Stories, and home design visit bookings',
+    hook: 'room reveal Reels, craftsmanship Stories, and home design visit bookings',
     breakupPhrase: 'bespoke interior project showcases & design visit automation',
     touch3Phrase: 'bespoke interior project showcases & design visit automation'
   }),
@@ -127,10 +127,10 @@ const FOLLOWUP_SECTOR_TEMPLATES = Object.freeze({
   trades: Object.freeze({
     sector: 'trades',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking',
-    hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking',
-    breakupPhrase: 'trade showcase Reels & 24/7 WhatsApp quote booking systems',
-    touch3Phrase: 'trade showcase Reels & 24/7 WhatsApp quote booking systems'
+    touch2Hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and seamless mobile job booking',
+    hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and seamless mobile job booking',
+    breakupPhrase: 'trade showcase Reels & 24/7 WhatsApp estimate booking systems',
+    touch3Phrase: 'trade showcase Reels & 24/7 WhatsApp estimate booking systems'
   }),
   hospitality: Object.freeze({
     sector: 'hospitality',

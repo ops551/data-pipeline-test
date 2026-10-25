@@ -33,7 +33,7 @@ jobs:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
       ENRICH_BATCH_SIZE: ${{ inputs.batch_size || '50' }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
-      DAYS_BACK_MIN: "90"
+      DAYS_BACK_MIN: "30"
       DAYS_BACK_MAX: "180"
       DAYS_BACK: "10"
       SMTP_HOST: ${{ secrets.SMTP_HOST }}

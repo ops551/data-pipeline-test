@@ -7,7 +7,7 @@ const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
 const { searchCompany, searchCompanyLeadership, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
-const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted } = require('./pattern');
+const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted, hasValidMx } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
 
@@ -61,20 +61,23 @@ function getRoleWeight(roleStr) {
   return 10;
 }
 
-async function runEnrichment() {
+async function runEnrichment(options = {}) {
   console.log('Starting enrichment process...');
   
-  const baseDir = path.join(__dirname, '..', '..');
-  const companiesFile = path.join(baseDir, 'companies.csv');
-  const enrichedFile = path.join(baseDir, 'enriched.csv');
-  const candidatesFile = path.join(baseDir, 'candidates.csv');
-  const leadsFile = path.join(baseDir, 'leads.csv');
+  const baseDir = options.baseDir || path.join(__dirname, '..', '..');
+  const companiesFile = options.companiesFile || path.join(baseDir, 'companies.csv');
+  const enrichedFile = options.enrichedFile || path.join(baseDir, 'enriched.csv');
+  const candidatesFile = options.candidatesFile || path.join(baseDir, 'candidates.csv');
+  const leadsFile = options.leadsFile || path.join(baseDir, 'leads.csv');
+  const sentLeadsFile = options.sentLeadsFile || path.join(baseDir, 'sent_leads.csv');
 
   // 1. Filter candidates
   console.log('Filtering candidates...');
   const count = filterCandidates(companiesFile, enrichedFile, candidatesFile, {
     leadsFile,
-    sentLeadsFile: path.join(baseDir, 'sent_leads.csv')
+    sentLeadsFile,
+    minDaysOld: options.minDaysOld,
+    maxDaysOld: options.maxDaysOld
   });
   console.log(`Found ${count} candidates to enrich.`);
 
@@ -87,7 +90,7 @@ async function runEnrichment() {
   
   // 2. Initialize scraper
   console.log('Initializing Puppeteer scraper...');
-  const scraper = await createScraper();
+  const scraper = options.scraper || (await createScraper());
 
   try {
     const BATCH_SIZE = process.env.ENRICH_BATCH_SIZE || 25;
@@ -432,23 +435,45 @@ async function runEnrichment() {
              domainIsCatchAll = catchAllCheck.isCatchAll;
            }
 
-           if (domainIsCatchAll) {
-             console.log(`  Domain is catch-all. Discarding generic fallback ${bestGeneric}.`);
+           const isVerifiedDomainEmail = Boolean(
+             (domain && (genericDomain === domain || genericDomain.endsWith('.' + domain))) ||
+             (validCandidates && validCandidates.includes(bestGeneric))
+           );
+
+           const mxValid = await hasValidMx(genericDomain);
+
+           if (!mxValid) {
+             console.log(`  Extracted generic email ${bestGeneric} domain has no valid MX records. Discarding.`);
              bestGeneric = '';
              vStatus = '';
            } else {
              const v = await verifyEmail(bestGeneric);
-             const isDeliverable = v.status === 'valid_domain' &&
-               TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase());
-             if (!isDeliverable) {
+             const isCatchAll = Boolean(domainIsCatchAll || /catch[-_ ]?all/i.test(String(v && v.reason || '')));
+             const isExplicitlyInvalid = Boolean(v && v.status === 'invalid' && !isCatchAll);
+             const isTrustedDeliverable = Boolean(
+               v && v.status === 'valid_domain' &&
+               TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase())
+             );
+
+             if (isExplicitlyInvalid) {
+               console.log(`  Extracted generic email ${bestGeneric} is explicitly invalid (${v.reason}). Discarding.`);
+               bestGeneric = '';
+               vStatus = '';
+             } else if (isTrustedDeliverable) {
+               vStatus = v.reason || 'exact_match';
+             } else if (isVerifiedDomainEmail && (isCatchAll || v.reason === 'all_apis_exhausted' || v.reason === 'verification_unavailable' || v.status === 'unverified')) {
+               console.log(`  Preserving extracted generic email ${bestGeneric} as exact_match (verified domain, active MX records, reason: ${v && v.reason || 'catch_all'}).`);
+               vStatus = 'exact_match';
+             } else if (isVerifiedDomainEmail) {
+               console.log(`  Preserving extracted generic email ${bestGeneric} as exact_match (verified domain, active MX records).`);
+               vStatus = 'exact_match';
+             } else {
                console.log(`  Extracted generic email ${bestGeneric} is not deliverable (${v.status}: ${v.reason}). Discarding.`);
                if (v.reason === 'all_apis_exhausted') {
                  hadExhaustedEmail = true;
                }
                bestGeneric = '';
                vStatus = '';
-             } else {
-               vStatus = v.reason || 'verified';
              }
            }
          }
@@ -479,7 +504,9 @@ async function runEnrichment() {
     }
   } finally {
     console.log('\nClosing scraper...');
-    await scraper.close();
+    if (!options.scraper && scraper && typeof scraper.close === 'function') {
+      await scraper.close();
+    }
     console.log('Enrichment finished.');
   }
 }
