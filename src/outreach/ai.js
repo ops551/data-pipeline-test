@@ -296,7 +296,7 @@ function isTechOrSoftwareCompany(company = {}) {
 function classifySector(company = {}) {
   if (!company || typeof company !== "object") return "general";
 
-  const rawSector = String(company?.sector || "").trim().toLowerCase();
+  const rawSector = String(company?.sector || company?.type || "").trim().toLowerCase();
   const normalizedSector =
     rawSector === "e-commerce" ? "ecommerce" : rawSector;
   if (
@@ -870,6 +870,33 @@ const SECTOR_CONFIGS = Object.freeze({
   },
 });
 
+const CANONICAL_DEFAULT_PILLARS = Object.freeze({
+  pillar1: "1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory)",
+  pillar2: "2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.",
+  pillar3: "3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking."
+});
+
+function getSectorPillars(sector) {
+  if (!sector || sector === "general" || !SECTOR_CONFIGS[sector] || !SECTOR_CONFIGS[sector].pitch) {
+    return { ...CANONICAL_DEFAULT_PILLARS };
+  }
+
+  const pitch = SECTOR_CONFIGS[sector].pitch;
+  const p1Match = pitch.match(/(1\)\s*[\s\S]*?)(?=\s*2\))/);
+  const p2Match = pitch.match(/(2\)\s*[\s\S]*?)(?=\s*3\))/);
+  const p3Match = pitch.match(/(3\)\s*[\s\S]*)$/);
+
+  if (p1Match && p2Match && p3Match) {
+    return {
+      pillar1: p1Match[1].trim(),
+      pillar2: p2Match[1].trim(),
+      pillar3: p3Match[1].trim()
+    };
+  }
+
+  return { ...CANONICAL_DEFAULT_PILLARS };
+}
+
 function getMockEmail(company = {}, options = {}) {
   const companyName = (company.company_name || "your business").trim();
   const emailCompanyName = getEmailCompanyName(companyName);
@@ -1401,8 +1428,8 @@ function buildPrompt(company = {}, options = {}) {
     "   2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
     "   3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)",
     hasVerifiedWebsite
-      ? `   Sector-specific details: ${track.pitch}`
-      : `   Sector-specific details: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
+      ? `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): ${track.pitch}`
+      : `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
     hasInspectedWebsite
       ? `4. Personalization: Include exactly one 10-20 word positive sentence, informed by a service or feature shown in the homepage snapshot, suggesting a website update and relevant automation (such as ${track.focus}) to make a routine task easier. Do not identify or imply any flaw, missing feature, or problem; present it as a helpful improvement idea, not a criticism.`
       : null,
@@ -1413,6 +1440,7 @@ function buildPrompt(company = {}, options = {}) {
     `7. Sign-off: Must end with:\n${signature}`,
     "",
     "Rules:",
+    "- Single 3-Pillar List Only: The email body must contain exactly ONE set of 3 numbered points (1, 2, and 3). NEVER output a generic list and then repeat another list for sector details. Never output duplicate lists.",
     "- All 3 Pillars Mandatory: The email body MUST always include all three pillars (1, 2, and 3). Each pillar must be on its own line with a full descriptive sentence. Never truncate or omit any pillar (never write just '24/7' or stop before pillar 3).",
     "- Opening Conciseness: Keep the opening under 25 words without wordy fluff before introducing the pillars.",
     "- Opening & Customization Proposition: Right in the opening after acknowledging their business, clearly explain that to help them interact with more customers and increase client engagement, you set up automated systems, AND explicitly state that in addition to this service, you can custom-build any workflow or feature tailored to their exact preferences and requirements.",
@@ -1421,7 +1449,7 @@ function buildPrompt(company = {}, options = {}) {
     "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
-    "- Keep it under 100-120 words before the signature.",
+    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 120-150 words total).",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
@@ -1451,6 +1479,9 @@ function cleanEmailContent(rawText, options = {}) {
   const signature = includeSignature
     ? buildSignature({ ...options, isTech })
     : `Best regards,\n${senderName}`;
+
+  const resolvedSector = options.sector || (isTech ? "tech" : classifySector({ company_name: companyName, industry: options.industry, sic_codes: options.sic_codes, sector: options.sector, type: options.type }));
+  const sectorPillars = getSectorPillars(resolvedSector);
 
   if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
     return getMockEmail(
@@ -1515,8 +1546,7 @@ function cleanEmailContent(rawText, options = {}) {
   }
 
   if (!subject) {
-    const sector = options.sector || (isTech ? "tech" : "general");
-    const track = SECTOR_CONFIGS[sector] || SECTOR_CONFIGS.general;
+    const track = SECTOR_CONFIGS[resolvedSector] || SECTOR_CONFIGS.general;
     subject = track.subject(emailCompanyName);
   }
 
@@ -1549,11 +1579,34 @@ function cleanEmailContent(rawText, options = {}) {
     )
     .replace(/\[([^\]]+)\]/g, "$1");
 
-  body = body.replace(
-    /(?:^|\n|\b)\s*2[).]\s*24\/7(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi,
-    "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n",
-  );
+  // Deduplication of duplicate pillar fragments:
+  // If Gemini outputs the 3 pillars and then appends a duplicate fragment like "For kitchen and interior studios... 1) ... 2) ...", cleanly strip the redundant fragment.
+  const ones = [...body.matchAll(/(?:^|\n|\b)(?:(?:For|Sector-specific|Specifically for|Our|Here is)\s+[^:\n]+:?\s*)?(?:\r?\n\s*)?1[).]/gi)];
+  if (ones.length > 1 && /(?:^|\n|\b)\s*2[).]/i.test(body.slice(0, ones[1].index))) {
+    const secondOneIndex = ones[1].index;
+    let beforeSecond = body.slice(0, secondOneIndex);
+    beforeSecond = beforeSecond.replace(/(?:\r?\n\s*){1,2}[A-Z][^\n:]{0,80}:?\s*$/i, "");
+    const fromSecond = body.slice(secondOneIndex);
+    const cleanedSecond = fromSecond.replace(
+      /^[\s\S]*?(?=(?:\r?\n\s*(?:[A-Z][^?\n]*\?|If you|Would you|Are you|Do you|Could you|Let me know|\r?\n\s*\r?\n\s*[A-Z])|\s*$))/i,
+      ""
+    );
+    body = beforeSecond.trimEnd() + "\n\n" + cleanedSecond.trimStart();
+  }
 
+  // Universal Truncated Pillar 2 Healer:
+  // Catches ANY variant of truncated Pillar 2:
+  // 2) 24/7, 2. 24/7, 2) 24/7:, 2) 24/7 -, 2) 24/7 assistant, 2) Hybrid 24/7, 2) Hybrid 24/7:,
+  // 2) Hybrid 24/7 WhatsApp Assistant, 2) Hybrid 24/7 WhatsApp Assistant:, 2) 24/7 WhatsApp Booking Assistant:, 2) 24/7 WhatsApp Assistant:
+  const truncatedPillar2Regex = /(?:^|\n|\b)\s*2[).]\s*(?:(?:Hybrid\s+)?24\/7(?:\s*WhatsApp)?(?:\s*Booking)?(?:\s*Assistant)?|(?:Hybrid\s+)?WhatsApp(?:\s*Booking)?\s*Assistant)(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi;
+
+  const healedPillar2 = (options.sector && options.sector !== "general" && sectorPillars?.pillar2)
+    ? `\n${sectorPillars.pillar2}\n`
+    : "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n";
+
+  body = body.replace(truncatedPillar2Regex, healedPillar2);
+
+  const hasPillar1 = /(?:^|\n|\b)\s*1[).]/i.test(body);
   const hasPillar2 =
     /(?:^|\n|\b)\s*2[).]/i.test(body) ||
     /2[).]\s*24\/7/i.test(body) ||
@@ -1564,9 +1617,14 @@ function cleanEmailContent(rawText, options = {}) {
     /(?:^|\n|\b)\s*3\)/i.test(body) ||
     /(?:^|\n|\b)\s*3\.(?:\s|$)/i.test(body);
 
+  if (hasPillar1 && !hasPillar2 && hasPillar3) {
+    body = body.replace(/(?=(?:^|\n)\s*3[).])/i, `${healedPillar2}\n`);
+  }
+
   if (hasPillar2 && !hasPillar3) {
-    const pillar3Addition =
-      "\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.\n";
+    const pillar3Addition = (options.sector && options.sector !== "general" && sectorPillars?.pillar3)
+      ? `\n${sectorPillars.pillar3}\n`
+      : "\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.\n";
 
     if (/(?:^|\n)[ \t]*2[).][\s\S]*?(?=\r?\n\s*\r?\n)/i.test(body)) {
       body = body.replace(
@@ -1736,6 +1794,8 @@ async function generateEmail(company, options = {}) {
         return cleanEmailContent(rawText, {
           ...options,
           isTech,
+          sector: options.sector || (isTech ? "tech" : classifySector(company)),
+          type: company.type,
           companyName: company.company_name,
           directorName: extractFirstName(
             company.person_name ||
@@ -1826,6 +1886,8 @@ async function generateEmail(company, options = {}) {
         return cleanEmailContent(rawText, {
           ...options,
           isTech,
+          sector: options.sector || (isTech ? "tech" : classifySector(company)),
+          type: company.type,
           companyName: company.company_name,
           directorName: extractFirstName(
             company.person_name ||
@@ -1909,6 +1971,8 @@ module.exports = {
   isTechOrSoftwareCompany,
   classifySector,
   SECTOR_CONFIGS,
+  CANONICAL_DEFAULT_PILLARS,
+  getSectorPillars,
   getMockEmail,
   buildPrompt,
   cleanEmailContent,
