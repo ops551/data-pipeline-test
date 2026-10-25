@@ -169,9 +169,9 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('Hey Mark,'));
   assert.ok(prompt.includes('Best regards,\nNahid'));
   assert.ok(prompt.includes('Say you came across Apex Cleaners and wanted to reach out'));
-  assert.ok(prompt.includes('capture every incoming customer enquiry promptly'));
-  assert.ok(prompt.includes('rapid WhatsApp messaging assistant and automated follow-ups'));
-  assert.ok(prompt.includes('If you prefer no further messages, I completely understand and will not contact you again.'));
+  assert.ok(prompt.includes('captures every incoming customer enquiry promptly'));
+  assert.ok(prompt.includes('rapid WhatsApp messaging assistant'));
+  assert.ok(prompt.includes('If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with \'yes\' and I will send it over.'));
   assert.ok(prompt.includes('Keep it under 100-120 words before the signature.'));
   assert.ok(prompt.includes(`Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(', ')}.`));
   assert.ok(prompt.includes('Do not use any forbidden word or phrase anywhere in the subject or body'));
@@ -365,13 +365,12 @@ test('cleanEmailContent appends personal signature by default and honors include
 
 test('cleanEmailContent handles null or empty input with robust fallback', () => {
   const cleaned = cleanEmailContent('', { companyName: 'Delta Ltd' });
-  assert.equal(cleaned.subject, "Quick question about Delta's workflow automation");
+  assert.equal(cleaned.subject, "Delta - customer bookings & enquiry flow");
   assert.ok(cleaned.body.includes('Delta'));
   assert.ok(cleaned.body.includes('I recently checked out Delta and wanted to reach out.'));
-  assert.ok(cleaned.body.includes('As an automation developer, I help businesses streamline routine communications and daily workflows.'));
-  assert.ok(cleaned.body.includes('unified dashboard to monitor operations in real time.'));
-  assert.ok(cleaned.body.includes('Are you currently exploring ways to streamline your daily operations?'));
-  assert.ok(cleaned.body.includes('and will not contact you again'));
+  assert.ok(cleaned.body.includes('Automated Showcase Reels & Stories'));
+  assert.ok(cleaned.body.includes('24/7 WhatsApp Booking Assistant'));
+  assert.ok(cleaned.body.includes('Fast Mobile Booking Page'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
   assert.equal(cleaned.body.includes('WhatsApp:'), false);
   assert.ok(cleaned.body.includes('Website: https://nahid-yf63.onrender.com/'));
@@ -608,9 +607,9 @@ test('buildPrompt generates client pipeline pitch for tech agencies (Track 6 Tec
 
   assert.ok(prompt.includes('Hey Zaki,'));
   assert.ok(prompt.includes('backend and automation engineer'));
-  assert.ok(prompt.includes('Quick question about client pipeline workflows for Various Labs'));
-  assert.ok(prompt.includes('automated client acquisition pipelines and smart reporting systems'));
-  assert.ok(prompt.includes('structured data tracking to monitor campaign results continuously'));
+  assert.ok(prompt.includes('Various Labs - client acquisition & pipeline'));
+  assert.ok(prompt.includes('case study breakdown Reels and daily client win Stories'));
+  assert.ok(prompt.includes('24/7 WhatsApp qualification assistant'));
   assert.ok(prompt.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
   assert.ok(prompt.includes(TECH_SIGNATURE_TITLE));
   assert.equal(prompt.includes('WhatsApp:'), false);
@@ -624,10 +623,10 @@ test('buildPrompt generates food and hospitality pitch (Track 4 Hospitality)', (
   });
 
   assert.ok(prompt.includes('Hey Marco,'));
-  assert.ok(prompt.includes('digital developer'));
-  assert.ok(prompt.includes('Quick question about online bookings for Bella Italia Dining'));
-  assert.ok(prompt.includes('automated guest feedback collection, seamless table or event reservations, and AI-driven seasonal announcements'));
-  assert.ok(prompt.includes('management dashboard to track guest feedback and reservations'));
+  assert.ok(prompt.includes('hospitality automation developer'));
+  assert.ok(prompt.includes('Bella Italia Dining - table reservations & guest flow'));
+  assert.ok(prompt.includes('dish highlight Reels and daily lunch/dinner special Stories'));
+  assert.ok(prompt.includes('24/7 WhatsApp assistant answers menu inquiries'));
   assert.ok(prompt.includes('Are you currently exploring ways to increase customer retention and table bookings?'));
 });
 
@@ -637,14 +636,17 @@ test('Sector-specific prompt generation and mock emails across tracks', async ()
     company_name: 'Acme Bakery Ltd',
     sic_codes: '10710'
   });
-  assert.ok(promptGeneral.includes("Quick question about Acme Bakery's workflow automation"));
-  assert.ok(promptGeneral.includes('Briefly explain that you help businesses streamline routine communications and daily workflows.'));
-  assert.ok(promptGeneral.includes('Are you currently exploring ways to streamline your daily operations?'));
+  assert.ok(promptGeneral.includes("Acme Bakery - customer bookings & enquiry flow"));
+  assert.ok(promptGeneral.includes('3-part growth system for local businesses'));
+  assert.ok(promptGeneral.includes('showcase Reels and daily Stories'));
+  assert.ok(promptGeneral.includes('24/7 WhatsApp assistant'));
+  assert.ok(promptGeneral.includes('Are you currently exploring ways to streamline your daily operations and client bookings?'));
 
   // Test mock email for general
   const mockGeneral = await generateEmail({ company_name: 'Acme Bakery Ltd', sic_codes: '10710' }, { mock: true });
-  assert.equal(mockGeneral.subject, "Quick question about Acme Bakery's workflow automation");
-  assert.ok(mockGeneral.body.includes('As an automation developer, I help businesses streamline routine communications'));
+  assert.equal(mockGeneral.subject, "Acme Bakery - customer bookings & enquiry flow");
+  assert.ok(mockGeneral.body.includes('Automated Showcase Reels & Stories'));
+  assert.ok(mockGeneral.body.includes('24/7 WhatsApp Booking Assistant'));
   assert.equal(mockGeneral.body.includes('WhatsApp:'), false);
 });
 
@@ -655,10 +657,10 @@ test('cleanEmailContent handles tech company fallback cleanly', () => {
     isTech: true
   });
 
-  assert.equal(cleanedTech.subject, 'Quick question about client pipeline workflows for Various Labs');
+  assert.equal(cleanedTech.subject, 'Various Labs - client acquisition & pipeline');
   assert.ok(cleanedTech.body.includes('Hey Zaki,'));
-  assert.ok(cleanedTech.body.includes('automated client acquisition pipelines and smart reporting systems'));
-  assert.ok(cleanedTech.body.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
+  assert.ok(cleanedTech.body.includes('Case Study Breakdown Reels & Stories'));
+  assert.ok(cleanedTech.body.includes('24/7 WhatsApp Qualification Assistant'));
   assert.ok(cleanedTech.body.includes(TECH_SIGNATURE_TITLE));
   assert.equal(cleanedTech.body.includes('WhatsApp:'), false);
 });
@@ -671,8 +673,8 @@ test('generateEmail generates tech outreach email end-to-end with model', async 
       return {
         response: {
           text: () => JSON.stringify({
-            subject: 'Quick question about client pipeline workflows for Various Labs Ltd',
-            body: 'Hey Zaki,\n\nI reviewed your work at Various Labs Ltd. We deploy automated client acquisition pipelines and smart reporting systems.\n\nAre you currently exploring ways to expand your agency\'s client pipeline?\n\nBest regards,\nNahid'
+            subject: 'Various Labs - client acquisition & pipeline',
+            body: 'Hey Zaki,\n\nI reviewed your work at Various Labs. We deploy automated client acquisition pipelines and smart reporting systems.\n\nAre you currently exploring ways to expand your agency\'s client pipeline?\n\nBest regards,\nNahid'
           })
         }
       };
@@ -689,8 +691,8 @@ test('generateEmail generates tech outreach email end-to-end with model', async 
   );
 
   assert.ok(capturedPrompt.includes('backend and automation engineer'));
-  assert.ok(capturedPrompt.includes('automated client acquisition pipelines'));
-  assert.equal(result.subject, 'Quick question about client pipeline workflows for Various Labs');
+  assert.ok(capturedPrompt.includes('case study breakdown Reels'));
+  assert.equal(result.subject, 'Various Labs - client acquisition & pipeline');
   assert.ok(result.body.includes('Hey Zaki,'));
   assert.ok(result.body.includes(TECH_SIGNATURE_TITLE));
   assert.equal(result.body.includes('WhatsApp:'), false);
@@ -825,95 +827,103 @@ test('classifySector respects explicit company.sector override', () => {
 test('buildPrompt builds targeted prompts for all 6 tracks and fallback', () => {
   // Track 1: E-Commerce
   const pEcom = buildPrompt({ company_name: 'Bloom Boutique Ltd', sic_codes: '47110' });
-  assert.ok(pEcom.includes("Quick question about Bloom Boutique's online store"));
+  assert.ok(pEcom.includes("Bloom Boutique - store conversion & customer sales"));
   assert.ok(pEcom.includes('e-commerce automation engineer'));
-  assert.ok(pEcom.includes('central dashboard to monitor everything in real time, plus automated follow-ups for pending checkouts'));
+  assert.ok(pEcom.includes('product photos into dynamic showcase Reels'));
+  assert.ok(pEcom.includes('24/7 WhatsApp shopping assistant'));
   assert.ok(pEcom.includes('Are you currently exploring ways to grow your store or looking to automate daily operations?'));
 
   // Track 2: Healthcare
   const pHealth = buildPrompt({ company_name: 'Smile Clinic Ltd', sic_codes: '86210' });
-  assert.ok(pHealth.includes("Quick question about Smile Clinic's patient bookings"));
-  assert.ok(pHealth.includes('digital automation developer'));
-  assert.ok(pHealth.includes('24/7 digital assistant that handles appointment bookings, patient intake form completions, and scheduled reminders'));
+  assert.ok(pHealth.includes("Smile Clinic - patient bookings & appointments"));
+  assert.ok(pHealth.includes('clinic automation developer'));
+  assert.ok(pHealth.includes('informative patient education Reels'));
+  assert.ok(pHealth.includes('24/7 WhatsApp digital assistant'));
   assert.ok(pHealth.includes("Are you currently exploring ways to improve your clinic's daily workflow?"));
 
   // Track 3: Local Trades
   const pTrades = buildPrompt({ company_name: 'Apex Plumbing Ltd', sic_codes: '43220' });
-  assert.ok(pTrades.includes('Quick question about client response times for Apex Plumbing'));
-  assert.ok(pTrades.includes('automation engineer'));
-  assert.ok(pTrades.includes('rapid WhatsApp messaging assistant and automated follow-ups'));
-  assert.ok(pTrades.includes('Are you currently looking to streamline your client communication process?'));
+  assert.ok(pTrades.includes('Apex Plumbing - job enquiries & emergency bookings'));
+  assert.ok(pTrades.includes('trade automation developer'));
+  assert.ok(pTrades.includes('before-and-after transformation Reels'));
+  assert.ok(pTrades.includes('24/7 rapid WhatsApp messaging assistant'));
+  assert.ok(pTrades.includes('Are you currently looking to streamline your client communication and fill your job calendar?'));
 
   // Track 4: Hospitality
   const pHosp = buildPrompt({ company_name: 'Bella Bistro Ltd', sic_codes: '56101' });
-  assert.ok(pHosp.includes('Quick question about online bookings for Bella Bistro'));
-  assert.ok(pHosp.includes('digital developer'));
-  assert.ok(pHosp.includes('automated guest feedback collection, seamless table or event reservations, and AI-driven seasonal announcements'));
+  assert.ok(pHosp.includes('Bella Bistro - table reservations & guest flow'));
+  assert.ok(pHosp.includes('hospitality automation developer'));
+  assert.ok(pHosp.includes('dish highlight Reels'));
+  assert.ok(pHosp.includes('24/7 WhatsApp assistant'));
   assert.ok(pHosp.includes('Are you currently exploring ways to increase customer retention and table bookings?'));
 
   // Track 5: B2B
   const pB2B = buildPrompt({ company_name: 'Summit Advisory Ltd', sic_codes: '70229' });
-  assert.ok(pB2B.includes('Quick question about client onboarding at Summit Advisory'));
+  assert.ok(pB2B.includes('Summit Advisory - client onboarding & enquiry flow'));
   assert.ok(pB2B.includes('business automation developer'));
-  assert.ok(pB2B.includes('automate client onboarding, payment tracking reminders, and pipeline management'));
-  assert.ok(pB2B.includes('Are you currently looking to automate your internal operations?'));
+  assert.ok(pB2B.includes('professional highlight Reels'));
+  assert.ok(pB2B.includes('24/7 WhatsApp consultation assistant'));
+  assert.ok(pB2B.includes('Are you currently looking to automate your internal operations and client pipeline?'));
 
   // Track 6: Tech
   const pTech = buildPrompt({ company_name: 'Pixel Dev Ltd', sic_codes: '62012' });
-  assert.ok(pTech.includes('Quick question about client pipeline workflows for Pixel Dev'));
+  assert.ok(pTech.includes('Pixel Dev - client acquisition & pipeline'));
   assert.ok(pTech.includes('backend and automation engineer'));
-  assert.ok(pTech.includes('automated client acquisition pipelines and smart reporting systems'));
+  assert.ok(pTech.includes('case study breakdown Reels'));
   assert.ok(pTech.includes("Are you currently exploring ways to expand your agency's client pipeline?"));
 
   // General fallback
   const pGen = buildPrompt({ company_name: 'Omega Holdings Ltd', sic_codes: '99999' });
-  assert.ok(pGen.includes("Quick question about Omega Holdings's workflow automation"));
-  assert.ok(pGen.includes('Briefly explain that you help businesses streamline routine communications'));
-  assert.ok(pGen.includes('Are you currently exploring ways to streamline your daily operations?'));
+  assert.ok(pGen.includes("Omega Holdings - customer bookings & enquiry flow"));
+  assert.ok(pGen.includes('3-part growth system'));
+  assert.ok(pGen.includes('showcase Reels'));
+  assert.ok(pGen.includes('24/7 WhatsApp assistant'));
+  assert.ok(pGen.includes('Are you currently exploring ways to streamline your daily operations and client bookings?'));
 });
 
 test('generateEmail generates sector-specific mock emails across all tracks with official signature', async () => {
   // Track 1: E-Commerce
   const mEcom = await generateEmail({ company_name: 'Trend Shop Ltd', sic_codes: '47110', active_directors: 'Emma Watson' }, { mock: true });
-  assert.equal(mEcom.subject, "Quick question about Trend Shop's online store");
+  assert.equal(mEcom.subject, "Trend Shop - store conversion & customer sales");
   assert.ok(mEcom.body.includes('Hey Emma,'));
-  assert.ok(mEcom.body.includes('pending checkouts'));
+  assert.ok(mEcom.body.includes('Product Showcase Reels & Stories'));
+  assert.ok(mEcom.body.includes('24/7 WhatsApp Shopping Assistant'));
   assert.equal(mEcom.body.includes('WhatsApp:'), false);
   assert.ok(mEcom.body.includes('https://nahid-yf63.onrender.com/'));
   assert.ok(mEcom.body.includes('https://github.com/Nahid625'));
 
   // Track 2: Healthcare
   const mHealth = await generateEmail({ company_name: 'Care Dental Ltd', sic_codes: '86210', active_directors: 'Dr David' }, { mock: true });
-  assert.equal(mHealth.subject, "Quick question about Care Dental's patient bookings");
-  assert.ok(mHealth.body.includes('24/7 digital assistant'));
-  assert.ok(mHealth.body.includes('patient intake form completions'));
+  assert.equal(mHealth.subject, "Care Dental - patient bookings & appointments");
+  assert.ok(mHealth.body.includes('Educational Reels & Clinic Stories'));
+  assert.ok(mHealth.body.includes('24/7 WhatsApp Patient Assistant'));
   assert.equal(mHealth.body.includes('WhatsApp:'), false);
 
   // Track 3: Trades
   const mTrades = await generateEmail({ company_name: 'Rapid Gas Ltd', sic_codes: '43220', active_directors: 'John Miller' }, { mock: true });
-  assert.equal(mTrades.subject, 'Quick question about client response times for Rapid Gas');
-  assert.ok(mTrades.body.includes('rapid WhatsApp messaging assistant'));
-  assert.ok(mTrades.body.includes('centralized inbox'));
+  assert.equal(mTrades.subject, 'Rapid Gas - job enquiries & emergency bookings');
+  assert.ok(mTrades.body.includes('Before-and-After Job Reels'));
+  assert.ok(mTrades.body.includes('24/7 On-Site WhatsApp Quoting'));
   assert.equal(mTrades.body.includes('WhatsApp:'), false);
 
   // Track 4: Hospitality
   const mHosp = await generateEmail({ company_name: 'Cozy Cafe Ltd', sic_codes: '56101' }, { mock: true });
-  assert.equal(mHosp.subject, 'Quick question about online bookings for Cozy Cafe');
-  assert.ok(mHosp.body.includes('seasonal announcements'));
-  assert.ok(mHosp.body.includes('management dashboard to track guest feedback'));
+  assert.equal(mHosp.subject, 'Cozy Cafe - table reservations & guest flow');
+  assert.ok(mHosp.body.includes('Food & Venue Showcase Reels'));
+  assert.ok(mHosp.body.includes('24/7 WhatsApp Table Assistant'));
   assert.equal(mHosp.body.includes('WhatsApp:'), false);
 
   // Track 5: B2B
   const mB2b = await generateEmail({ company_name: 'Prime Legal Ltd', sic_codes: '69101' }, { mock: true });
-  assert.equal(mB2b.subject, 'Quick question about client onboarding at Prime Legal');
-  assert.ok(mB2b.body.includes('payment tracking reminders'));
-  assert.ok(mB2b.body.includes('pipeline management'));
+  assert.equal(mB2b.subject, 'Prime Legal - client onboarding & enquiry flow');
+  assert.ok(mB2b.body.includes('Insight Reels & Daily Industry Stories'));
+  assert.ok(mB2b.body.includes('24/7 WhatsApp Consultation Assistant'));
   assert.equal(mB2b.body.includes('WhatsApp:'), false);
 
   // Track 6: Tech
   const mTech = await generateEmail({ company_name: 'Cloudify Ltd', sic_codes: '62012' }, { mock: true });
-  assert.equal(mTech.subject, 'Quick question about client pipeline workflows for Cloudify');
-  assert.ok(mTech.body.includes('automated client acquisition pipelines'));
+  assert.equal(mTech.subject, 'Cloudify - client acquisition & pipeline');
+  assert.ok(mTech.body.includes('Case Study Breakdown Reels & Stories'));
   assert.ok(mTech.body.includes(TECH_SIGNATURE_TITLE));
   assert.equal(mTech.body.includes('WhatsApp:'), false);
 });

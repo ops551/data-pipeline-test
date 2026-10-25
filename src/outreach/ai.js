@@ -713,73 +713,73 @@ const SECTOR_CONFIGS = Object.freeze({
   },
   ecommerce: {
     role: "an e-commerce automation engineer",
-    subject: (name) => `Quick question about ${name}'s online store`,
+    subject: (name) => `${name} - store conversion & customer sales`,
     pitch:
-      "Briefly explain that you help retail businesses organize their online presence. State that you use AI to automatically generate your social media content, schedule posts, and handle customer enquiries so they do not need to write or create anything manually. Mention they will receive a central dashboard to monitor everything in real time, plus automated follow-ups for pending checkouts.",
+      "Explain that you set up an automated revenue engine for online brands: 1) Turns product photos into dynamic showcase Reels, unboxing clips, and daily flash-deal Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp shopping assistant answers sizing and shipping questions, recovers pending checkouts, and guides buyers to completed orders. 3) Optimizes mobile storefront pages for lightning-fast 1-tap checkouts.",
     question:
       "Are you currently exploring ways to grow your store or looking to automate daily operations?",
-    focus: "online store, social media scheduling, and pending checkouts automation",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+    focus: "product showcase Reels, WhatsApp cart recovery, and mobile checkout speed",
+    cta: "If you would like to see a quick 30-second preview of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
   },
   healthcare: {
-    role: "a digital automation developer",
-    subject: (name) => `Quick question about ${name}'s patient bookings`,
+    role: "a clinic automation developer",
+    subject: (name) => `${name} - patient bookings & appointments`,
     pitch:
-      "Briefly explain that you help healthcare providers simplify patient communication. State that you implement a 24/7 digital assistant that handles appointment bookings, patient intake form completions, and scheduled reminders so staff does not manage scheduling manually. Mention they will receive a secure dashboard to monitor patient inquiries and reduce missed appointments.",
+      "Explain that you set up an automated patient communication and booking system for clinics and healthcare practices: 1) Turns clinic information into informative patient education Reels and daily clinic Stories auto-scheduled across Instagram and Facebook. 2) 24/7 WhatsApp digital assistant handles appointment bookings, patient intake form completions, and scheduled reminders directly into your clinic calendar. 3) Streamlines patient consultation pages for one-tap mobile booking.",
     question:
       "Are you currently exploring ways to improve your clinic's daily workflow?",
-    focus: "patient bookings, intake form completions, and scheduled reminders",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+    focus: "patient education Reels, 24/7 WhatsApp appointment bookings, and intake form completions",
+    cta: "If you would like to see a quick 30-second preview of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
   },
   trades: {
-    role: "an automation engineer",
-    subject: (name) => `Quick question about client response times for ${name}`,
+    role: "a trade automation developer",
+    subject: (name) => `${name} - job enquiries & emergency bookings`,
     pitch:
-      "Briefly explain that you help local service businesses capture every incoming customer enquiry promptly. State that when their team is busy on-site, the system triggers a rapid WhatsApp messaging assistant and automated follow-ups so they do not worry about missing potential clients. Mention they will receive a centralized inbox to track all customer requests in one place.",
+      "Explain that you set up an automated growth and booking system for trades and contractors: 1) Turns on-site job photos into before-and-after transformation Reels, completed project clips, and daily Stories auto-scheduled across Instagram and Facebook. 2) 24/7 rapid WhatsApp messaging assistant captures every incoming customer enquiry promptly while your team is on-site and books job estimates directly into your calendar with automated follow-ups. 3) Streamlines trade service landing pages for 1-tap mobile estimate requests.",
     question:
-      "Are you currently looking to streamline your client communication process?",
-    focus: "capturing customer enquiries promptly on-site via rapid WhatsApp messaging assistant",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+      "Are you currently looking to streamline your client communication and fill your job calendar?",
+    focus: "before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking",
+    cta: "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
   },
   hospitality: {
-    role: "a digital developer",
-    subject: (name) => `Quick question about online bookings for ${name}`,
+    role: "a hospitality automation developer",
+    subject: (name) => `${name} - table reservations & guest flow`,
     pitch:
-      "Briefly explain that you help hospitality businesses automate customer engagement. State that you set up automated guest feedback collection, seamless table or event reservations, and AI-driven seasonal announcements so they do not handle marketing tasks manually. Mention they will receive a real-time management dashboard to track guest feedback and reservations.",
+      "Explain that you set up an automated reservation and social engine for restaurants and hospitality venues: 1) Turns food and venue photos into mouthwatering dish highlight Reels and daily lunch/dinner special Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers menu inquiries, dietary questions, and confirms table reservations directly into your calendar. 3) Optimizes digital menus and booking pages for one-tap mobile reservations.",
     question:
       "Are you currently exploring ways to increase customer retention and table bookings?",
-    focus: "automated guest feedback, table reservations, and seasonal announcements",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+    focus: "dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations",
+    cta: "If you would like to see a quick 30-second preview of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
   },
   b2b: {
     role: "a business automation developer",
-    subject: (name) => `Quick question about client onboarding at ${name}`,
+    subject: (name) => `${name} - client onboarding & enquiry flow`,
     pitch:
-      "Briefly explain that you help professional firms streamline administrative workflows. State that you automate client onboarding, payment tracking reminders, and pipeline management so teams do not spend hours on repetitive paperwork. Mention they will receive a unified dashboard to monitor project delivery and client communications securely.",
+      "Explain that you set up an automated client acquisition and onboarding system for professional firms: 1) Turns client case studies and insights into professional highlight Reels and daily company update Stories auto-scheduled across LinkedIn and Twitter. 2) 24/7 WhatsApp consultation assistant answers scope inquiries, collects onboarding information, and books consultations directly into your calendar. 3) Streamlines firm service pages for high-ticket client conversion.",
     question:
-      "Are you currently looking to automate your internal operations?",
-    focus: "automated client onboarding, payment tracking reminders, and pipeline management",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+      "Are you currently looking to automate your internal operations and client pipeline?",
+    focus: "insight Reels, 24/7 WhatsApp consultation booking, and automated client onboarding",
+    cta: "If you would like to see a quick 30-second preview of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
   },
   tech: {
     role: "a backend and automation engineer",
-    subject: (name) => `Quick question about client pipeline workflows for ${name}`,
+    subject: (name) => `${name} - client acquisition & pipeline`,
     pitch:
-      "Briefly explain that you help digital agencies expand their client acquisition. State that you deploy automated client acquisition pipelines and smart reporting systems so teams do not spend excessive hours on manual prospecting. Mention they will receive structured data tracking to monitor campaign results continuously.",
+      "Explain that you deploy an automated client acquisition engine for digital and tech agencies: 1) Turns portfolio work into case study breakdown Reels and daily client win Stories auto-scheduled across LinkedIn and Instagram. 2) 24/7 WhatsApp qualification assistant answers technical capability questions and books discovery calls directly into agency calendars. 3) Streamlines agency landing pages for high-ticket client conversion.",
     question:
       "Are you currently exploring ways to expand your agency's client pipeline?",
-    focus: "automated client acquisition pipelines, smart reporting, and structured data tracking",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+    focus: "case study Reels, 24/7 WhatsApp qualification, and discovery call bookings",
+    cta: "If you would like to see a quick 30-second preview of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
   },
   general: {
-    role: "an automation developer",
-    subject: (name) => `Quick question about ${name}'s workflow automation`,
+    role: "a business automation developer",
+    subject: (name) => `${name} - customer bookings & enquiry flow`,
     pitch:
-      "Briefly explain that you help businesses streamline routine communications and daily workflows. State that you implement automated customer enquiry replies, scheduled task management, and a centralized dashboard so teams do not handle repetitive tasks manually. Mention they will receive a unified dashboard to monitor operations in real time.",
+      "Explain that you set up an automated 3-part growth system for local businesses: 1) Turns service photos into high-engagement showcase Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot. 2) 24/7 WhatsApp assistant answers customer inquiries on pricing and availability and books appointments directly into your calendar. 3) Streamlines mobile website pages so visitors can browse services and book appointments with zero lag.",
     question:
-      "Are you currently exploring ways to streamline your daily operations?",
-    focus: "workflow automation, customer enquiry replies, and unified dashboard",
-    cta: "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+      "Are you currently exploring ways to streamline your daily operations and client bookings?",
+    focus: "showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion",
+    cta: "If you would like to see a quick 30-second preview of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
   },
 });
 
@@ -1060,133 +1060,154 @@ function getMockEmail(company = {}, options = {}) {
       break;
 
     case "ecommerce":
-      subject = `Quick question about ${emailCompanyName}'s online store`;
+      subject = `${emailCompanyName} - store conversion & customer sales`;
       bodyLines = [
         greeting,
         "",
-        `I recently reviewed the homepage for ${emailCompanyName}.`,
+        `I recently reviewed the online store for ${emailCompanyName}.`,
         "",
-        "As an e-commerce automation engineer, I help retail businesses organize their online presence. We use AI to automatically generate your social media content, schedule posts, and handle customer enquiries—meaning you do not need to write or create anything manually.",
+        "Managing inventory and fulfillment every day leaves store owners little time to film product showcases, edit social clips, or recover abandoned shopping carts manually.",
         "",
-        "You will also receive a central dashboard to monitor everything in real time, plus automated follow-ups for pending checkouts.",
+        "We set up an automated revenue engine built for e-commerce brands:",
+        "1. Product Showcase Reels & Stories: Turns product photos into dynamic showcase Reels, unboxing clips, and daily flash-deal Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 WhatsApp Shopping Assistant: Answers sizing and shipping questions, recovers pending checkouts, and guides buyers to completed orders.",
+        hasVerifiedWebsite
+          ? "3. Storefront Speed Tuning: We streamline your product pages and checkout flow so mobile shoppers buy in one tap without cart drop-off."
+          : "3. High-Converting Mobile Storefront: A lightning-fast mobile catalog designed to turn visitors into instant buyers.",
         "",
-        "Are you currently exploring ways to grow your store or looking to automate daily operations?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated product reels and WhatsApp checkout recovery work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     case "healthcare":
-      subject = `Quick question about ${emailCompanyName}'s patient bookings`;
+      subject = `${emailCompanyName} - patient bookings & appointments`;
       bodyLines = [
         greeting,
         "",
-        `I recently reviewed the website for ${emailCompanyName}.`,
+        `I recently reviewed the services offered at ${emailCompanyName}.`,
         "",
-        "As a digital automation developer, I help healthcare providers simplify patient communication. We implement a 24/7 digital assistant that handles appointment bookings, patient intake form completions, and scheduled reminders—meaning your staff does not need to manage scheduling manually.",
+        "Treating patients all day means clinic staff rarely have time to produce educational clips, post daily clinic updates, or answer after-hours appointment inquiries.",
         "",
-        "You will also receive a secure dashboard to monitor patient inquiries and reduce missed appointments.",
+        "We set up an automated patient communication and booking system for healthcare practices:",
+        "1. Educational Reels & Clinic Stories: Turns clinic information into informative patient education Reels and daily clinic Stories auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 WhatsApp Patient Assistant: Answers common treatment questions, handles digital intake completions, and books appointments directly into your clinic calendar.",
+        hasVerifiedWebsite
+          ? "3. Patient Booking Portal Tuning: We streamline your appointment request pages for seamless, one-tap mobile booking."
+          : "3. Modern Mobile Clinic Portal: A clean, patient-friendly portal designed to simplify appointment requests and reduce administrative overhead.",
         "",
-        "Are you currently exploring ways to improve your clinic's daily workflow?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated clinic reels and appointment bookings work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     case "trades":
-      subject = `Quick question about client response times for ${emailCompanyName}`;
+      subject = `${emailCompanyName} - job enquiries & emergency bookings`;
       bodyLines = [
         greeting,
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "As an automation engineer, I help local service businesses capture every incoming customer enquiry promptly. When your team is busy on-site, our system triggers a rapid WhatsApp messaging assistant and automated follow-ups to handle appointment scheduling directly into your calendar—meaning you do not need to worry about missing potential clients.",
+        "When your team is on-site doing jobs, there is no time to film project transformations, edit video reels, or answer incoming customer calls and estimate requests.",
         "",
-        "You will also receive a centralized inbox to track all customer requests in one place.",
+        "We set up an automated growth and booking system built for trades and contractors:",
+        "1. Before-and-After Job Reels: Turns on-site job photos into high-impact transformation Reels and daily completed-project Stories auto-scheduled across Instagram and Facebook.",
+        "2. 24/7 On-Site WhatsApp Quoting: Captures every incoming customer enquiry promptly while your team is on-site with a rapid WhatsApp messaging assistant and automated follow-ups to book job estimates directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Service Page Mobile Tuning: We optimize your service pages so homeowners can request estimates and check availability in one tap."
+          : "3. Fast Mobile Trade Landing Page: A high-converting estimate page built to turn local homeowners into booked jobs with instant WhatsApp contact.",
         "",
-        "Are you currently looking to streamline your client communication process?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     case "hospitality":
-      subject = `Quick question about online bookings for ${emailCompanyName}`;
+      subject = `${emailCompanyName} - table reservations & guest flow`;
       bodyLines = [
         greeting,
         "",
         `I recently reviewed ${emailCompanyName}.`,
         "",
-        "As a digital developer, I help hospitality businesses automate customer engagement. We set up an automated guest feedback system, seamless table or event bookings, and AI-driven seasonal announcements—meaning you do not need to handle marketing tasks manually.",
+        "Running busy meal services leaves kitchen and front-of-house staff with zero time to film food prep, edit daily reels, or manage direct message table inquiries.",
         "",
-        "You will also receive a management dashboard to track guest feedback and reservations in real time.",
+        "We set up an automated reservation and social engine built for dining and hospitality:",
+        "1. Food & Venue Showcase Reels: Turns dish and atmosphere photos into mouthwatering highlight Reels and daily lunch/dinner special Stories auto-scheduled across Instagram and TikTok.",
+        "2. 24/7 WhatsApp Table Assistant: Answers menu questions and confirms reservations directly into your reservation calendar around the clock.",
+        hasVerifiedWebsite
+          ? "3. Digital Menu & Booking Tuning: We streamline your online menu and reservation flow for instant mobile booking with zero friction."
+          : "3. Fast Mobile Reservation Page: A clean, mobile-first menu and booking portal designed to turn local diners into confirmed reservations.",
         "",
-        "Are you currently exploring ways to increase customer retention and table bookings?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated dining reels and table reservations work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     case "b2b":
-      subject = `Quick question about client onboarding at ${emailCompanyName}`;
+      subject = `${emailCompanyName} - client onboarding & enquiry flow`;
       bodyLines = [
         greeting,
         "",
         `I recently reviewed the services offered at ${emailCompanyName}.`,
         "",
-        "As a business automation developer, I help professional firms streamline administrative workflows. We automate client onboarding, payment tracking reminders, and pipeline management—meaning your team does not need to spend hours on repetitive paperwork.",
+        "Managing client deliverables leaves partners and consultants little time to produce weekly content, manage social updates, or handle manual onboarding paperwork.",
         "",
-        "You will also receive a unified dashboard to monitor project delivery and client communications securely.",
+        "We set up an automated client acquisition and onboarding system for professional firms:",
+        "1. Insight Reels & Daily Industry Stories: Turns client case studies and insights into professional highlight Reels and daily company updates auto-scheduled across LinkedIn and Twitter.",
+        "2. 24/7 WhatsApp Consultation Assistant: Captures incoming inquiries, automates onboarding document collection, and schedules consultations directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Firm Website Conversion Tuning: We optimize your service pages so prospective corporate clients can request consultations with zero friction."
+          : "3. High-End B2B Showcase: A modern, high-speed corporate landing page designed to attract and capture qualified client inquiries.",
         "",
-        "Are you currently looking to automate your internal operations?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated client onboarding and consultation booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     case "tech":
-      subject = `Quick question about client pipeline workflows for ${emailCompanyName}`;
+      subject = `${emailCompanyName} - client acquisition & pipeline`;
       bodyLines = [
         greeting,
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "As a backend and automation engineer, I help digital agencies expand their client acquisition. We deploy automated client acquisition pipelines and smart reporting systems—meaning your team does not need to spend excessive hours on manual prospecting.",
+        "Delivering software sprints and client projects means technical founders rarely have time to produce case study content, post daily wins, or chase incoming agency leads.",
         "",
-        "You will also receive structured data tracking to monitor campaign results continuously.",
+        "We deploy an automated client acquisition engine built for tech and digital agencies:",
+        "1. Case Study Breakdown Reels & Stories: Turns project launches and client wins into compelling visual Reels and daily Stories auto-scheduled across LinkedIn and Instagram.",
+        "2. 24/7 WhatsApp Qualification Assistant: Qualifies incoming client scope, answers technical capability questions, and books discovery calls directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Agency Portfolio Speed Tuning: We streamline your project case studies and inquiry pages for instant mobile performance."
+          : "3. High-Converting Agency Portal: A clean, modern developer showcase built to turn prospective tech clients into booked discovery calls.",
         "",
-        "Are you currently exploring ways to expand your agency's client pipeline?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated agency showcase and discovery call booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
       break;
 
     default: // general
-      subject = `Quick question about ${emailCompanyName}'s workflow automation`;
+      subject = `${emailCompanyName} - customer bookings & enquiry flow`;
       bodyLines = [
         greeting,
         "",
         `I recently checked out ${emailCompanyName} and wanted to reach out.`,
         "",
-        "As an automation developer, I help businesses streamline routine communications and daily workflows. We implement automated customer enquiry replies, scheduled task management, and a centralized dashboard so your team does not need to handle repetitive tasks manually.",
+        "Running day-to-day operations means business owners rarely have time to film daily content, edit video reels, or answer customer inquiries immediately around the clock.",
         "",
-        "You will also receive a unified dashboard to monitor operations in real time.",
+        "We set up an automated 3-part growth system built for local businesses:",
+        "1. Automated Showcase Reels & Stories: Turns your service photos into engaging Reels and daily Stories auto-scheduled across Instagram and Facebook on autopilot.",
+        "2. 24/7 WhatsApp Booking Assistant: Answers customer inquiries on pricing and availability, booking appointments directly into your calendar.",
+        hasVerifiedWebsite
+          ? "3. Website Conversion Optimization: We streamline your website pages so visitors can browse services and book appointments with zero lag."
+          : "3. Fast Mobile Booking Page: A modern, high-converting mobile page designed to turn local visitors into confirmed bookings.",
         "",
-        "Are you currently exploring ways to streamline your daily operations?",
-        "",
-        "If you would like to briefly discuss this, just let me know. If you prefer no further messages, I completely understand and will not contact you again.",
+        "If you would like to see a quick 30-second preview of how automated service reels and booking work, just reply with 'yes' and I will send it over.",
         "",
         signature,
       ];
@@ -1286,6 +1307,10 @@ function buildPrompt(company = {}, options = {}) {
     hasInspectedWebsite
       ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows.`
       : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists.`,
+    "Core Solution Requirement: You must clearly present our 3-pillar growth system tailored to their specific industry (do not condense to just social media posting):",
+    "  1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from their photos/inventory)",
+    "  2) 24/7 WhatsApp & Instant Booking Assistant (answers pricing/enquiries and books appointments/estimates directly into their calendar)",
+    "  3) Dynamic High-Speed Mobile Website & Booking Optimization",
     hasVerifiedWebsite
       ? `3. Value Proposition: ${track.pitch}`
       : `3. Value Proposition: Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,

@@ -340,7 +340,7 @@ test('generateFollowUpEmail crafts Touch 2 (Quick Bump) for Non-Tech Persona', (
   // Content verification
   assert.match(email.text, /^Hey Sarah,/);
   assert.match(email.text, /floating my previous note back to the top/);
-  assert.match(email.text, /automating customer enquiries and scheduling social updates/);
+  assert.match(email.text, /dish highlight Reels, daily special Stories, and 24\/7 WhatsApp table reservations/);
   assert.match(email.text, /Worth a brief 5-minute chat/);
 
   // Signature trust verification

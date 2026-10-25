@@ -53,8 +53,9 @@ const EXCLUDED_SIC_SET = new Set(EXCLUDED_SICS);
 
 function isTargetSic(sicString) {
   if (!sicString) return false;
-  const codes = sicString
-    .split(';')
+  const raw = Array.isArray(sicString) ? sicString.join(';') : String(sicString || '');
+  const codes = raw
+    .split(/[;,]/)
     .map(c => c.trim())
     .filter(Boolean);
 
