@@ -1449,7 +1449,7 @@ function buildPrompt(company = {}, options = {}) {
     "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
-    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 120-150 words total).",
+    "- Keep it under 100-120 words before the signature. Aim for around 130-160 words before signature. Keep the body concise and punchy (around 130-160 words total).",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
@@ -1594,17 +1594,50 @@ function cleanEmailContent(rawText, options = {}) {
     body = beforeSecond.trimEnd() + "\n\n" + cleanedSecond.trimStart();
   }
 
+  // Normalize markdown bold / bullets on pillar numbers (e.g. **2)** -> 2), - 2) -> 2))
+  body = body
+    .replace(/\*\*([123][).][^*]*)\*\*/g, "$1")
+    .replace(/(\b[123][).]\s*)\*\*([^*]+)\*\*/g, "$1$2")
+    .replace(/(?:^|\n)\s*[-*]\s*([123][).])/g, "\n$1");
+
   // Universal Truncated Pillar 2 Healer:
   // Catches ANY variant of truncated Pillar 2:
   // 2) 24/7, 2. 24/7, 2) 24/7:, 2) 24/7 -, 2) 24/7 assistant, 2) Hybrid 24/7, 2) Hybrid 24/7:,
   // 2) Hybrid 24/7 WhatsApp Assistant, 2) Hybrid 24/7 WhatsApp Assistant:, 2) 24/7 WhatsApp Booking Assistant:, 2) 24/7 WhatsApp Assistant:
   const truncatedPillar2Regex = /(?:^|\n|\b)\s*2[).]\s*(?:(?:Hybrid\s+)?24\/7(?:\s*WhatsApp)?(?:\s*Booking)?(?:\s*Assistant)?|(?:Hybrid\s+)?WhatsApp(?:\s*Booking)?\s*Assistant)(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi;
 
-  const healedPillar2 = (options.sector && options.sector !== "general" && sectorPillars?.pillar2)
+  const healedPillar2 = (resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar2)
     ? `\n${sectorPillars.pillar2}\n`
     : "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n";
 
   body = body.replace(truncatedPillar2Regex, healedPillar2);
+
+  // Layer 2: Structural Guard
+  // Catches markdown formatting (e.g. **2) 24/7**), bullet points (- 2) 24/7), or unpredicted truncated phrases
+  // without falsely overwriting concise valid descriptions (like "2. 24/7 WhatsApp Assistant: Books consultations.")
+  const p2StructuralRegex = /(?:^|\n|\b)[ \t]*(?:[-*]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*([\s\S]*?)(?=(?:\r?\n[ \t]*(?:[-*]\s*)?(?:\*\*)?3[).])|\b3[).]|(?:\r?\n\s*\r?\n)|$)/i;
+  const p2Match = body.match(p2StructuralRegex);
+  if (p2Match) {
+    const p2Text = p2Match[1].replace(/^(?:[-*]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*/, "").replace(/\*+$/, "").trim();
+    let isTruncated = false;
+    if (p2Text.length < 30) {
+      isTruncated = true;
+    } else {
+      const splitMatch = p2Text.match(/^([^:\-–—]+)[:\-–—]\s*(.*)$/);
+      if (splitMatch) {
+        const afterSeparator = splitMatch[2].trim();
+        const wordsAfter = afterSeparator ? afterSeparator.split(/\s+/).filter(Boolean).length : 0;
+        isTruncated = wordsAfter < 2;
+      } else {
+        const totalWords = p2Text.split(/\s+/).filter(Boolean).length;
+        isTruncated = totalWords < 8 || p2Text.length < 45;
+      }
+    }
+
+    if (isTruncated) {
+      body = body.replace(p2StructuralRegex, healedPillar2);
+    }
+  }
 
   const hasPillar1 = /(?:^|\n|\b)\s*1[).]/i.test(body);
   const hasPillar2 =

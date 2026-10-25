@@ -397,3 +397,32 @@ test('Unit 5.65 - Adversarial Test 3: Auto-completes missing Pillar 2 when Gemin
   assert.ok(pos1 < pos2 && pos2 < pos3, 'Pillars must be in sequential 1, 2, 3 order');
 });
 
+test('Unit 5.65 - Adversarial Test 4: Structural Guard (<8 words / <50 chars) heals markdown bolding, bullets, and novel short phrasings', () => {
+  const adversarialCases = [
+    { label: 'markdown bolding **2) 24/7**', body: '1) AI Social Media Autopilot: Project reels.\n**2) 24/7**\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Fast booking.' },
+    { label: 'bulleted markdown - 2) 24/7:', body: '1) AI Social Media Autopilot: Project reels.\n- 2) 24/7:\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Fast booking.' },
+    { label: 'bulleted asterisk * 2) 24/7.', body: '1) AI Social Media Autopilot: Project reels.\n* 2) 24/7.\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Fast booking.' },
+    { label: 'novel short phrasing 2) Custom Assistant', body: '1) AI Social Media Autopilot: Project reels.\n2) Custom Assistant\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Fast booking.' },
+    { label: 'short fragment with hyphen 2) 24/7 - answers enquiries', body: '1) AI Social Media Autopilot: Project reels.\n2) 24/7 - answers enquiries\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Fast booking.' }
+  ];
+
+  for (const tc of adversarialCases) {
+    const raw = JSON.stringify({
+      subject: 'Idea for Horizon Kitchens',
+      body: `Hey Team,\n\n${tc.body}\n\nWould you like a demo?`
+    });
+
+    const cleaned = cleanEmailContent(raw, {
+      companyName: 'Horizon Kitchens',
+      sector: 'kitchen_interior'
+    });
+
+    assert.ok(
+      cleaned.body.includes('2) Hybrid 24/7 WhatsApp Assistant: Chat manually with homeowners anytime; when you\'re on-site or after-hours, an automated assistant captures client dimensions and books home measurement and design consultations into your calendar.'),
+      `Structural guard must heal ${tc.label}`
+    );
+    assert.ok(!cleaned.body.includes('**\n2)'), 'Must not leave dangling markdown asterisks');
+  }
+});
+
+
