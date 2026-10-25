@@ -48,7 +48,8 @@ function formatLead(company = {}, extractedData = {}, sources = [], website = {}
     website_context: website.context || company?.website_context || '',
     website_url: website.url || company?.website_url || ''
   };
-  const type = extractedData.type || company?.type || company?.sector || classifySector(combinedCompanyContext);
+  const rawType = String(extractedData.type || company?.type || company?.sector || '').trim();
+  const type = rawType || classifySector(combinedCompanyContext);
   
   return {
     company_number: company.company_number,

@@ -171,7 +171,7 @@ test('buildPrompt includes tailored company details and the current concise prom
   assert.ok(prompt.includes('Say you came across Apex Cleaners and wanted to reach out'));
   assert.ok(prompt.includes('captures every incoming customer enquiry promptly'));
   assert.ok(prompt.includes('rapid WhatsApp messaging assistant'));
-  assert.ok(prompt.includes('If you would like to see a quick 30-second preview of how automated trade reels and 24/7 estimate booking work, just reply with \'yes\' and I will send it over.'));
+  assert.ok(prompt.includes('If you would like to see a quick 30-second preview demo of how automated trade reels and 24/7 estimate booking work, just reply with \'yes\' and I will send it over.'));
   assert.ok(prompt.includes('Keep it under 100-120 words before the signature.'));
   assert.ok(prompt.includes(`Forbidden words and phrases: ${FORBIDDEN_SPAM_WORDS.join(', ')}.`));
   assert.ok(prompt.includes('Do not use any forbidden word or phrase anywhere in the subject or body'));
@@ -933,7 +933,11 @@ test('generateEmail generates sector-specific mock emails across all tracks with
 // -----------------------------------------------------------------------------
 
 test('SAFE_WORD_REPLACEMENTS and applySafeWordReplacements neutralize all 12 trigger words', () => {
-  assert.equal(applySafeWordReplacements('We offer an instant quote.'), 'We offer an rapid response.');
+  assert.equal(applySafeWordReplacements('We offer an instant quote.'), 'We offer a rapid response.');
+  assert.equal(applySafeWordReplacements('Get an instant preview.'), 'Get a direct preview.');
+  assert.equal(applySafeWordReplacements('We provide an direct route.'), 'We provide a direct route.');
+  assert.equal(applySafeWordReplacements('We provide an rapid turnaround.'), 'We provide a rapid turnaround.');
+  assert.equal(applySafeWordReplacements('Ask about an rates.'), 'Ask about rates.');
   assert.equal(applySafeWordReplacements('Instant quote on WhatsApp.'), 'Rapid response on WhatsApp.');
   assert.equal(applySafeWordReplacements('We automate invoice chasing.'), 'We automate payment tracking reminders.');
   assert.equal(applySafeWordReplacements('Send promo blasts weekly.'), 'Send seasonal announcements weekly.');

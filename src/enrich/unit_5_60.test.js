@@ -449,7 +449,7 @@ test('Unit 5.60 - Anti-Spam Vocabulary: "instant" and "price" forbidden across a
   assert.ok(FORBIDDEN_SPAM_WORDS.includes('price'), 'FORBIDDEN_SPAM_WORDS must include "price"');
 
   // 2. Safe word replacements neutralize "instant", "pricing", and "prices"
-  assert.equal(applySafeWordReplacements('Get an instant preview.'), 'Get an direct preview.');
+  assert.equal(applySafeWordReplacements('Get an instant preview.'), 'Get a direct preview.');
   assert.equal(applySafeWordReplacements('Enquire about pricing details.'), 'Enquire about rates details.');
   assert.equal(applySafeWordReplacements('Affordable price on all jobs.'), 'Affordable rates on all jobs.');
   assert.equal(applySafeWordReplacements('Discount prices available.'), 'Discount rates available.');
