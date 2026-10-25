@@ -91,7 +91,7 @@ test('Unit 5.18: GitHub Actions Enrichment Workflow', async (t) => {
     assert.strictEqual(env.GH_TOKEN, '${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}');
     assert.strictEqual(env.ENRICH_BATCH_SIZE, "${{ inputs.batch_size || '50' }}");
     assert.strictEqual(env.COMPANIES_HOUSE_API_KEY, '${{ secrets.COMPANIES_HOUSE_API_KEY }}');
-    assert.strictEqual(env.DAYS_BACK_MIN, '90');
+    assert.strictEqual(env.DAYS_BACK_MIN, '30');
     assert.strictEqual(env.DAYS_BACK_MAX, '180');
     assert.strictEqual(env.DAYS_BACK, '10');
     assert.strictEqual(env.SMTP_HOST, '${{ secrets.SMTP_HOST }}');

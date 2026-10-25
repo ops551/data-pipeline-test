@@ -457,7 +457,9 @@ async function verifyEmailSmtp(email) {
   const domain = email.split('@')[1];
   let mxRecords;
   try {
-    const mxPromise = resolveMx(domain);
+    const mxPromise = (dns.promises && typeof dns.promises.resolveMx === 'function')
+      ? dns.promises.resolveMx(domain)
+      : resolveMx(domain);
     const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('timeout')), 5000)
     );
@@ -562,7 +564,9 @@ async function verifyEmail(email) {
     !TEST_OR_DOC_DOMAINS.has(emailDomain)
   ) {
     try {
-      const mxPromise = resolveMx(emailDomain);
+      const mxPromise = (dns.promises && typeof dns.promises.resolveMx === 'function')
+        ? dns.promises.resolveMx(emailDomain)
+        : resolveMx(emailDomain);
       const timeoutPromise = new Promise((_, reject) =>
         setTimeout(() => reject(new Error('timeout')), 2000)
       );
@@ -868,6 +872,32 @@ async function resolvePersonEmail({
   return null;
 }
 
+async function hasValidMx(domain) {
+  if (!domain) return false;
+  const d = String(domain).toLowerCase().trim().replace(/^@/, '');
+  if (PUBLIC_EMAIL_PROVIDERS.has(d) || TEST_OR_DOC_DOMAINS.has(d)) {
+    return true;
+  }
+  if (process.env.SMTP_MOCK === 'true' || process.env.SMTP_MOCK === '1' || process.env.SKIP_MX_CHECK === 'true') {
+    return true;
+  }
+  try {
+    const mxPromise = (dns.promises && typeof dns.promises.resolveMx === 'function')
+      ? dns.promises.resolveMx(d)
+      : resolveMx(d);
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 3000)
+    );
+    const mxRecords = await Promise.race([mxPromise, timeoutPromise]);
+    if (!mxRecords || mxRecords.length === 0 || (mxRecords.length === 1 && mxRecords[0].exchange === '')) {
+      return false;
+    }
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
 module.exports = {
   detectPattern,
   inferEmails,
@@ -883,6 +913,7 @@ module.exports = {
   resetExhaustedKeys,
   exhaustedKeys,
   areAllVerificationApisExhausted,
-  parseKeys
+  parseKeys,
+  hasValidMx
 };
 

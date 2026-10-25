@@ -64,8 +64,8 @@ function filterCandidates(
 
   const rawMin = options.minDaysOld !== undefined
     ? Number(options.minDaysOld)
-    : (envMin !== undefined ? Number(envMin) : 90);
-  const minDaysOld = Number.isFinite(rawMin) ? rawMin : 90;
+    : (envMin !== undefined ? Number(envMin) : 30);
+  const minDaysOld = Number.isFinite(rawMin) ? rawMin : 30;
 
   const rawMax = options.maxDaysOld !== undefined
     ? Number(options.maxDaysOld)
