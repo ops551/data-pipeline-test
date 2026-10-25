@@ -42,7 +42,7 @@ permissions:
 jobs:
   followup:
     name: Run Follow-up Outreach
-    if: github.repository == 'ops551/data-pipeline-test'
+    if: github.repository == 'ops551/data-pipeline-test' || github.repository == 'Nahid625/Recent-uk-Companys'
     runs-on: ubuntu-latest
     timeout-minutes: 15
 

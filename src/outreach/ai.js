@@ -685,7 +685,7 @@ const SECTOR_CONFIGS = Object.freeze({
     role: "a fitness automation developer",
     subject: (name) => `${name} - member signups & trial passes`,
     pitch:
-      "Explain that you set up an automated member acquisition system for gyms, personal trainers, and pilates studios: 1) Turns client progress photos into 12-week body transformation Reels and daily motivational Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers class inquiries and books free trial passes and consultations into their calendar. 3) Optimizes class schedules and membership signups for mobile.",
+      "Explain that you set up an automated member acquisition system for gyms, personal trainers, and pilates studios: 1) Turns client progress photos into 12-week body transformation Reels and daily motivational Stories auto-scheduled across Instagram and TikTok. 2) 24/7 WhatsApp assistant answers class inquiries and books trial passes and consultations into their calendar. 3) Optimizes class schedules and membership signups for mobile.",
     question:
       "Are you currently looking to increase new member signups and trial pass bookings?",
     focus: "transformation Reels, daily motivation Stories, and trial pass booking",
@@ -890,7 +890,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer quote enquiry.",
+        "When you are in the bay doing paint corrections and ceramic coatings, there is no time to film before-and-after clips, edit reels, or reply immediately to every customer pricing enquiry.",
         "",
         "We set up an automated content and booking engine built for detailing studios:",
         "1. 50/50 Before-After Reels & Daily Stories: Turns quick photos from your bay into high-gloss transformation Reels, ceramic coating showcases, and daily completed-car Stories auto-scheduled across Instagram and Facebook.",
@@ -960,7 +960,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated showcase system designed for bespoke joinery and interior studios:",
         "1. Room Reveal Reels & Craft Stories: Turns your completed project photos into cinematic room-reveal Reels, material closeups, and daily in-progress Stories scheduled across Instagram and Facebook on autopilot.",
-        "2. 24/7 Design Consultation Booking: When prospective clients message asking for estimates, an automated assistant replies promptly and books free home measurement and design visits into your calendar.",
+        "2. 24/7 Design Consultation Booking: When prospective clients message asking for estimates, an automated assistant replies promptly and books home measurement and design visits into your calendar.",
         hasVerifiedWebsite
           ? "3. Portfolio Website Speed Tuning: We streamline your gallery pages so homeowners can inspect high-res projects and request design visits with zero lag."
           : "3. Modern Bespoke Portfolio Showcase: A high-end mobile showcase designed to display your craftsmanship and capture design consultations.",
@@ -1004,7 +1004,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         "We set up an automated member acquisition setup built for fitness and pilates studios:",
         "1. Body Transformation Reels & Stories: Turns client progress photos into 12-week body transformation Reels, workout technique tips, and daily motivation Stories auto-scheduled across Instagram and TikTok.",
-        "2. 24/7 Trial Pass & WhatsApp Assistant: Replies promptly to class inquiries and books free trial passes and fitness assessments directly into your calendar.",
+        "2. 24/7 Trial Pass & WhatsApp Assistant: Replies promptly to class inquiries and books trial passes and fitness assessments directly into your calendar.",
         hasVerifiedWebsite
           ? "3. Class Schedule Mobile Tuning: We streamline your timetable and signup flow so prospective members can book trial passes in one tap."
           : "3. Modern Studio Landing Page: A clean, mobile-first page built to turn local fitness searchers into booked trial passes.",
@@ -1104,7 +1104,7 @@ function getMockEmail(company = {}, options = {}) {
         "",
         `I recently checked out ${emailCompanyName}.`,
         "",
-        "As an automation engineer, I help local service businesses capture every incoming customer enquiry promptly. When your team is busy on-site, our system triggers a rapid WhatsApp messaging assistant and automated follow-ups—meaning you do not need to worry about missing potential clients.",
+        "As an automation engineer, I help local service businesses capture every incoming customer enquiry promptly. When your team is busy on-site, our system triggers a rapid WhatsApp messaging assistant and automated follow-ups to handle appointment scheduling directly into your calendar—meaning you do not need to worry about missing potential clients.",
         "",
         "You will also receive a centralized inbox to track all customer requests in one place.",
         "",
@@ -1193,8 +1193,9 @@ function getMockEmail(company = {}, options = {}) {
       break;
   }
 
-  const body = bodyLines.join("\n");
-  return { subject, body, text: `Subject: ${subject}\n\n${body}` };
+  const body = applySafeWordReplacements(bodyLines.join("\n"));
+  const cleanSubject = applySafeWordReplacements(subject);
+  return { subject: cleanSubject, body, text: `Subject: ${cleanSubject}\n\n${body}` };
 }
 
 function resolveApiKey(options = {}) {
