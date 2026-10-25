@@ -1398,6 +1398,7 @@ function buildPrompt(company = {}, options = {}) {
     ? `Hey directorName,`.replace("directorName", directorName)
     : `Hey ${emailCompanyName},`;
 
+
   return [
     `Write a short, natural cold outreach email from ${track.role}.`,
     `Suggested subject line (baseline reference): "${track.subject(emailCompanyName)}"`,
@@ -1449,7 +1450,7 @@ function buildPrompt(company = {}, options = {}) {
     "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
-    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 120-150 words total).",
+    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 130-160 words before signature total).",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
@@ -1480,7 +1481,14 @@ function cleanEmailContent(rawText, options = {}) {
     ? buildSignature({ ...options, isTech })
     : `Best regards,\n${senderName}`;
 
-  const resolvedSector = options.sector || (isTech ? "tech" : classifySector({ company_name: companyName, industry: options.industry, sic_codes: options.sic_codes, sector: options.sector, type: options.type }));
+  const explicitSector = options.sector || options.company?.sector || options.company?.type || options.type;
+  const resolvedSector = explicitSector || (isTech ? "tech" : classifySector({
+    company_name: companyName,
+    industry: options.industry || options.company?.industry,
+    sic_codes: options.sic_codes || options.company?.sic_codes,
+    sector: options.sector || options.company?.sector,
+    type: options.type || options.company?.type
+  }));
   const sectorPillars = getSectorPillars(resolvedSector);
 
   if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
@@ -1594,17 +1602,41 @@ function cleanEmailContent(rawText, options = {}) {
     body = beforeSecond.trimEnd() + "\n\n" + cleanedSecond.trimStart();
   }
 
+  // Normalize markdown bold / bullets on pillar numbers (e.g. **2) 24/7**, 2) **24/7**, - 2) 24/7)
+  body = body
+    .replace(/(?:^|\n)\s*[-*•]\s*(?:\*\*)?([123][).])/g, "\n$1")
+    .replace(/\*\*([123][).][^*]*)\*\*/g, "$1")
+    .replace(/(\b[123][).]\s*)\*\*([^*]+)\*\*/g, "$1$2")
+    .replace(/(\b[123][).][^\n*]*)\*+/g, "$1");
+
   // Universal Truncated Pillar 2 Healer:
   // Catches ANY variant of truncated Pillar 2:
   // 2) 24/7, 2. 24/7, 2) 24/7:, 2) 24/7 -, 2) 24/7 assistant, 2) Hybrid 24/7, 2) Hybrid 24/7:,
   // 2) Hybrid 24/7 WhatsApp Assistant, 2) Hybrid 24/7 WhatsApp Assistant:, 2) 24/7 WhatsApp Booking Assistant:, 2) 24/7 WhatsApp Assistant:
   const truncatedPillar2Regex = /(?:^|\n|\b)\s*2[).]\s*(?:(?:Hybrid\s+)?24\/7(?:\s*WhatsApp)?(?:\s*Booking)?(?:\s*Assistant)?|(?:Hybrid\s+)?WhatsApp(?:\s*Booking)?\s*Assistant)(?:\s*[:\-–—]|\s*\.|\s*assistant(?:\s*[:\-–—]|\.|\b)|\s*)?(?=\s*(?:\r?\n|3[).]|(?:\r?\n\s*\r?\n)|$))/gi;
 
-  const healedPillar2 = (options.sector && options.sector !== "general" && sectorPillars?.pillar2)
+  const healedPillar2 = (resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar2)
     ? `\n${sectorPillars.pillar2}\n`
     : "\n2) 24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries and schedules appointments or estimates directly into your calendar.\n";
 
   body = body.replace(truncatedPillar2Regex, healedPillar2);
+
+  // Layer 2: Structural Guard (<8 words or <45 chars)
+  // If any line/block starting with 2) or 2. has fewer than 8 words or fewer than 45 characters, unconditionally replace it with the complete healedPillar2
+  const p2StructuralRegex = /(?:^|\n)[ \t]*(?:[-*•]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*([\s\S]*?)(?=(?:\r?\n[ \t]*(?:[-*•]\s*)?(?:\*\*)?3[).])|\b3[).]|(?:\r?\n\s*\r?\n)|$)/i;
+  const p2Match = body.match(p2StructuralRegex);
+  if (p2Match) {
+    const p2Raw = p2Match[0].trim();
+    const p2Text = p2Match[1].replace(/^(?:[-*•]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*/, "").replace(/[*_~`]/g, "").trim();
+    const splitMatch = p2Text.match(/^([^:\-–—]+)[:\-–—]\s*(.*)$/);
+    const wordsAfter = splitMatch && splitMatch[2] ? splitMatch[2].trim().split(/\s+/).filter(Boolean).length : 0;
+    const totalWords = p2Raw.replace(/[*_~`]/g, "").split(/\s+/).filter(Boolean).length;
+    const isTruncated = p2Raw.length < 45 || (totalWords < 8 && wordsAfter < 2);
+
+    if (isTruncated) {
+      body = body.replace(p2StructuralRegex, healedPillar2);
+    }
+  }
 
   const hasPillar1 = /(?:^|\n|\b)\s*1[).]/i.test(body);
   const hasPillar2 =
@@ -1622,7 +1654,8 @@ function cleanEmailContent(rawText, options = {}) {
   }
 
   if (hasPillar2 && !hasPillar3) {
-    const pillar3Addition = (options.sector && options.sector !== "general" && sectorPillars?.pillar3)
+    const isGenericPillar2 = body.includes("24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries");
+    const pillar3Addition = (!isGenericPillar2 && resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar3)
       ? `\n${sectorPillars.pillar3}\n`
       : "\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.\n";
 
@@ -1797,11 +1830,12 @@ async function generateEmail(company, options = {}) {
           sector: options.sector || (isTech ? "tech" : classifySector(company)),
           type: company.type,
           companyName: company.company_name,
-          directorName: extractFirstName(
+          directorName: options.directorName || extractFirstName(
             company.person_name ||
             company.active_directors ||
             company.contact_name ||
             company.director_name ||
+            company.officer_name ||
             ""
           )
         });
@@ -1889,11 +1923,12 @@ async function generateEmail(company, options = {}) {
           sector: options.sector || (isTech ? "tech" : classifySector(company)),
           type: company.type,
           companyName: company.company_name,
-          directorName: extractFirstName(
+          directorName: options.directorName || extractFirstName(
             company.person_name ||
             company.active_directors ||
             company.contact_name ||
             company.director_name ||
+            company.officer_name ||
             ""
           )
         });
