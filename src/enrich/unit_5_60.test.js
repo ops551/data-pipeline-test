@@ -439,3 +439,58 @@ test('Unit 5.60 - Delivery Shield Integrity: Blind synthesis remains banned and 
     fs.rmSync(dir2, { recursive: true, force: true });
   }
 });
+
+test('Unit 5.60 - Anti-Spam Vocabulary: "instant" and "price" forbidden across all 18 sector templates and follow-ups', () => {
+  const { FORBIDDEN_SPAM_WORDS, SECTOR_CONFIGS, getMockEmail, applySafeWordReplacements } = require('../outreach/ai');
+  const { FOLLOWUP_SECTOR_TEMPLATES } = require('../outreach/followup');
+
+  // 1. FORBIDDEN_SPAM_WORDS includes "instant" and "price"
+  assert.ok(FORBIDDEN_SPAM_WORDS.includes('instant'), 'FORBIDDEN_SPAM_WORDS must include "instant"');
+  assert.ok(FORBIDDEN_SPAM_WORDS.includes('price'), 'FORBIDDEN_SPAM_WORDS must include "price"');
+
+  // 2. Safe word replacements neutralize "instant", "pricing", and "prices"
+  assert.equal(applySafeWordReplacements('Get an instant preview.'), 'Get an direct preview.');
+  assert.equal(applySafeWordReplacements('Enquire about pricing details.'), 'Enquire about rates details.');
+  assert.equal(applySafeWordReplacements('Affordable price on all jobs.'), 'Affordable rates on all jobs.');
+  assert.equal(applySafeWordReplacements('Discount prices available.'), 'Discount rates available.');
+
+  // 3. All 18 SECTOR_CONFIGS pitches, focus, and ctas contain zero forbidden spam words
+  for (const [sector, config] of Object.entries(SECTOR_CONFIGS)) {
+    const textToCheck = `${config.pitch} ${config.focus || ''} ${config.cta || ''}`;
+    for (const spamWord of FORBIDDEN_SPAM_WORDS) {
+      const regex = new RegExp(`\\b${spamWord}\\b`, 'i');
+      assert.ok(
+        !regex.test(textToCheck),
+        `Sector ${sector} pitch/focus must NOT contain forbidden spam word "${spamWord}"`
+      );
+    }
+  }
+
+  // 4. All 18 getMockEmail bodies contain zero forbidden spam words
+  for (const sector of Object.keys(SECTOR_CONFIGS)) {
+    const mock = getMockEmail({ company_name: 'Apex Motor Group Ltd' }, { sector });
+    for (const spamWord of FORBIDDEN_SPAM_WORDS) {
+      const regex = new RegExp(`\\b${spamWord}\\b`, 'i');
+      assert.ok(
+        !regex.test(mock.body),
+        `Sector ${sector} mock email body must NOT contain forbidden spam word "${spamWord}"`
+      );
+      assert.ok(
+        !regex.test(mock.subject),
+        `Sector ${sector} mock email subject must NOT contain forbidden spam word "${spamWord}"`
+      );
+    }
+  }
+
+  // 5. All followup templates contain zero forbidden spam words
+  for (const [sector, template] of Object.entries(FOLLOWUP_SECTOR_TEMPLATES)) {
+    const text = `${template.touch2Hook || ''} ${template.hook || ''} ${template.breakupPhrase || ''}`;
+    for (const spamWord of FORBIDDEN_SPAM_WORDS) {
+      const regex = new RegExp(`\\b${spamWord}\\b`, 'i');
+      assert.ok(
+        !regex.test(text),
+        `Follow-up sector ${sector} must NOT contain forbidden spam word "${spamWord}"`
+      );
+    }
+  }
+});
