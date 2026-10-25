@@ -267,12 +267,25 @@ async function verifySniffmail(email, apiKey) {
       if (res.status === 200) {
         return { success: false, isValid: false, reason: 'sniffmail_malformed_response' };
       }
-      return { quotaExceeded: res.status >= 400 };
+      if (res.status >= 500) {
+        return { success: false, timeout: false, reason: 'server_error' };
+      }
+      return { quotaExceeded: res.status === 402 || res.status === 429 || res.status === 401 };
+    }
+    if (res.status >= 500) {
+      return { success: false, timeout: false, reason: 'server_error' };
     }
     if (isQuotaExceeded(res.status, data)) {
       return { quotaExceeded: true };
     }
-    const isCatchAllDomain = Boolean(data.is_catchall || data.catch_all);
+    const isCatchAllDomain = Boolean(
+      data.is_catchall ||
+      data.catch_all ||
+      data.is_catch_all ||
+      data.status === 'catch_all' ||
+      /catch[-_ ]?all/i.test(String(data.reason || '')) ||
+      /catch[-_ ]?all/i.test(String(data.mx_details || ''))
+    );
     const userPart = (String(email || '').split('@')[0] || '').toLowerCase().trim();
     const isKnownRolePrefix = GENERIC_PREFIXES.has(userPart);
     const isRoleAccount = Boolean(data.is_role_account || isKnownRolePrefix);
@@ -313,12 +326,25 @@ async function verifyReoon(email, apiKey) {
       if (res.status === 200) {
         return { success: false, isValid: false, reason: 'reoon_malformed_response' };
       }
-      return { quotaExceeded: res.status >= 400 };
+      if (res.status >= 500) {
+        return { success: false, timeout: false, reason: 'server_error' };
+      }
+      return { quotaExceeded: res.status === 402 || res.status === 429 || res.status === 401 };
+    }
+    if (res.status >= 500) {
+      return { success: false, timeout: false, reason: 'server_error' };
     }
     if (isQuotaExceeded(res.status, data)) {
       return { quotaExceeded: true };
     }
-    const isCatchAll = data.status === 'catch_all' || data.is_catch_all === true;
+    const isCatchAll = Boolean(
+      data.status === 'catch_all' ||
+      data.is_catch_all === true ||
+      data.is_catchall === true ||
+      data.catch_all === true ||
+      /catch[-_ ]?all/i.test(String(data.reason || '')) ||
+      /catch[-_ ]?all/i.test(String(data.mx_details || ''))
+    );
     const isDeliverable = (data.is_deliverable === true || data.status === 'valid' || data.status === 'safe');
     const isSafe = data.is_safe_to_send !== false;
     const isInvalid = data.status === 'invalid' || data.status === 'disposable' || data.status === 'spamtrap' || data.is_deliverable === false;

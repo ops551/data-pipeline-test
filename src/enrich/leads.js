@@ -2,11 +2,13 @@ const fs = require('fs');
 const path = require('path');
 const { parseCSV, writeCSV } = require('./csvParser');
 const { normalisePhone, isMobile } = require('./phone');
+const { classifySector } = require('../outreach/ai');
 
 const LEADS_COLUMNS = [
   'company_number',
   'company_name',
   'date_of_creation',
+  'type',
   'emails',
   'phones',
   'whatsapp_candidate',
@@ -26,7 +28,7 @@ const LEADS_COLUMNS = [
   'fallback_used'
 ];
 
-function formatLead(company, extractedData, sources, website = {}) {
+function formatLead(company = {}, extractedData = {}, sources = [], website = {}) {
   let emails = extractedData.emails || [];
   let rawPhones = extractedData.phones || [];
   
@@ -40,11 +42,19 @@ function formatLead(company, extractedData, sources, website = {}) {
   
   const hasEmail = emails.length > 0;
   const status = hasEmail ? 'lead' : 'no_contact';
+
+  const combinedCompanyContext = {
+    ...company,
+    website_context: website.context || company?.website_context || '',
+    website_url: website.url || company?.website_url || ''
+  };
+  const type = extractedData.type || company?.type || company?.sector || classifySector(combinedCompanyContext);
   
   return {
     company_number: company.company_number,
     company_name: company.company_name,
     date_of_creation: company.date_of_creation,
+    type,
     emails: emails.join('; '),
     phones: normalisedPhones.join('; '),
     whatsapp_candidate,

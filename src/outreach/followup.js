@@ -119,42 +119,42 @@ const FOLLOWUP_SECTOR_TEMPLATES = Object.freeze({
   ecommerce: Object.freeze({
     sector: 'ecommerce',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'social media scheduling, online store conversion, and pending checkout recovery',
-    hook: 'social media scheduling, online store conversion, and pending checkout recovery',
-    breakupPhrase: 'e-commerce workflow automation & store optimization',
-    touch3Phrase: 'e-commerce workflow automation & store optimization'
+    touch2Hook: 'product showcase Reels, 24/7 WhatsApp cart recovery, and mobile checkout speed',
+    hook: 'product showcase Reels, 24/7 WhatsApp cart recovery, and mobile checkout speed',
+    breakupPhrase: 'e-commerce showcase Reels & WhatsApp checkout recovery systems',
+    touch3Phrase: 'e-commerce showcase Reels & WhatsApp checkout recovery systems'
   }),
   trades: Object.freeze({
     sector: 'trades',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'capturing customer enquiries promptly on-site via rapid WhatsApp messaging assistant',
-    hook: 'capturing customer enquiries promptly on-site via rapid WhatsApp messaging assistant',
-    breakupPhrase: 'trade enquiry automation & rapid WhatsApp booking systems',
-    touch3Phrase: 'trade enquiry automation & rapid WhatsApp booking systems'
+    touch2Hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking',
+    hook: 'before-and-after job Reels, 24/7 on-site WhatsApp quoting, and instant mobile job booking',
+    breakupPhrase: 'trade showcase Reels & 24/7 WhatsApp quote booking systems',
+    touch3Phrase: 'trade showcase Reels & 24/7 WhatsApp quote booking systems'
   }),
   hospitality: Object.freeze({
     sector: 'hospitality',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'automating customer enquiries and scheduling social updates',
-    hook: 'automating customer enquiries and scheduling social updates',
-    breakupPhrase: 'hospitality guest engagement & reservation automation',
-    touch3Phrase: 'hospitality guest engagement & reservation automation'
+    touch2Hook: 'dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations',
+    hook: 'dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations',
+    breakupPhrase: 'dining showcase Reels & WhatsApp table reservation systems',
+    touch3Phrase: 'dining showcase Reels & WhatsApp table reservation systems'
   }),
   healthcare: Object.freeze({
     sector: 'healthcare',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'handling 24/7 appointment bookings, patient intake forms, and automated reminders',
-    hook: 'handling 24/7 appointment bookings, patient intake forms, and automated reminders',
-    breakupPhrase: 'healthcare appointment automation & patient communication systems',
-    touch3Phrase: 'healthcare appointment automation & patient communication systems'
+    touch2Hook: 'patient education Reels, 24/7 WhatsApp appointment bookings, and intake form automation',
+    hook: 'patient education Reels, 24/7 WhatsApp appointment bookings, and intake form automation',
+    breakupPhrase: 'clinic educational Reels & 24/7 WhatsApp patient booking systems',
+    touch3Phrase: 'clinic educational Reels & 24/7 WhatsApp patient booking systems'
   }),
   b2b: Object.freeze({
     sector: 'b2b',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'automating client onboarding, payment tracking reminders, and pipeline management',
-    hook: 'automating client onboarding, payment tracking reminders, and pipeline management',
-    breakupPhrase: 'web infrastructure & business automation',
-    touch3Phrase: 'web infrastructure & business automation'
+    touch2Hook: 'insight Reels, 24/7 WhatsApp consultation booking, and automated client onboarding',
+    hook: 'insight Reels, 24/7 WhatsApp consultation booking, and automated client onboarding',
+    breakupPhrase: 'firm case study Reels & client onboarding automation',
+    touch3Phrase: 'firm case study Reels & client onboarding automation'
   }),
   tech: Object.freeze({
     sector: 'tech',
@@ -167,10 +167,10 @@ const FOLLOWUP_SECTOR_TEMPLATES = Object.freeze({
   general: Object.freeze({
     sector: 'general',
     touch2Intro: 'Just floating my previous note back to the top of your inbox in case it got buried.',
-    touch2Hook: 'automating customer enquiries and scheduling social updates',
-    hook: 'automating customer enquiries and scheduling social updates',
-    breakupPhrase: 'web infrastructure & business automation',
-    touch3Phrase: 'web infrastructure & business automation'
+    touch2Hook: 'showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion',
+    hook: 'showcase Reels, 24/7 WhatsApp enquiry booking, and fast mobile website conversion',
+    breakupPhrase: 'service showcase Reels & WhatsApp appointment booking systems',
+    touch3Phrase: 'service showcase Reels & WhatsApp appointment booking systems'
   })
 });
 
