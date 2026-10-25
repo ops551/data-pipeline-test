@@ -16,7 +16,7 @@ const {
 
 const { filterCandidates } = require('./filter');
 const { extractUkPostcode, searchCompany } = require('./search');
-const { classifySector } = require('../outreach/ai');
+const { classifySector, SECTOR_CONFIGS } = require('../outreach/ai');
 const { parseCSV } = require('./csvParser');
 
 test('Unit 5.58 - SIC Priority Scoring: Tier 1 returns 100', () => {
@@ -276,20 +276,8 @@ test('Unit 5.58 - Active leads.csv and legacy_leads_archive.csv integrity', () =
   assert.ok(activeLeads.length >= 0, 'leads.csv should have verified qualified leads structure');
 
   const qualifiedTypes = new Set([
-    'trades',
-    'aesthetics_clinic',
-    'kitchen_interior',
-    'wedding_events',
-    'car_showroom',
-    'watch_showroom',
-    'bike_showroom',
-    'dentistry',
-    'restaurant',
-    'detailing',
-    'fitness',
-    'estate_agent',
-    'pet_grooming',
-    'ecommerce'
+    ...Object.keys(SECTOR_CONFIGS),
+    'restaurant'
   ]);
 
   for (const lead of activeLeads) {
