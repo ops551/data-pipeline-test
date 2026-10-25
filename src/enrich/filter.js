@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { parseCSV, writeCSV } = require('./csvParser');
-const { isTargetSic } = require('./sic');
+const { isTargetSic, getSicPriority, isDisqualifiedCompany } = require('./sic');
 
 const AGENT_ADDRESS_THRESHOLD = 20;
 
@@ -82,6 +82,7 @@ function filterCandidates(
     if (daysOld < 0 || daysOld < minDaysOld || daysOld > maxDaysOld) continue;
 
     if (!isTargetSic(company.sic_codes)) continue;
+    if (isDisqualifiedCompany(company)) continue;
 
     const address = company.registered_office_address;
     const isAgent = addressCounts[address] >= AGENT_ADDRESS_THRESHOLD;
@@ -103,8 +104,13 @@ function filterCandidates(
     'agent_address'
   ];
 
-  // Prioritize freshest candidates first (e.g. 5-10 day sweet spot)
+  // Prioritize Tier 1 prime luxury/showroom niches first, then freshest candidates
   candidates.sort((a, b) => {
+    const scoreA = getSicPriority(a.sic_codes);
+    const scoreB = getSicPriority(b.sic_codes);
+    if (scoreB !== scoreA) {
+      return scoreB - scoreA;
+    }
     const dateA = a.date_of_creation || '';
     const dateB = b.date_of_creation || '';
     return dateB.localeCompare(dateA);
