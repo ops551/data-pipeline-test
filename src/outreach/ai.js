@@ -1398,13 +1398,6 @@ function buildPrompt(company = {}, options = {}) {
     ? `Hey directorName,`.replace("directorName", directorName)
     : `Hey ${emailCompanyName},`;
 
-  const sectorPillars = getSectorPillars(sector);
-  const promptPillar1 = sectorPillars.pillar1;
-  const promptPillar2 = sectorPillars.pillar2.replace(
-    /^2[).]\s*(?:(?:Hybrid\s+)?(?:24\/7\s+)?(?:rapid\s+)?(?:WhatsApp\s+)?(?:Booking\s+)?(?:Digital\s+)?(?:Shopping\s+)?(?:Consultation\s+)?(?:Qualification\s+)?Assistant|WhatsApp\s+Booking\s+Assistant)[:\-–—]?\s*/i,
-    "2) Hybrid WhatsApp Booking Assistant: "
-  );
-  const promptPillar3 = sectorPillars.pillar3;
 
   return [
     `Write a short, natural cold outreach email from ${track.role}.`,
@@ -1432,15 +1425,12 @@ function buildPrompt(company = {}, options = {}) {
       ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`
       : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`,
     "3. Value Proposition (Must clearly present our 3 distinct growth pillars on separate lines):",
-    track.pitch && track.pitch.includes("3-part growth system")
-      ? "   Explain that you set up an automated 3-part growth system for local businesses:"
-      : null,
-    `   ${promptPillar1}`,
-    `   ${promptPillar2}`,
-    `   ${promptPillar3}`,
+    "   1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory)",
+    "   2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
+    "   3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)",
     hasVerifiedWebsite
-      ? "   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Use ONLY the single 3-pillar list above. (Baseline template reference: 1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory); 2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar); 3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking))."
-      : "   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. Use ONLY the single 3-pillar list above. (Baseline template reference: 1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory); 2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar); 3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)).",
+      ? `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): ${track.pitch}`
+      : `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
     hasInspectedWebsite
       ? `4. Personalization: Include exactly one 10-20 word positive sentence, informed by a service or feature shown in the homepage snapshot, suggesting a website update and relevant automation (such as ${track.focus}) to make a routine task easier. Do not identify or imply any flaw, missing feature, or problem; present it as a helpful improvement idea, not a criticism.`
       : null,
@@ -1614,9 +1604,10 @@ function cleanEmailContent(rawText, options = {}) {
 
   // Normalize markdown bold / bullets on pillar numbers (e.g. **2) 24/7**, 2) **24/7**, - 2) 24/7)
   body = body
-    .replace(/(?:^|\n)[ \t]*(?:[-*•]\s*)?(?:\*\*)?([1-3])[).](?:\*\*)?[ \t]*(?:\*\*)?/g, "\n$1) ")
-    .replace(/(\b[1-3]\)\s*)\*\*([^*]+)\*\*/g, "$1$2")
-    .replace(/\*\*([1-3]\)[^*]*)\*\*/g, "$1");
+    .replace(/(?:^|\n)\s*[-*•]\s*(?:\*\*)?([123][).])/g, "\n$1")
+    .replace(/\*\*([123][).][^*]*)\*\*/g, "$1")
+    .replace(/(\b[123][).]\s*)\*\*([^*]+)\*\*/g, "$1$2")
+    .replace(/(\b[123][).][^\n*]*)\*+/g, "$1");
 
   // Universal Truncated Pillar 2 Healer:
   // Catches ANY variant of truncated Pillar 2:
@@ -1839,11 +1830,12 @@ async function generateEmail(company, options = {}) {
           sector: options.sector || (isTech ? "tech" : classifySector(company)),
           type: company.type,
           companyName: company.company_name,
-          directorName: extractFirstName(
+          directorName: options.directorName || extractFirstName(
             company.person_name ||
             company.active_directors ||
             company.contact_name ||
             company.director_name ||
+            company.officer_name ||
             ""
           )
         });
@@ -1931,11 +1923,12 @@ async function generateEmail(company, options = {}) {
           sector: options.sector || (isTech ? "tech" : classifySector(company)),
           type: company.type,
           companyName: company.company_name,
-          directorName: extractFirstName(
+          directorName: options.directorName || extractFirstName(
             company.person_name ||
             company.active_directors ||
             company.contact_name ||
             company.director_name ||
+            company.officer_name ||
             ""
           )
         });
