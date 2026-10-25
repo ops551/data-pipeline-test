@@ -21,6 +21,13 @@ test('DAYS_BACK changes the from date', () => {
   assert.equal(cfg.incorporatedTo, '2026-09-19');
 });
 
+test('DAYS_BACK_MIN and DAYS_BACK_MAX support 3 to 6 months range', () => {
+  const cfg = loadConfig({ ...base, DAYS_BACK_MIN: '90', DAYS_BACK_MAX: '180' }, today);
+  // today is 2026-09-19. 180 days back is 2026-03-23, 90 days back is 2026-06-21.
+  assert.equal(cfg.incorporatedFrom, '2026-03-23');
+  assert.equal(cfg.incorporatedTo, '2026-06-21');
+});
+
 test('explicit dates win over DAYS_BACK', () => {
   const cfg = loadConfig(
     { ...base, INCORPORATED_FROM: '2026-01-01', INCORPORATED_TO: '2026-01-31', DAYS_BACK: '3' },

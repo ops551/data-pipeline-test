@@ -58,6 +58,13 @@ function filterCandidates(
     }
   }
 
+  const minDaysOld = options.minDaysOld !== undefined
+    ? Number(options.minDaysOld)
+    : (process.env.MIN_DAYS_OLD !== undefined ? Number(process.env.MIN_DAYS_OLD) : 90);
+  const maxDaysOld = options.maxDaysOld !== undefined
+    ? Number(options.maxDaysOld)
+    : (process.env.MAX_DAYS_OLD !== undefined ? Number(process.env.MAX_DAYS_OLD) : 180);
+
   const candidates = [];
 
   for (const company of allCompanies) {
@@ -65,7 +72,7 @@ function filterCandidates(
     if (!compNum || excludedNumbers.has(compNum)) continue;
 
     const daysOld = getDaysOld(company.date_of_creation);
-    if (daysOld < 0 || daysOld > 60) continue;
+    if (daysOld < minDaysOld || daysOld > maxDaysOld) continue;
 
     if (!isTargetSic(company.sic_codes)) continue;
 

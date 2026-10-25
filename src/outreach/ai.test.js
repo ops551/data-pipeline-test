@@ -1090,3 +1090,126 @@ test('Unit 5.50: cleanEmailContent cleanly preserves customized company-specific
   assert.ok(!cleaned.subject.endsWith('.'));
   assert.ok(!cleaned.subject.toLowerCase().includes('quick question'));
 });
+
+// -----------------------------------------------------------------------------
+// Unit 5.52: High-Converting Outreach Overhaul & Hyper-Specific Sub-Niches
+// -----------------------------------------------------------------------------
+
+test('Unit 5.52: classifySector accurately detects high-converting sub-niches by SIC code and text keywords', () => {
+  // 1. Car Showrooms
+  assert.equal(classifySector({ sic_codes: '45111' }), 'car_showroom');
+  assert.equal(classifySector({ sic_codes: '45112' }), 'car_showroom');
+  assert.equal(classifySector({ company_name: 'Apex Prestige Car Dealership Ltd' }), 'car_showroom');
+  assert.equal(classifySector({ industry: 'Used cars and motor sales' }), 'car_showroom');
+
+  // 2. Luxury Watches
+  assert.equal(classifySector({ sic_codes: '47770' }), 'watch_showroom');
+  assert.equal(classifySector({ sic_codes: '95250' }), 'watch_showroom');
+  assert.equal(classifySector({ company_name: 'Mayfair Luxury Timepieces Ltd' }), 'watch_showroom');
+  assert.equal(classifySector({ description: 'Exclusive Rolex and Patek horology boutique' }), 'watch_showroom');
+
+  // 3. Motorbikes
+  assert.equal(classifySector({ sic_codes: '45400' }), 'bike_showroom');
+  assert.equal(classifySector({ company_name: 'Ducati Superbike Centre Ltd' }), 'bike_showroom');
+
+  // 4. Detailing & Ceramic Coating
+  assert.equal(classifySector({ sic_codes: '45200', industry: 'Ceramic coating and paint correction detailing' }), 'detailing');
+  assert.equal(classifySector({ company_name: 'Signature Detailing & Valeting Studio' }), 'detailing');
+
+  // 5. Aesthetic Clinics
+  assert.equal(classifySector({ sic_codes: '96020', industry: 'Botox and dermal fillers skin clinic' }), 'aesthetics_clinic');
+  assert.equal(classifySector({ company_name: 'Harley Skin & Laser Clinic Ltd' }), 'aesthetics_clinic');
+
+  // 6. Cosmetic Dentistry
+  assert.equal(classifySector({ sic_codes: '86230' }), 'dentistry');
+  assert.equal(classifySector({ industry: 'Cosmetic smile makeovers and composite bonding' }), 'dentistry');
+
+  // 7. Bespoke Kitchens & Interior Design
+  assert.equal(classifySector({ sic_codes: '74100' }), 'kitchen_interior');
+  assert.equal(classifySector({ sic_codes: '43320' }), 'kitchen_interior');
+  assert.equal(classifySector({ company_name: 'Cotswold Bespoke Kitchens & Joinery Ltd' }), 'kitchen_interior');
+
+  // 8. Estate Agents
+  assert.equal(classifySector({ sic_codes: '68310' }), 'estate_agent');
+  assert.equal(classifySector({ company_name: 'Kensington Estate Agents & Lettings Ltd' }), 'estate_agent');
+
+  // 9. Fitness & Pilates
+  assert.equal(classifySector({ sic_codes: '93120' }), 'fitness');
+  assert.equal(classifySector({ sic_codes: '93130' }), 'fitness');
+  assert.equal(classifySector({ company_name: 'Core Reformer Pilates Studio Ltd' }), 'fitness');
+
+  // 10. Weddings & Events
+  assert.equal(classifySector({ sic_codes: '74201' }), 'wedding_events');
+  assert.equal(classifySector({ company_name: 'Surrey Manor Wedding Venue Ltd' }), 'wedding_events');
+
+  // 11. Pet Grooming
+  assert.equal(classifySector({ sic_codes: '96090' }), 'pet_grooming');
+  assert.equal(classifySector({ company_name: 'Paws & Bubbles Dog Grooming Spa Ltd' }), 'pet_grooming');
+});
+
+test('Unit 5.52: Car Showroom email copy delivers hyper-specific walkaround reels, test-drive booking, and zero generic overlap', async () => {
+  const email = await generateEmail({
+    company_name: 'Apex Car Sales Ltd',
+    sic_codes: '45112',
+    active_directors: 'Marcus Vance',
+    website_url: 'https://apexmotors.co.uk'
+  }, { mock: true });
+
+  assert.equal(email.subject, 'Apex Car Sales - vehicle showcase & viewings');
+  assert.ok(email.body.includes('Hey Marcus,'));
+  assert.ok(email.body.includes('walkaround Reels, interior showcase clips, and daily arrival Stories'));
+  assert.ok(email.body.includes('24/7 Test-Drive & WhatsApp Booking'));
+  assert.ok(email.body.includes('Showroom Website Optimization'));
+  assert.ok(email.body.includes("reply with 'yes' and I will send it over"));
+  // Strict check: zero mention of watches, tiles, or plumbing
+  assert.ok(!email.body.toLowerCase().includes('watch'));
+  assert.ok(!email.body.toLowerCase().includes('plumb'));
+  assert.ok(!email.body.toLowerCase().includes('pending checkouts'));
+});
+
+test('Unit 5.52: Watch Showroom email copy delivers macro wrist-roll reels, VIP boutique viewings, and dynamic website showcase', async () => {
+  const emailWithWebsite = await generateEmail({
+    company_name: 'Mayfair Timepieces Ltd',
+    sic_codes: '47770',
+    website_url: 'https://mayfairtime.co.uk'
+  }, { mock: true });
+
+  assert.equal(emailWithWebsite.subject, 'Mayfair Timepieces - timepiece showcase & viewings');
+  assert.ok(emailWithWebsite.body.includes('Macro Wrist-Roll Reels & Stories'));
+  assert.ok(emailWithWebsite.body.includes('24/7 VIP Viewing & Inquiries'));
+  assert.ok(emailWithWebsite.body.includes('Boutique Website Optimization'));
+  assert.ok(!emailWithWebsite.body.toLowerCase().includes('car on your lot'));
+
+  // Without website -> pitches modern luxury showcase catalog
+  const emailWithoutWebsite = await generateEmail({
+    company_name: 'Vault Horology Ltd',
+    sic_codes: '47770'
+  }, { mock: true });
+
+  assert.ok(emailWithoutWebsite.body.includes('Luxury Inventory Showcase'));
+});
+
+test('Unit 5.52: Detailing Studio email copy delivers 50/50 paint correction reels and WhatsApp slot booking', async () => {
+  const email = await generateEmail({
+    company_name: 'Gleam Ceramic Detailing Ltd',
+    sic_codes: '45200',
+    industry: 'Automotive detailing and ceramic coating'
+  }, { mock: true });
+
+  assert.equal(email.subject, 'Gleam Ceramic Detailing - customer bookings & showcase');
+  assert.ok(email.body.includes('50/50 Before-After Reels & Daily Stories'));
+  assert.ok(email.body.includes('24/7 Rapid WhatsApp Assistant'));
+  assert.ok(email.body.includes('Modern Detailing Booking Page'));
+});
+
+test('Unit 5.52: Aesthetic Clinic email copy delivers glow-up transformation reels and consultation assistant', async () => {
+  const email = await generateEmail({
+    company_name: 'Luxe Aesthetics Clinic Ltd',
+    industry: 'Botox and dermal fillers skin clinic'
+  }, { mock: true });
+
+  assert.equal(email.subject, 'Luxe Aesthetics Clinic - patient bookings & treatments');
+  assert.ok(email.body.includes('Transformation Reels & Daily Stories'));
+  assert.ok(email.body.includes('24/7 Consultation & WhatsApp Assistant'));
+  assert.ok(email.body.includes("reply with 'yes' and I will send it over"));
+});
