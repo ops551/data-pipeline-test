@@ -1032,4 +1032,105 @@ test('Unit 5.51: runOutreachPipeline respects explicit enableHtml: false overrid
   }
 });
 
+test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shells 70229, 69203, 66290)', async () => {
+  const ws = createWorkspace();
+  const sentEmails = [];
+
+  const mixedLeads = [
+    {
+      company_number: '70229001',
+      company_name: 'PMA Management Consultancy Ltd',
+      sic_codes: '70229',
+      emails: 'director@pmaconsultancy.co.uk',
+      status: 'lead',
+      verification_status: 'sniffmail'
+    },
+    {
+      company_number: '69203001',
+      company_name: 'Sterling UK Tax Services Ltd',
+      sic_codes: '69203',
+      emails: 'tax@sterling-tax.co.uk',
+      status: 'lead',
+      verification_status: 'sniffmail'
+    },
+    {
+      company_number: '45200001',
+      company_name: 'Apex Supercar Detailing Ltd',
+      sic_codes: '45200',
+      emails: 'boss@apexdetailing.co.uk',
+      status: 'lead',
+      verification_status: 'sniffmail'
+    },
+    {
+      company_number: '62012001',
+      company_name: 'Altivox Tech Agency Ltd',
+      // sic_codes omitted from lead to test companies.csv lookup
+      emails: 'founder@altivox.co.uk',
+      status: 'lead',
+      verification_status: 'sniffmail'
+    },
+    {
+      company_number: '66290001',
+      company_name: 'Bind Affinity Insurance Ltd',
+      // sic_codes in companies.csv is 66290 (non-target)
+      emails: 'thomas@bindaffinity.com',
+      status: 'lead',
+      verification_status: 'sniffmail'
+    }
+  ];
+
+  fs.writeFileSync(
+    ws.companiesPath,
+    'company_number,company_name,sic_codes\n' +
+    '62012001,Altivox Tech Agency Ltd,62012\n' +
+    '66290001,Bind Affinity Insurance Ltd,66290\n'
+  );
+
+  const warnLogs = [];
+  const customLogger = {
+    log: () => {},
+    info: () => {},
+    warn: (msg) => warnLogs.push(msg),
+    error: () => {}
+  };
+
+  try {
+    const result = await runOutreachPipeline(
+      {
+        leadsPath: ws.leadsPath,
+        sentLeadsPath: ws.sentLeadsPath,
+        companiesPath: ws.companiesPath,
+        mock: true,
+        delay: 0,
+        logger: customLogger
+      },
+      {
+        getPendingLeads: () => mixedLeads,
+        generateEmail: async (company) => ({
+          subject: `Automated Growth for ${company.company_name}`,
+          body: `Hi there,\n\n${DEFAULT_SIGNATURE_STRING}`
+        }),
+        sendEmail: async (mailOptions) => {
+          sentEmails.push(mailOptions.to);
+          return { success: true, messageId: 'msg-sic-test' };
+        }
+      }
+    );
+
+    assert.strictEqual(result.sent, 2, 'Only the 2 target SIC leads should be sent');
+    assert.strictEqual(sentEmails.length, 2);
+    assert.ok(sentEmails.includes('boss@apexdetailing.co.uk'));
+    assert.ok(sentEmails.includes('founder@altivox.co.uk'));
+    assert.ok(!sentEmails.includes('director@pmaconsultancy.co.uk'));
+    assert.ok(!sentEmails.includes('tax@sterling-tax.co.uk'));
+    assert.ok(!sentEmails.includes('thomas@bindaffinity.com'));
+
+    assert.ok(warnLogs.some(w => w.includes('70229')));
+    assert.ok(warnLogs.some(w => w.includes('69203')));
+    assert.ok(warnLogs.some(w => w.includes('66290')));
+  } finally {
+    ws.cleanup();
+  }
+});
+
 

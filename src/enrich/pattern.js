@@ -272,24 +272,26 @@ async function verifySniffmail(email, apiKey) {
     if (isQuotaExceeded(res.status, data)) {
       return { quotaExceeded: true };
     }
+    const isCatchAllDomain = Boolean(data.is_catchall || data.catch_all);
     const userPart = (String(email || '').split('@')[0] || '').toLowerCase().trim();
     const isKnownRolePrefix = GENERIC_PREFIXES.has(userPart);
     const isRoleAccount = Boolean(data.is_role_account || isKnownRolePrefix);
     const isDeliverableRoleAccount = Boolean(
+      !isCatchAllDomain &&
       isRoleAccount &&
       data.is_deliverable === true &&
       data.is_disposable !== true &&
       data.mx_valid !== false
     );
     const isRisky = (data.is_reachable === 'risky' || /risky/i.test(data.reason || '')) && !isDeliverableRoleAccount;
-    const isCatchAll = Boolean((data.is_catchall || data.catch_all || isRisky) && !isDeliverableRoleAccount);
-    const isValid = (data.is_valid === true && data.is_deliverable === true && !isRisky && !isCatchAll) || isDeliverableRoleAccount;
+    const isCatchAll = Boolean(isCatchAllDomain || (isRisky && !isDeliverableRoleAccount));
+    const isValid = !isCatchAll && Boolean((data.is_valid === true && data.is_deliverable === true && !isRisky) || isDeliverableRoleAccount);
     return {
       success: true,
       isValid,
       isCatchAll,
       isRisky,
-      reason: isValid ? 'sniffmail' : (isRisky ? 'sniffmail_risky' : (isCatchAll ? 'sniffmail_catch_all' : (data.reason || 'sniffmail_invalid')))
+      reason: isValid ? 'sniffmail' : (isCatchAllDomain ? 'sniffmail_catch_all' : (isRisky ? 'sniffmail_risky' : (isCatchAll ? 'sniffmail_catch_all' : (data.reason || 'sniffmail_invalid'))))
     };
   } catch (err) {
     if (isNetworkOrTimeoutError(err)) {

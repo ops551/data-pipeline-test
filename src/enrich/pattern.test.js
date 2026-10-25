@@ -1139,6 +1139,83 @@ test('Unit 5.49: Sniffmail rejects non-role unknown email on risky catch-all dom
   restoreEnv();
 });
 
+test('Unit 5.53: Catch-all domain with role account (e.g. team@abyagenomics.com) is strictly rejected and marked sniffmail_catch_all', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_unit53_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'team@abyagenomics.com',
+      is_valid: true,
+      is_catchall: true,
+      is_deliverable: true,
+      is_role_account: true,
+      is_disposable: false,
+      mx_valid: true,
+      reason: 'Catch-all server detected'
+    })
+  });
+
+  const res = await verifyEmail('team@abyagenomics.com');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'sniffmail_catch_all');
+
+  restoreEnv();
+});
+
+test('Unit 5.53: Non-catch-all domain with deliverable role account (e.g. info@valid.com) is correctly accepted', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.SNIFFMAIL_API_KEY = 'sniff_unit53_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'info@valid.com',
+      is_valid: true,
+      is_catchall: false,
+      catch_all: false,
+      is_deliverable: true,
+      is_role_account: true,
+      is_disposable: false,
+      mx_valid: true,
+      reason: 'Deliverable'
+    })
+  });
+
+  const res = await verifyEmail('info@valid.com');
+  assert.strictEqual(res.status, 'valid_domain');
+  assert.strictEqual(res.reason, 'sniffmail');
+
+  restoreEnv();
+});
+
+test('Unit 5.53: Reoon catch-all domain with role account is strictly rejected and marked reoon_catch_all', async () => {
+  restoreEnv();
+  process.env.SMTP_MOCK = 'true';
+  process.env.REOON_API_KEY = 'reoon_unit53_key';
+
+  global.fetch = async () => ({
+    status: 200,
+    json: async () => ({
+      email: 'support@catchallservice.com',
+      status: 'catch_all',
+      is_deliverable: true,
+      is_safe_to_send: true,
+      is_catch_all: true
+    })
+  });
+
+  const res = await verifyEmail('support@catchallservice.com');
+  assert.strictEqual(res.status, 'invalid');
+  assert.strictEqual(res.reason, 'reoon_catch_all');
+
+  restoreEnv();
+});
+
+
 
 
 

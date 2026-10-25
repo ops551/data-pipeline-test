@@ -22,6 +22,7 @@ const {
   isSmtpQuotaExceeded: defaultIsSmtpQuotaExceeded
 } = require('./email');
 const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAddress');
+const { isTargetSic: defaultIsTargetSic } = require('../enrich/sic');
 
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
@@ -155,6 +156,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   const parseCsvFn = deps.parseCSV || defaultParseCSV;
   const isValidEmail = deps.isValidEmailAddress || defaultIsValidEmailAddress;
   const isSmtpQuotaExceededFn = deps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
+  const isTargetSic = deps.isTargetSic || defaultIsTargetSic;
 
   // Pre-flight connection check via verifyConnection (skip if dry-run or mock)
   if (!dryRun && !mock && !options.skipVerify) {
@@ -281,16 +283,23 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       continue;
     }
 
+    // Pre-flight SIC Gate: Skip legacy corporate shells and non-target SICs
+    const companyInfo = companiesMap.get(String(companyNum).trim()) || {};
+    const companySics = lead.sic_codes || companyInfo.sic_codes;
+    if (companySics && !isTargetSic(companySics)) {
+      logger.warn(`Skipping lead ${companyName} (${companyNum}): non-target SIC codes ("${companySics}")`);
+      continue;
+    }
+
     let isSending = false;
     try {
       // 1. Enrich company data
-      const companyInfo = companiesMap.get(String(companyNum).trim()) || {};
       const enrichedCompany = {
         ...companyInfo,
         ...lead,
         company_number: companyNum,
         company_name: companyName,
-        sic_codes: lead.sic_codes || companyInfo.sic_codes || '',
+        sic_codes: companySics || '',
         registered_office_address: lead.registered_office_address || companyInfo.registered_office_address || '',
         locality: lead.locality || companyInfo.locality || companyInfo.registered_office_address || ''
       };

@@ -425,18 +425,31 @@ async function runEnrichment() {
          }
          
          if (bestGeneric) {
-           const v = await verifyEmail(bestGeneric);
-           const isDeliverable = v.status === 'valid_domain' &&
-             TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase());
-           if (!isDeliverable) {
-             console.log(`  Extracted generic email ${bestGeneric} is not deliverable (${v.status}: ${v.reason}). Discarding.`);
-             if (v.reason === 'all_apis_exhausted') {
-               hadExhaustedEmail = true;
-             }
+           let domainIsCatchAll = isCatchAll;
+           const genericDomain = (bestGeneric.split('@')[1] || '').toLowerCase();
+           if (!domainIsCatchAll && genericDomain && genericDomain !== domain) {
+             const catchAllCheck = await checkCatchAll(genericDomain);
+             domainIsCatchAll = catchAllCheck.isCatchAll;
+           }
+
+           if (domainIsCatchAll) {
+             console.log(`  Domain is catch-all. Discarding generic fallback ${bestGeneric}.`);
              bestGeneric = '';
              vStatus = '';
            } else {
-             vStatus = v.reason || 'verified';
+             const v = await verifyEmail(bestGeneric);
+             const isDeliverable = v.status === 'valid_domain' &&
+               TRUSTED_DELIVERABILITY_STATUSES.has(String(v.reason || '').trim().toLowerCase());
+             if (!isDeliverable) {
+               console.log(`  Extracted generic email ${bestGeneric} is not deliverable (${v.status}: ${v.reason}). Discarding.`);
+               if (v.reason === 'all_apis_exhausted') {
+                 hadExhaustedEmail = true;
+               }
+               bestGeneric = '';
+               vStatus = '';
+             } else {
+               vStatus = v.reason || 'verified';
+             }
            }
          }
          
