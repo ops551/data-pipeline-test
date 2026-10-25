@@ -1398,6 +1398,14 @@ function buildPrompt(company = {}, options = {}) {
     ? `Hey directorName,`.replace("directorName", directorName)
     : `Hey ${emailCompanyName},`;
 
+  const sectorPillars = getSectorPillars(sector);
+  const promptPillar1 = sectorPillars.pillar1;
+  const promptPillar2 = sectorPillars.pillar2.replace(
+    /^2[).]\s*(?:(?:Hybrid\s+)?(?:24\/7\s+)?(?:rapid\s+)?(?:WhatsApp\s+)?(?:Booking\s+)?(?:Digital\s+)?(?:Shopping\s+)?(?:Consultation\s+)?(?:Qualification\s+)?Assistant|WhatsApp\s+Booking\s+Assistant)[:\-–—]?\s*/i,
+    "2) Hybrid WhatsApp Booking Assistant: "
+  );
+  const promptPillar3 = sectorPillars.pillar3;
+
   return [
     `Write a short, natural cold outreach email from ${track.role}.`,
     `Suggested subject line (baseline reference): "${track.subject(emailCompanyName)}"`,
@@ -1424,12 +1432,15 @@ function buildPrompt(company = {}, options = {}) {
       ? `2. Opening: Briefly say you reviewed the supplied homepage for ${emailCompanyName}; do not claim more than the snapshot shows. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`
       : `2. Opening: Say you came across ${emailCompanyName} and wanted to reach out; do not claim to have reviewed a website or that none exists. Explain that to help them engage and interact with more customers and capture more bookings, you set up tailored automation workflows, and emphasize that in addition to this core setup, you can custom-build any workflow or feature to fit their exact business needs and preferences.`,
     "3. Value Proposition (Must clearly present our 3 distinct growth pillars on separate lines):",
-    "   1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory)",
-    "   2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar)",
-    "   3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)",
+    track.pitch && track.pitch.includes("3-part growth system")
+      ? "   Explain that you set up an automated 3-part growth system for local businesses:"
+      : null,
+    `   ${promptPillar1}`,
+    `   ${promptPillar2}`,
+    `   ${promptPillar3}`,
     hasVerifiedWebsite
-      ? `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): ${track.pitch}`
-      : `   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. ${track.pitch}`,
+      ? "   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Use ONLY the single 3-pillar list above. (Baseline template reference: 1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory); 2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar); 3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking))."
+      : "   Sector-specific details (incorporate directly into the 3 pillars above; do NOT create a second list): Explain how you help businesses in their specific sector build or upgrade websites and set up automated workflows so teams do not handle routine client communications or scheduling manually. Use ONLY the single 3-pillar list above. (Baseline template reference: 1) AI Social Media Autopilot (Reels, Clips & Stories auto-scheduled on Instagram/TikTok/Facebook from photos/inventory); 2) 24/7 WhatsApp Booking Assistant (answers enquiries on services/availability and schedules appointments or estimates directly into your calendar); 3) Dynamic High-Speed Mobile Website & Booking Optimization (streamlines service pages for 1-tap mobile booking)).",
     hasInspectedWebsite
       ? `4. Personalization: Include exactly one 10-20 word positive sentence, informed by a service or feature shown in the homepage snapshot, suggesting a website update and relevant automation (such as ${track.focus}) to make a routine task easier. Do not identify or imply any flaw, missing feature, or problem; present it as a helpful improvement idea, not a criticism.`
       : null,
@@ -1449,7 +1460,7 @@ function buildPrompt(company = {}, options = {}) {
     "- Pillar 3 Modern High-Speed Mobile Showcase: If a website exists, streamline and optimize it for 1-tap mobile booking; if no website exists, build from scratch.",
     "- Pillar 2 Completeness: When mentioning pillar 2, you MUST write out the full name and complete explanation (e.g. '2) 24/7 WhatsApp Booking Assistant: answers customer enquiries and schedules appointments directly into your calendar'). NEVER truncate, cut off, or leave pillar 2 as just '24/7'.",
     "- Subject line: Must be specifically customized to the recipient company name and their core business/offering. Avoid repetitive generic templates like 'Quick question about...' whenever a tailored, business-specific subject fits. Keep it concise (under 7 words).",
-    "- Keep it under 100-120 words before the signature. Aim for around 130-160 words before signature. Keep the body concise and punchy (around 130-160 words total).",
+    "- Keep it under 100-120 words before the signature. Keep the body concise and punchy (around 130-160 words before signature total).",
     "- Make the tone professional, helpful, and natural.",
     "- Use the provided Company Name to Use in the Email consistently in the subject and body; do not expand or alter its legal suffix.",
     "- Make the wording slightly unique for this specific company name and industry, using homepage evidence when available; do not invent company facts.",
@@ -1480,7 +1491,14 @@ function cleanEmailContent(rawText, options = {}) {
     ? buildSignature({ ...options, isTech })
     : `Best regards,\n${senderName}`;
 
-  const resolvedSector = options.sector || (isTech ? "tech" : classifySector({ company_name: companyName, industry: options.industry, sic_codes: options.sic_codes, sector: options.sector, type: options.type }));
+  const explicitSector = options.sector || options.company?.sector || options.company?.type || options.type;
+  const resolvedSector = explicitSector || (isTech ? "tech" : classifySector({
+    company_name: companyName,
+    industry: options.industry || options.company?.industry,
+    sic_codes: options.sic_codes || options.company?.sic_codes,
+    sector: options.sector || options.company?.sector,
+    type: options.type || options.company?.type
+  }));
   const sectorPillars = getSectorPillars(resolvedSector);
 
   if (!rawText || typeof rawText !== "string" || !rawText.trim()) {
@@ -1594,11 +1612,11 @@ function cleanEmailContent(rawText, options = {}) {
     body = beforeSecond.trimEnd() + "\n\n" + cleanedSecond.trimStart();
   }
 
-  // Normalize markdown bold / bullets on pillar numbers (e.g. **2)** -> 2), - 2) -> 2))
+  // Normalize markdown bold / bullets on pillar numbers (e.g. **2) 24/7**, 2) **24/7**, - 2) 24/7)
   body = body
-    .replace(/\*\*([123][).][^*]*)\*\*/g, "$1")
-    .replace(/(\b[123][).]\s*)\*\*([^*]+)\*\*/g, "$1$2")
-    .replace(/(?:^|\n)\s*[-*]\s*([123][).])/g, "\n$1");
+    .replace(/(?:^|\n)[ \t]*(?:[-*•]\s*)?(?:\*\*)?([1-3])[).](?:\*\*)?[ \t]*(?:\*\*)?/g, "\n$1) ")
+    .replace(/(\b[1-3]\)\s*)\*\*([^*]+)\*\*/g, "$1$2")
+    .replace(/\*\*([1-3]\)[^*]*)\*\*/g, "$1");
 
   // Universal Truncated Pillar 2 Healer:
   // Catches ANY variant of truncated Pillar 2:
@@ -1612,27 +1630,17 @@ function cleanEmailContent(rawText, options = {}) {
 
   body = body.replace(truncatedPillar2Regex, healedPillar2);
 
-  // Layer 2: Structural Guard
-  // Catches markdown formatting (e.g. **2) 24/7**), bullet points (- 2) 24/7), or unpredicted truncated phrases
-  // without falsely overwriting concise valid descriptions (like "2. 24/7 WhatsApp Assistant: Books consultations.")
-  const p2StructuralRegex = /(?:^|\n|\b)[ \t]*(?:[-*]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*([\s\S]*?)(?=(?:\r?\n[ \t]*(?:[-*]\s*)?(?:\*\*)?3[).])|\b3[).]|(?:\r?\n\s*\r?\n)|$)/i;
+  // Layer 2: Structural Guard (<8 words or <45 chars)
+  // If any line/block starting with 2) or 2. has fewer than 8 words or fewer than 45 characters, unconditionally replace it with the complete healedPillar2
+  const p2StructuralRegex = /(?:^|\n)[ \t]*(?:[-*•]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*([\s\S]*?)(?=(?:\r?\n[ \t]*(?:[-*•]\s*)?(?:\*\*)?3[).])|\b3[).]|(?:\r?\n\s*\r?\n)|$)/i;
   const p2Match = body.match(p2StructuralRegex);
   if (p2Match) {
-    const p2Text = p2Match[1].replace(/^(?:[-*]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*/, "").replace(/\*+$/, "").trim();
-    let isTruncated = false;
-    if (p2Text.length < 30) {
-      isTruncated = true;
-    } else {
-      const splitMatch = p2Text.match(/^([^:\-–—]+)[:\-–—]\s*(.*)$/);
-      if (splitMatch) {
-        const afterSeparator = splitMatch[2].trim();
-        const wordsAfter = afterSeparator ? afterSeparator.split(/\s+/).filter(Boolean).length : 0;
-        isTruncated = wordsAfter < 2;
-      } else {
-        const totalWords = p2Text.split(/\s+/).filter(Boolean).length;
-        isTruncated = totalWords < 8 || p2Text.length < 45;
-      }
-    }
+    const p2Raw = p2Match[0].trim();
+    const p2Text = p2Match[1].replace(/^(?:[-*•]\s*)?(?:\*\*)?2[).](?:\*\*)?[ \t]*/, "").replace(/[*_~`]/g, "").trim();
+    const splitMatch = p2Text.match(/^([^:\-–—]+)[:\-–—]\s*(.*)$/);
+    const wordsAfter = splitMatch && splitMatch[2] ? splitMatch[2].trim().split(/\s+/).filter(Boolean).length : 0;
+    const totalWords = p2Raw.replace(/[*_~`]/g, "").split(/\s+/).filter(Boolean).length;
+    const isTruncated = p2Raw.length < 45 || (totalWords < 8 && wordsAfter < 2);
 
     if (isTruncated) {
       body = body.replace(p2StructuralRegex, healedPillar2);
@@ -1655,7 +1663,8 @@ function cleanEmailContent(rawText, options = {}) {
   }
 
   if (hasPillar2 && !hasPillar3) {
-    const pillar3Addition = (options.sector && options.sector !== "general" && sectorPillars?.pillar3)
+    const isGenericPillar2 = body.includes("24/7 WhatsApp Booking Assistant: Replies promptly to incoming enquiries");
+    const pillar3Addition = (!isGenericPillar2 && resolvedSector && resolvedSector !== "general" && sectorPillars?.pillar3)
       ? `\n${sectorPillars.pillar3}\n`
       : "\n3) Dynamic High-Speed Mobile Website & Booking Optimization: Streamlines your service pages for 1-tap mobile booking.\n";
 
