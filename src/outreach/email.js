@@ -35,8 +35,9 @@ function stripExternalLinks(content) {
   // Strip HTML tags
   str = str.replace(/<[^>]*>/g, '');
 
-  // Strip non-whitelisted WhatsApp lines/numbers
-  str = str.replace(/(?:WhatsApp|WhatsApp number):?[^\r\n]*/gi, '');
+  // Strip non-whitelisted WhatsApp lines/numbers (e.g. WhatsApp: +44..., WhatsApp number: 07..., etc.)
+  // Must target actual phone numbers or links, not service/product descriptions like "WhatsApp Assistant"
+  str = str.replace(/(?:WhatsApp(?:\s+number)?)\s*:?\s*(?:\+?\d|wa\.me|https?:\/\/)[^\r\n]*/gi, '');
 
   // Replace markdown links with link text before stripping bare URLs
   str = str.replace(/\[([^\]]+)\]\((?:https?:\/\/[^\s)]+|www\.[^\s)]+)\)/gi, '$1');
