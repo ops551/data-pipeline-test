@@ -20,9 +20,7 @@ const TIER_1_SICS = [
 
 const TIER_2_SICS = [
   // Essential Trades (Plumbers, Electricians, Construction, Roofing)
-  '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '43999',
-  // Cleaning Services
-  '81210', '81221', '81222', '81223', '81291', '81299',
+  '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910',
   // Weddings, Luxury Events & Photography
   '74201', '74202', '74203', '74209', '93290',
   // Fitness, Gyms & Pilates Studios
@@ -36,11 +34,6 @@ const TIER_2_SICS = [
 ];
 
 const TIER_3_SICS = [
-  // Health Activities (general clinics)
-  '86900', '86909',
-  // Retail & Ecommerce
-  '47110', '47190', '47210', '47220', '47230', '47240', '47290',
-  '47710', '47721', '47722', '47730', '47741', '47749', '47750',
   // Tech & Digital Agencies
   '62012', '62020', '62090', '58290', '73110'
 ];
@@ -53,6 +46,8 @@ const TARGET_SICS = [
 
 // SPV / holding / dormant / corporate shell codes to exclude
 const EXCLUDED_SICS = [
+  // Industrial, window & domestic cleaning services (strictly non-target)
+  '81210', '81221', '81222', '81223', '81291', '81299',
   '64201', '64202', '64203', '64204', '64205', '64209', // holding companies
   '64301', '64302', '64303', '64304', '64305', '64306', // trusts, funds
   '64991', '64992', '64999', // other financial
