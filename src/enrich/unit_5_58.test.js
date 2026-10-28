@@ -36,30 +36,32 @@ test('Unit 5.58 - SIC Priority Scoring: Tier 1 returns 100', () => {
 });
 
 test('Unit 5.58 - SIC Priority Scoring: Tier 2 returns 60 and Tier 3 returns 10', () => {
-  // Tier 2: Trades, Cleaning, Events, Fitness, Pet grooming
+  // Tier 2: Trades, Events, Fitness, Pet grooming
   assert.equal(getSicPriority('43220'), 60, 'Plumbing & HVAC');
-  assert.equal(getSicPriority('81210'), 60, 'General cleaning');
+  assert.equal(getSicPriority('43210'), 60, 'Electrical installation');
   assert.equal(getSicPriority('74201'), 60, 'Photography activities');
   assert.equal(getSicPriority('93130'), 60, 'Fitness facilities');
   assert.equal(getSicPriority('96090'), 60, 'Pet grooming & personal services');
   assert.equal(getSicPriority('68310'), 60, 'Real estate agencies');
 
-  // Tier 3: IT contractors, generic software, standard retail
+  // Tier 3: IT contractors, generic software
   assert.equal(getSicPriority('62012'), 10, 'Business & domestic software');
   assert.equal(getSicPriority('62020'), 10, 'IT consultancy');
-  assert.equal(getSicPriority('47110'), 10, 'Generic retail');
+  assert.equal(getSicPriority('62090'), 10, 'Other IT activities');
 
   // Unknown or empty
   assert.equal(getSicPriority(''), 0);
   assert.equal(getSicPriority(null), 0);
   assert.equal(getSicPriority('99999'), 0);
+  // Cleaning is excluded -> priority 0
+  assert.equal(getSicPriority('81210'), 0, 'Cleaning is strictly excluded');
 });
 
 test('Unit 5.58 - SIC Priority Scoring: Multi-SIC uses highest tier', () => {
   // Company with Tier 3 (62012) and Tier 1 (74100)
   assert.equal(getSicPriority('62012;74100'), 100, 'Must pick highest Tier 1 priority');
-  // Company with Tier 3 (47110) and Tier 2 (43220)
-  assert.equal(getSicPriority('47110;43220'), 60, 'Must pick Tier 2 over Tier 3');
+  // Company with Tier 3 (62090) and Tier 2 (43220)
+  assert.equal(getSicPriority('62090;43220'), 60, 'Must pick Tier 2 over Tier 3');
   // Array of SICs
   assert.equal(getSicPriority(['47910', '45112']), 100);
 });

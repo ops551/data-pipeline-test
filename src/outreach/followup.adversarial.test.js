@@ -842,7 +842,7 @@ test('Adversarial Unit 5.55: getEligibleFollowUps handles polymorphic 3rd argume
   const { dir, sentLeadsPath, followUpsPath } = createTempDir();
   const customCompaniesPath = path.join(dir, 'custom_companies.csv');
 
-  const now = new Date('2026-10-20T12:00:00Z');
+  const now = new Date();
   const past3Days = new Date(now.getTime() - 3.5 * 24 * 60 * 60 * 1000).toISOString();
 
   const sentLeads = [
