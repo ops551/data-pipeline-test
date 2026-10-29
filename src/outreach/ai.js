@@ -299,6 +299,28 @@ function classifySector(company = {}) {
   const rawSector = String(company?.sector || company?.type || "").trim().toLowerCase();
   const normalizedSector =
     rawSector === "e-commerce" ? "ecommerce" : rawSector;
+  const textToScan = [
+    company.industry,
+    company.company_name,
+    company.website_context,
+    company.description,
+  ]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+  const isExcludedFromPetGrooming =
+    /\b(?:self[- ]?storage|storage|warehouse|warehousing|lockers?|removals?|shipping|logistics|personal\s+service|personal\s+services|concierge)\b/i.test(
+      textToScan,
+    );
+
+  const isPetGroomingText =
+    /\b(?:(?:pet|dog|doggy|puppy|canine)\s*(?:grooming|groomer|groomers|groom|spa|wash|salon|care|daycare|boarding)|animal\s+care|canine\s+hydrotherapy)\b/i.test(
+      textToScan,
+    );
+
   if (
     [
       "ecommerce",
@@ -318,10 +340,17 @@ function classifySector(company = {}) {
       "estate_agent",
       "fitness",
       "wedding_events",
-      "pet_grooming",
     ].includes(normalizedSector)
   ) {
     return normalizedSector;
+  }
+
+  if (normalizedSector === "pet_grooming") {
+    if (!company.sector && isExcludedFromPetGrooming) {
+      // Disallow erroneous pet_grooming type on storage, warehouse, or personal service company
+    } else {
+      return "pet_grooming";
+    }
   }
 
   if (
@@ -339,18 +368,6 @@ function classifySector(company = {}) {
     .split(/[;,]/)
     .map((c) => c.trim())
     .filter(Boolean);
-
-  const textToScan = [
-    company.industry,
-    company.company_name,
-    company.website_context,
-    company.description,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
 
   // 1. High-precision contextual keywords (Brand intent & explicit names override loose SIC codes)
   if (
@@ -409,11 +426,7 @@ function classifySector(company = {}) {
     return "detailing";
   }
 
-  if (
-    /\b(?:dog grooming|pet groom(?:ing|er)|dog spa|canine hydrotherapy)\b/i.test(
-      textToScan,
-    )
-  ) {
+  if (!isExcludedFromPetGrooming && isPetGroomingText) {
     return "pet_grooming";
   }
 
@@ -452,6 +465,20 @@ function classifySector(company = {}) {
       return "wedding_events";
     }
     if (code === "96090") {
+      if (
+        /\b(?:self[- ]?storage|storage|warehouse|warehousing|lockers?|removals?|shipping|logistics)\b/i.test(
+          textToScan,
+        )
+      ) {
+        return "trades";
+      }
+      if (
+        /\b(?:personal\s+service|personal\s+services|concierge)\b/i.test(
+          textToScan,
+        )
+      ) {
+        return "general";
+      }
       return "pet_grooming";
     }
     if (code === "96020" || code === "96040") {
@@ -578,11 +605,7 @@ function classifySector(company = {}) {
     return "fitness";
   }
 
-  if (
-    /\b(?:dog grooming|pet groom(?:ing|er)|dog spa|canine hydrotherapy)\b/i.test(
-      textToScan,
-    )
-  ) {
+  if (!isExcludedFromPetGrooming && isPetGroomingText) {
     return "pet_grooming";
   }
 
