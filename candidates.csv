@@ -1,54 +1,5 @@
 company_number,company_name,date_of_creation,company_status,company_type,sic_codes,registered_office_address,agent_address
-17246645,SOMNICURA LTD,2026-05-28,active,ltd,62012;63110;72190;86900,"167 - 169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
-17246663,TRUCKSCAN LTD,2026-05-28,active,ltd,49410;62012;63110;63120,"18 Plantation Drive, Scunthorpe, DN15 8FJ, England",no
-17246688,QUORVEX MEDIA LTD.,2026-05-28,active,ltd,73110,"Suite 302 4 Station Square, Cambridge, CB1 2GE, United Kingdom",yes
-17246698,DIGIROCKET LTD,2026-05-28,active,ltd,73110,"167-169 Great Portland Street, 5th Floor, London, W1W 5PF, United Kingdom",yes
-17246747,AMBULANCE INTELLIGENCE LIMITED,2026-05-28,active,ltd,62020,"1st Floor, Tc Primera Spitalfields House, Stirling Way, Borehamwood, Herts, WD6 2FX, United Kingdom",no
-17246782,HANNAH KELLY CONSULTING LTD,2026-05-28,active,ltd,73110,"42 Garrison Court, Hitchin, SG4 9AA, United Kingdom",no
-17246862,DB APEX UK LTD,2026-05-28,active,ltd,73110,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17246945,RUNWAY EVENTS LTD,2026-05-28,active,ltd,47910;73110;82301;90020,"20 Wenlock Road, London, N1 7GU, England",yes
-17247054,FORCEFUSION SALESFORCE CONSULTING LTD,2026-05-28,active,ltd,58290,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17247091,SPOD CONSULTING LTD,2026-05-28,active,ltd,62012,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-17247098,KNOWN BY HEART LTD,2026-05-28,active,ltd,73110,"Elmhurst Ley London Road, Woore, Crewe, CW3 9RQ, England",no
-17247162,SNOZZ LTD,2026-05-28,active,ltd,58290,"73 Claude Road, London, E13 0QQ, England",no
-17246822,CROWMIS LTD,2026-05-28,active,ltd,47910;62020;62090;73110,"84 Wood Lane, London, W12 0BZ, England",no
-17247388,VERITAS DIGITAL MEDIA LTD,2026-05-28,active,ltd,73110,"41 Liden Close, London, E17 8HQ, United Kingdom",no
-17247503,SOLEMM INCORPORATION LTD,2026-05-28,active,ltd,62020,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17247655,WE ARE CONTENT LIMITED,2026-05-28,active,ltd,73110,"2 Ardmay Gardens, Surbiton, KT6 4SW, England",no
-17247680,APPCITY (UK) LTD,2026-05-28,active,ltd,62012,"5 Sibton Road, Carshalton, SM5 1LA, England",no
-17247683,PALEHALO TECHNOLOGIES LTD,2026-05-28,active,ltd,58290;62012,"11 Sefton Court Jersey Road, Hounslow, TW3 4BG, England",no
-17247740,VIONOV LABS LIMITED,2026-05-28,active,ltd,62012,"Flat 2 15 Alveston Place, Leamington Spa, CV32 4SN, England",no
-17247745,WITH LOVE VENTURES LTD,2026-05-28,active,ltd,47910;58290,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17247746,ONE SIMULATION UK LIMITED,2026-05-28,active,ltd,62020;62090,"9 Sherborne Avenue, Cardiff, CF23 6SJ, Wales",no
-17247841,MANO MONEY LIMITED,2026-05-28,active,ltd,58290,"50 Liverpool Street, London, EC2M 7PY, England",no
-17247900,SUPAPOSEAI LIMITED,2026-05-28,active,ltd,62012;62020;72190,"Unit 13 Freeland Park Wareham Road, Lytchett Matravers, Poole, BH16 6FA, England",yes
-17248004,SUMMIT THREE LTD,2026-05-28,active,ltd,62012;63110,"Hopwell Hall, Ockbrook, Derby, DE72 3RW, England",no
-17248012,TRIVANTA SERVICES LIMITED,2026-05-28,active,ltd,47910;62012;62090;63120,"Unit 13 Freeland Park Wareham Road, Lytchett Matravers, Poole, BH16 6FA, England",yes
-17248101,REBEL CRM LTD,2026-05-28,active,ltd,62020,"61 Bridge Street, Kington, HR5 3DJ, United Kingdom",yes
-17248143,WHITESPACE AI LTD,2026-05-28,active,ltd,62012,"167 - 169 Great Portland Street, 5th Floor, London, W1W 5PF, England",yes
-17248202,BEANBAG SOLUTIONS LTD,2026-05-28,active,ltd,62012,"10 Dury Falls Close, Hornchurch, RM11 3AX, England",no
-17248250,KUSIJU LTD,2026-05-28,active,ltd,62090,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17248258,PERSEUS NETWORK LTD,2026-05-28,active,ltd,62012,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17248536,190975 LTD,2026-05-28,active,ltd,62020,"167-169 Great Portland Street, London, W1W 5PF, England",yes
-17248540,RACELINE ENTERPRISES LTD,2026-05-28,active,ltd,62011;62090,"66 Paul Street, London, England, EC2A 4NA, United Kingdom",yes
-NI740996,MJ REED TECHNOLOGY LTD,2026-05-28,active,ltd,62012;62020;63110,"5 Woodford Avenue, Newtownabbey, BT36 6TL, Northern Ireland",no
-17248631,QISSAH LTD,2026-05-28,active,ltd,62012,"Flat 11 Farleycroft 9 Mays Hill Road, Bromley, BR2 0HN, England",no
-17248625,ENATHEO LTD,2026-05-28,active,ltd,58290,"78 William Bristow Road, Coventry, CV3 5LR, United Kingdom",no
-17246623,ELVYN LIMITED,2026-05-28,active,ltd,47190;47820;47910;62012,"51a St. Georges Road, London, E10 5RQ, England",no
-17246799,LURELLA VENTURES LIMITED,2026-05-28,active,ltd,62012;62090,"Acorn House, 33 Churchfield Road, London, W3 6AY, United Kingdom",no
-17246880,CONTRACTOR CONVERSION LTD,2026-05-28,active,ltd,73110,"128 City Road, London, EC1V 2NX, United Kingdom",yes
-17246948,EKZ LTD,2026-05-28,active,ltd,62020,"C/O Aardvark Accounting 1 Cedar Office Park, Cobham Road, Wimborne, BH21 7SB, United Kingdom",no
-17246959,DEVICEDIAGPRO LTD,2026-05-28,active,ltd,62020;71200,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17246969,PORTA DIGITAL LTD,2026-05-28,active,ltd,62012,"4 Childs Lane, Stansted, CM24 8GL, England",no
-17247038,MASTERSALES APP LTD,2026-05-28,active,ltd,62012,"82a James Carter Road, Mildenhall, Bury St. Edmunds, IP28 7DE, England",yes
-17246978,GPP CROWN LTD,2026-05-28,active,ltd,47910;62020;62090;73110,"77 Smiths Square, London, W6 8AF, England",no
-17247144,LAHOVSKA STUDIO LIMITED,2026-05-28,active,ltd,58290;62012,"Flat 14 10 Cheedale, Buxton, SK17 7TE, United Kingdom",no
-17247183,SEARTISTS LTD,2026-05-28,active,ltd,73110;90010,"180e New Cross Road, London, SE14 5AA, United Kingdom",no
-17247218,MULLIGAN CONSULTING LTD,2026-05-28,active,ltd,62020,"71-75 Shelton Street, Covent Garden, London, WC2H 9JQ, United Kingdom",yes
-17247237,PINELTHORNE LIMITED,2026-05-28,active,ltd,62020,"2 Pinel Close, Virginia Water, GU25 4SP, England",no
-17247351,SCALEFUNDED LTD,2026-05-28,active,ltd,62012;62090,"2 Frederick Street, Kings Cross, London, WC1X 0ND, United Kingdom",yes
-17247383,STRATUM DYNAMICS LTD,2026-05-28,active,ltd,62012;63110;63990,"12 Pond Close, Fernwood, Newark, NG24 3RU, England",no
-17247480,NEXCORE SOLUTIONS LTD,2026-05-28,active,ltd,62020,"7a Moneyhill Parade, Rickmansworth, WD3 7BQ, England",no
+SC894833,GURIK LTD,2026-07-02,active,ltd,56103,"50a Moredunvale Road, Edinburgh, EH17 7RZ, Scotland",no
 17247477,RIDE OR DIE LIMITED,2026-05-28,active,ltd,58290,"57a Broadway, Leigh-On-Sea, SS9 1PE, England",no
 17247530,CAPVYUH TECHNOLOGY LIMITED,2026-05-28,active,ltd,62012;62020;62090;63110,"128 City Road, London, EC1V 2NX, United Kingdom",yes
 17247576,EMS PRO LIMITED,2026-05-28,active,ltd,62012,"Unit 1c Eagle Industrial Estate, Church Green, Witney, Oxfordshire, OX28 4YR, United Kingdom",no
