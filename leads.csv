@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17425217,NEUROMOTION REHAB LIMITED,2026-08-27,healthcare,neuromotionphysiorehab@gmail.com,+447341449995; +447880253895,yes,lead,officers_api,,,Darren Bloore,director,person_fallback,,,,,,quickemailverification,yes
