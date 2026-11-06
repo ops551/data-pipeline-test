@@ -130,16 +130,16 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000003',
-          company_name: 'PRECISION DETAILING STUDIO LTD',
+          company_name: 'PRECISION WATCH ATELIER LTD',
           date_of_creation: getPastDate(95),
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: ['45200'], // Car Detailing, Valeting & Garages
+          sic_codes: ['47770'], // Luxury Watches & Jewellery
           registered_office_address: {
-            premises: 'Bay 4',
-            address_line_1: 'Industrial Estate',
-            locality: 'Birmingham',
-            postal_code: 'B3 3PL',
+            premises: 'Suite 4',
+            address_line_1: 'Mayfair',
+            locality: 'London',
+            postal_code: 'W1J 6BD',
             country: 'England'
           }
         },
@@ -190,11 +190,11 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000007',
-          company_name: 'METRO EMERGENCY PLUMBING LTD',
+          company_name: 'METRO WEDDING EVENTS LTD',
           date_of_creation: getPastDate(140),
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: ['43220'], // Essential Trades (Plumbers)
+          sic_codes: ['74201'], // Photography / Wedding & Event Specialists
           registered_office_address: {
             premises: 'Unit 9',
             address_line_1: 'Trade Park',
@@ -294,11 +294,11 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       // All 7 target companies must be present
       assert.ok(candidateNumbers.has('10000001'), 'Premier Car Showroom must pass');
       assert.ok(candidateNumbers.has('10000002'), 'Glow Aesthetics Clinic must pass');
-      assert.ok(candidateNumbers.has('10000003'), 'Precision Detailing Studio must pass');
+      assert.ok(candidateNumbers.has('10000003'), 'Precision Watch Atelier must pass');
       assert.ok(candidateNumbers.has('10000004'), 'Elite Bespoke Kitchens must pass');
       assert.ok(candidateNumbers.has('10000005'), 'Vanguard Property Lettings must pass');
       assert.ok(candidateNumbers.has('10000006'), 'Apex Dental Studio must pass');
-      assert.ok(candidateNumbers.has('10000007'), 'Metro Emergency Plumbing must pass');
+      assert.ok(candidateNumbers.has('10000007'), 'Metro Wedding Events must pass');
 
       // ALL corporate shells and out-of-range items must be filtered out
       assert.equal(candidateNumbers.has('90000001'), false, 'Holding SPV shell must be excluded');
@@ -438,15 +438,15 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         expectedCopy: ['Reels', 'Stories', 'scheduled', 'WhatsApp', 'consultation']
       },
       {
-        sector: 'detailing',
+        sector: 'watch_showroom',
         company: {
           company_number: '10000003',
-          company_name: 'PRECISION DETAILING STUDIO LTD',
-          sic_codes: '45200',
+          company_name: 'PRECISION WATCH ATELIER LTD',
+          sic_codes: '47770',
           person_name: 'Alex Mercer',
-          website_url: 'https://precisiondetailing.co.uk'
+          website_url: 'https://precisionwatches.co.uk'
         },
-        expectedCopy: ['Reels', 'ceramic', 'Stories', 'scheduled', 'WhatsApp']
+        expectedCopy: ['Reels', 'timepiece', 'Stories', 'scheduled', 'viewing']
       },
       {
         sector: 'kitchen_interior',
@@ -482,15 +482,15 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         expectedCopy: ['Reels', 'Stories', 'scheduled', 'WhatsApp', 'assessments']
       },
       {
-        sector: 'trades',
+        sector: 'wedding_events',
         company: {
           company_number: '10000007',
-          company_name: 'METRO EMERGENCY PLUMBING LTD',
-          sic_codes: '43220',
+          company_name: 'METRO WEDDING EVENTS LTD',
+          sic_codes: '74201',
           person_name: 'Tom Bradley',
-          website_url: 'https://metroplumbing.co.uk'
+          website_url: 'https://metroweddings.co.uk'
         },
-        expectedCopy: ['WhatsApp', 'assistant', 'enquiry', 'automated']
+        expectedCopy: ['Cinematic', 'Reels', 'WhatsApp', 'viewings']
       }
     ];
 
@@ -553,9 +553,9 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000003',
-          company_name: 'PRECISION DETAILING STUDIO LTD',
-          sic_codes: '45200',
-          registered_office_address: 'Bay 4, Birmingham'
+          company_name: 'PRECISION WATCH ATELIER LTD',
+          sic_codes: '47770',
+          registered_office_address: 'Suite 4, Mayfair, London'
         },
         {
           company_number: '90000001',
@@ -598,12 +598,12 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
           contact_type: 'person',
           verification_status: 'exact_match'
         },
-        // Lead 3: Target Detailing Studio with trusted Sniffmail status
+        // Lead 3: Target Watch Atelier with trusted Sniffmail status
         {
           company_number: '10000003',
-          company_name: 'PRECISION DETAILING STUDIO LTD',
+          company_name: 'PRECISION WATCH ATELIER LTD',
           date_of_creation: getPastDate(95),
-          emails: 'alex@precisiondetailing.co.uk',
+          emails: 'alex@precisionwatches.co.uk',
           phones: '+447700900333',
           whatsapp_candidate: 'yes',
           status: 'lead',
@@ -693,7 +693,7 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       assert.deepEqual(dispatchedRecipients, [
         'james.sterling@premiercars.co.uk',
         'dr.sarah@glowaesthetics.co.uk',
-        'alex@precisiondetailing.co.uk'
+        'alex@precisionwatches.co.uk'
       ]);
 
       // Check sent_leads.csv records
@@ -736,7 +736,7 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       const companiesData = [
         { company_number: '10000001', company_name: 'PREMIER CAR SHOWROOM LTD', sic_codes: '45111' },
         { company_number: '10000002', company_name: 'GLOW AESTHETICS CLINIC LTD', sic_codes: '96020' },
-        { company_number: '10000003', company_name: 'PRECISION DETAILING STUDIO LTD', sic_codes: '45200' },
+        { company_number: '10000003', company_name: 'PRECISION WATCH ATELIER LTD', sic_codes: '47770' },
         { company_number: '90000001', company_name: 'GLOBAL HOLDINGS SPV LTD', sic_codes: '64209' } // Corporate shell
       ];
       writeCSVAtomic(ws.companiesPath, companiesData, COLUMNS);
@@ -765,16 +765,16 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
           subject: 'GLOW AESTHETICS CLINIC - patient bookings & treatments',
           sic_codes: '96020'
         },
-        // Lead 3: Eligible Detailing Studio for Touch 2
+        // Lead 3: Eligible Watch Atelier for Touch 2
         {
           company_number: '10000003',
-          company_name: 'PRECISION DETAILING STUDIO LTD',
+          company_name: 'PRECISION WATCH ATELIER LTD',
           person_name: 'Alex Mercer',
-          sent_to: 'alex@precisiondetailing.co.uk',
+          sent_to: 'alex@precisionwatches.co.uk',
           sent_at: touch1Timestamp,
-          message_id: '<msg_precision_detailing_003@coldoutreach.io>',
-          subject: 'PRECISION DETAILING STUDIO - customer bookings & showcase',
-          sic_codes: '45200'
+          message_id: '<msg_precision_watches_003@coldoutreach.io>',
+          subject: 'PRECISION WATCH ATELIER - timepiece showcase & viewings',
+          sic_codes: '47770'
         },
         // Adversarial Lead 4: Corporate Shell in sent_leads (Must be BLOCKED by SIC Protection Shield)
         {
@@ -883,10 +883,10 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         generatedFollowUps[1].text.includes('treatment transformation Reels, open cancellation Stories, and consultation bookings'),
         'Aesthetics clinic follow-up must contain transformation Reels & consultation hook'
       );
-      // Detailing studio hook
+      // Watch atelier hook
       assert.ok(
-        generatedFollowUps[2].text.includes('50/50 paint correction Reels, ceramic coating showcases, and 24/7 WhatsApp bay booking'),
-        'Detailing studio follow-up must contain paint correction Reels & WhatsApp bay booking hook'
+        generatedFollowUps[2].text.includes('macro wrist-roll video Reels, social scheduling, and private VIP boutique viewings'),
+        'Watch atelier follow-up must contain wrist-roll Reels & VIP boutique viewing hook'
       );
 
       // Step 6.3: Execute simulated follow-up pipeline run

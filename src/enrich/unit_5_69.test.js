@@ -104,11 +104,12 @@ test('Unit 5.69: High-Value Booking Niches remain 100% active and protected in T
     assert.equal(getSicPriority(code), 100);
   }
 
-  // 7. Specific high-ticket trades (Tier 2)
-  const tradeCodes = ['41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910'];
+  // 7. General Trades are strictly excluded (Tier 2 trades removed)
+  const tradeCodes = ['41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '45200'];
   for (const code of tradeCodes) {
-    assert.equal(isTargetSic(code), true);
-    assert.equal(getSicPriority(code), 60);
+    assert.equal(isTargetSic(code), false);
+    assert.equal(getSicPriority(code), 0);
+    assert.ok(EXCLUDED_SICS.includes(code));
   }
 
   // 8. Luxury Events, Weddings, Fitness, Pet Grooming, Estate Agents (Tier 2)

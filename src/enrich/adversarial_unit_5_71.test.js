@@ -44,8 +44,8 @@ test('Adversarial SIC: Whitespace padding and boundary delimiters', () => {
   assert.equal(isTargetSic(' \t 74100 \n '), true, 'Padded Tier 1 interior design must be accepted');
   assert.equal(getSicPriority(' \t 74100 \n '), 100, 'Padded Tier 1 interior design must have priority 100');
 
-  assert.equal(isTargetSic('  41201  '), true, 'Padded Tier 2 trade must be accepted');
-  assert.equal(getSicPriority('  41201  '), 60, 'Padded Tier 2 trade must have priority 60');
+  assert.equal(isTargetSic('  74201  '), true, 'Padded Tier 2 wedding photography must be accepted');
+  assert.equal(getSicPriority('  74201  '), 60, 'Padded Tier 2 wedding photography must have priority 60');
 
   // Whitespace-only strings
   const whitespaceOnly = ['', ' ', '   ', '\t', '\n', '\r\n \t '];
@@ -60,8 +60,11 @@ test('Adversarial SIC: Numeric inputs, null, undefined, and non-string types', (
   assert.equal(isTargetSic(45111), true, 'Numeric 45111 must be accepted as Tier 1');
   assert.equal(getSicPriority(45111), 100, 'Numeric 45111 must have priority 100');
 
-  assert.equal(isTargetSic(41201), true, 'Numeric 41201 must be accepted as Tier 2');
-  assert.equal(getSicPriority(41201), 60, 'Numeric 41201 must have priority 60');
+  assert.equal(isTargetSic(74201), true, 'Numeric 74201 must be accepted as Tier 2');
+  assert.equal(getSicPriority(74201), 60, 'Numeric 74201 must have priority 60');
+
+  assert.equal(isTargetSic(41201), false, 'Numeric trade 41201 must be excluded');
+  assert.equal(getSicPriority(41201), 0, 'Numeric trade 41201 must have priority 0');
 
   assert.equal(isTargetSic(58290), false, 'Numeric 58290 must be excluded');
   assert.equal(getSicPriority(58290), 0, 'Numeric 58290 must have priority 0');
@@ -176,24 +179,28 @@ test('Adversarial SIC: Complex multi-SIC combinations and contamination override
   assert.equal(isTargetSic('45111; 74100'), true, 'Two Tier 1 codes must pass');
   assert.equal(getSicPriority('45111; 74100'), 100, 'Two Tier 1 codes must have priority 100');
 
-  assert.equal(isTargetSic('45111, 41201'), true, 'Tier 1 + Tier 2 must pass');
-  assert.equal(getSicPriority('45111, 41201'), 100, 'Tier 1 + Tier 2 must take Tier 1 priority (100)');
+  assert.equal(isTargetSic('45111, 74201'), true, 'Tier 1 + Tier 2 must pass');
+  assert.equal(getSicPriority('45111, 74201'), 100, 'Tier 1 + Tier 2 must take Tier 1 priority (100)');
 
-  assert.equal(isTargetSic('41201; 43210'), true, 'Two Tier 2 codes must pass');
-  assert.equal(getSicPriority('41201; 43210'), 60, 'Two Tier 2 codes must have priority 60');
+  assert.equal(isTargetSic('74201; 93120'), true, 'Two Tier 2 codes must pass');
+  assert.equal(getSicPriority('74201; 93120'), 60, 'Two Tier 2 codes must have priority 60');
 
   assert.equal(isTargetSic(['45111', '47770']), true, 'Array of Tier 1 codes must pass');
   assert.equal(getSicPriority(['45111', '47770']), 100);
 
-  assert.equal(isTargetSic(['41201', '43210']), true, 'Array of Tier 2 codes must pass');
-  assert.equal(getSicPriority(['41201', '43210']), 60);
+  assert.equal(isTargetSic(['74201', '93120']), true, 'Array of Tier 2 codes must pass');
+  assert.equal(getSicPriority(['74201', '93120']), 60);
 
   // Valid target code paired with harmless unrecognized non-target code
   assert.equal(isTargetSic('45111; 11111'), true, 'Tier 1 + unrecognized non-target must pass');
   assert.equal(getSicPriority('45111; 11111'), 100, 'Tier 1 + unrecognized non-target must have priority 100');
 
-  assert.equal(isTargetSic('41201; 11111'), true, 'Tier 2 + unrecognized non-target must pass');
-  assert.equal(getSicPriority('41201; 11111'), 60, 'Tier 2 + unrecognized non-target must have priority 60');
+  assert.equal(isTargetSic('74201; 11111'), true, 'Tier 2 + unrecognized non-target must pass');
+  assert.equal(getSicPriority('74201; 11111'), 60, 'Tier 2 + unrecognized non-target must have priority 60');
+
+  // Verify trade combination is strictly rejected
+  assert.equal(isTargetSic('45111, 41201'), false, 'Trade 41201 combination must be rejected');
+  assert.equal(getSicPriority('45111, 41201'), 0, 'Trade 41201 combination must yield priority 0');
 });
 
 // =========================================================================
@@ -321,8 +328,8 @@ test('Adversarial filterCandidates: 10+ company mixed adversarial batch strictly
     `SC800010,Cotswold Bespoke Kitchens Ltd,${d(70)},active,ltd,74100,12 High St Burford`,
     // 11. Genuine Tier 1 Aesthetic Clinic (valid date, valid SIC 96020, but at formation agent address)
     `SC800011,Harley Aesthetic Skin Clinic Ltd,${d(50)},active,ltd,96020,"${formationAgentAddr}"`,
-    // 12. Genuine Tier 2 Trade: Electrical Contractor (valid date, valid SIC 43210)
-    `SC800012,Westminster Electrical Contracting Ltd,${d(55)},active,ltd,43210,14 Victoria St`
+    // 12. Genuine Tier 2 Luxury: Wedding Photography & Events (valid date, valid SIC 74201)
+    `SC800012,Westminster Luxury Events Ltd,${d(55)},active,ltd,74201,14 Victoria St`
   ];
 
   // Add 20 filler shell records at the formation agent address to trigger AGENT_ADDRESS_THRESHOLD (20)
@@ -342,12 +349,12 @@ test('Adversarial filterCandidates: 10+ company mixed adversarial batch strictly
       leadsFile
     });
 
-    // Exactly 4 genuine candidates must pass:
+    // Exactly 4 genuine luxury candidates must pass:
     // SC800009 (Supercars, Tier 1, priority 100)
     // SC800011 (Harley Aesthetic Clinic, Tier 1, priority 100)
     // SC800010 (Bespoke Kitchens, Tier 1, priority 100)
-    // SC800012 (Westminster Electrical, Tier 2, priority 60)
-    assert.equal(count, 4, `Expected exactly 4 genuine luxury/trade candidates to pass, but got ${count}`);
+    // SC800012 (Westminster Luxury Events, Tier 2, priority 60)
+    assert.equal(count, 4, `Expected exactly 4 genuine luxury candidates to pass, but got ${count}`);
 
     const candidateLines = fs.readFileSync(candFile, 'utf8').trim().split('\n');
     assert.equal(candidateLines.length, 5, 'Candidate file must contain 1 header + 4 rows');
@@ -377,7 +384,7 @@ test('Adversarial filterCandidates: 10+ company mixed adversarial batch strictly
     assert.ok(candidateContent.includes('SC800009'), 'Kensington Luxury Supercars must be accepted');
     assert.ok(candidateContent.includes('SC800010'), 'Cotswold Bespoke Kitchens must be accepted');
     assert.ok(candidateContent.includes('SC800011'), 'Harley Aesthetic Skin Clinic must be accepted');
-    assert.ok(candidateContent.includes('SC800012'), 'Westminster Electrical must be accepted');
+    assert.ok(candidateContent.includes('SC800012'), 'Westminster Luxury Events must be accepted');
 
     // VERIFICATION 5: Formation agent address detection flag
     // SC800011 at Wenlock Road (repeated 21 times) must have agent_address = 'yes'

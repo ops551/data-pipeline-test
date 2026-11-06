@@ -6,31 +6,27 @@ const TIER_1_SICS = [
   '45400',
   // 3. Luxury Watches & Jewellery
   '47770', '95250',
-  // 4. Car Detailing, Valeting & Garages
-  '45200',
-  // 5. Aesthetic Clinics, Salons & Wellbeing
+  // 4. Aesthetic Clinics, Salons & Wellbeing
   '96020', '96040',
-  // 6. Cosmetic Dentistry & Dental Practices
+  // 5. Cosmetic Dentistry & Dental Practices
   '86230',
-  // 7. Bespoke Kitchens, Joinery & Interior Design
+  // 6. Bespoke Kitchens, Joinery & Interior Design
   '74100', '43320',
-  // 8. Fine Dining, Restaurants & Hospitality
+  // 7. Fine Dining, Restaurants & Hospitality
   '56101', '56102', '56103', '55100'
 ];
 
 const TIER_2_SICS = [
-  // Essential Trades (Plumbers, Electricians, Construction, Roofing)
-  '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910',
   // Weddings, Luxury Events & Photography
   '74201', '74202', '74203', '74209', '93290',
   // Fitness, Gyms & Pilates Studios
-  '93120', '93130', '93199',
+  '93120', '93130',
   // Pet Grooming & Dog Spas
   '96090',
   // Estate Agents & Property Letting
   '68310',
-  // Additional Hospitality & Catering
-  '55201', '55202', '55209', '55300', '55900', '56210', '56290', '56301', '56302'
+  // Additional Hospitality & Catering (Boutique hotels, catering, bars)
+  '55201', '55202', '55209', '55300', '56210', '56290', '56301', '56302'
 ];
 
 const TIER_3_SICS = [
@@ -42,8 +38,10 @@ const TARGET_SICS = [
   ...TIER_2_SICS
 ];
 
-// SPV / holding / dormant / corporate shell codes and non-target tech/SaaS to exclude
+// SPV / holding / dormant / corporate shell codes, tech/SaaS, and general trades to exclude
 const EXCLUDED_SICS = [
+  // Construction, plumbing, electrical, and general trades (strictly non-target)
+  '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '45200',
   // Tech, software publishing, SaaS, and digital/media agencies (strictly non-target)
   '58210', '58290', '62011', '62012', '62020', '62030', '62090',
   '63110', '63120', '63910', '63990', '70210', '73110', '73120',
@@ -72,7 +70,8 @@ const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   /\b(?:recruitment|staffing|talent acquisition|headhunters?|personnel|workforce)\b/i,
   /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i,
   /\b(?:saas|software|cloud security|devops|cybersecurity|robotics|subsea)\b/i,
-  /\b(?:digital marketing|marketing agency|seo agency|web design agency|lead generation)\b/i
+  /\b(?:digital marketing|marketing agency|seo agency|web design agency|lead generation)\b/i,
+  /\b(?:roofing|plumbing|electrician|scaffolding|builders|plastering|drainage|boiler|(?:auto|car|vehicle) repair|accident repair)\b/i
 ]);
 
 function getSicPriority(sicString) {

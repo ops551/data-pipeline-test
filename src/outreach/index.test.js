@@ -1054,10 +1054,10 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
       verification_status: 'sniffmail'
     },
     {
-      company_number: '45200001',
-      company_name: 'Apex Supercar Detailing Ltd',
-      sic_codes: '45200',
-      emails: 'boss@apexdetailing.co.uk',
+      company_number: '45111001',
+      company_name: 'Apex Supercar Showroom Ltd',
+      sic_codes: '45111',
+      emails: 'boss@apexsupercars.co.uk',
       status: 'lead',
       verification_status: 'sniffmail'
     },
@@ -1119,7 +1119,7 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
 
     assert.strictEqual(result.sent, 2, 'Only the 2 target SIC leads should be sent');
     assert.strictEqual(sentEmails.length, 2);
-    assert.ok(sentEmails.includes('boss@apexdetailing.co.uk'));
+    assert.ok(sentEmails.includes('boss@apexsupercars.co.uk'));
     assert.ok(sentEmails.includes('founder@altivoxwatches.co.uk'));
     assert.ok(!sentEmails.includes('director@pmaconsultancy.co.uk'));
     assert.ok(!sentEmails.includes('tax@sterling-tax.co.uk'));
