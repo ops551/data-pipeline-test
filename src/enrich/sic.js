@@ -10,10 +10,10 @@ const TIER_1_SICS = [
   '96020', '96040',
   // 5. Cosmetic Dentistry & Dental Practices
   '86230',
-  // 6. Bespoke Kitchens, Joinery & Interior Design
-  '74100', '43320',
-  // 7. Fine Dining, Restaurants & Hospitality
-  '56101', '56102', '56103', '55100'
+  // 6. Bespoke Kitchens & Interior Design (High-ticket architectural)
+  '74100',
+  // 7. Fine Dining & Luxury Hospitality (strictly licensed dining and boutique hotels only)
+  '56101', '55100'
 ];
 
 const TIER_2_SICS = [
@@ -24,9 +24,7 @@ const TIER_2_SICS = [
   // Pet Grooming & Dog Spas
   '96090',
   // Estate Agents & Property Letting
-  '68310',
-  // Additional Hospitality & Catering (Boutique hotels, catering, bars)
-  '55201', '55202', '55209', '55300', '56210', '56290', '56301', '56302'
+  '68310'
 ];
 
 const TIER_3_SICS = [
@@ -38,10 +36,12 @@ const TARGET_SICS = [
   ...TIER_2_SICS
 ];
 
-// SPV / holding / dormant / corporate shell codes, tech/SaaS, and general trades to exclude
+// SPV / holding / dormant / corporate shell codes, tech/SaaS, general trades, and fast food to exclude
 const EXCLUDED_SICS = [
-  // Construction, plumbing, electrical, and general trades (strictly non-target)
-  '41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '45200',
+  // Fast food, takeaways, unlicensed cafes, mobile stalls, and generic drinking pubs (strictly non-luxury)
+  '56102', '56103', '56210', '56290', '56301', '56302', '55201', '55202', '55209', '55300',
+  // Construction, plumbing, electrical, carpentry/joinery fitting, and general trades (strictly non-target)
+  '41201', '41202', '43210', '43220', '43290', '43310', '43320', '43330', '43341', '43342', '43390', '43910', '45200',
   // Tech, software publishing, SaaS, and digital/media agencies (strictly non-target)
   '58210', '58290', '62011', '62012', '62020', '62030', '62090',
   '63110', '63120', '63910', '63990', '70210', '73110', '73120',
@@ -71,7 +71,9 @@ const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i,
   /\b(?:saas|software|cloud security|devops|cybersecurity|robotics|subsea)\b/i,
   /\b(?:digital marketing|marketing agency|seo agency|web design agency|lead generation)\b/i,
-  /\b(?:roofing|plumbing|electrician|scaffolding|builders|plastering|drainage|boiler|(?:auto|car|vehicle) repair|accident repair)\b/i
+  /\b(?:roofing|plumbing|electrician|scaffolding|builders|plastering|drainage|boiler|(?:auto|car|vehicle) repair|accident repair)\b/i,
+  /\b(?:takeaway|take-away|pizza|kebab|burger|fast food|fish and chips|fish & chips|shawarma|sharwarma|fried chicken|peri peri|dessert shop|waffle|desserts?|sandwich bar|sandwich shop|catering equipment)\b/i,
+  /\b(?:salvage|scrap|breakers?|towing|recovery|vehicle recovery|car transport|raffle|competitions?|car hire|van hire|car rental)\b/i
 ]);
 
 function getSicPriority(sicString) {

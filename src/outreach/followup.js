@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { isValidEmailAddress } = require('../emailAddress');
-const { isTargetSic: defaultIsTargetSic } = require('../enrich/sic');
+const { isTargetSic: defaultIsTargetSic, isDisqualifiedCompany: defaultIsDisqualifiedCompany } = require('../enrich/sic');
 const { parseCSV } = require('../enrich/csvParser');
 const {
   DEFAULT_SENT_LEADS_PATH,
@@ -212,6 +212,7 @@ function getEligibleFollowUps(
   const limit = typeof options.limit === 'number' ? options.limit : DEFAULT_MAX_DAILY_FOLLOWUPS;
   const requireMessageId = options.requireMessageId !== false;
   const isTargetSic = typeof options.isTargetSic === 'function' ? options.isTargetSic : defaultIsTargetSic;
+  const isDisqualified = typeof options.isDisqualifiedCompany === 'function' ? options.isDisqualifiedCompany : defaultIsDisqualifiedCompany;
   const filterNonTargetSics = options.filterNonTargetSics !== false;
 
   let companiesMap = options.companiesMap;
@@ -314,12 +315,23 @@ function getEligibleFollowUps(
       continue;
     }
 
-    // SIC Protection Shield Gate:
+    // Disqualified Sector & SIC Protection Shield Gate:
     const companyInfo = getCompanyFromMap(companiesMap, compNum);
     const companySics = lead.sic_codes || companyInfo.sic_codes || '';
-    if (filterNonTargetSics && companySics && !isTargetSic(companySics)) {
-      nonTargetSicCount++;
-      continue;
+    if (filterNonTargetSics) {
+      if (companySics && !isTargetSic(companySics)) {
+        nonTargetSicCount++;
+        continue;
+      }
+      const leadType = String(lead.type || '').trim().toLowerCase();
+      if (leadType && (leadType === 'trades' || leadType === 'tech' || leadType === 'b2b' || leadType === 'general' || leadType === 'corporate')) {
+        nonTargetSicCount++;
+        continue;
+      }
+      if (isDisqualified(lead) || isDisqualified(companyInfo) || isTechOrSoftwareCompany(lead.company_name || companyInfo.company_name)) {
+        nonTargetSicCount++;
+        continue;
+      }
     }
 
     const touch1Fup = previousFollowUps.find(f => f.followup_number === 1);

@@ -298,16 +298,26 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     const companySics = lead.sic_codes || companyInfo.sic_codes;
     if (companySics && !isTargetSic(companySics)) {
       logger.warn(`Skipping lead ${companyName} (${companyNum}): non-target SIC codes ("${companySics}")`);
-      if (!dryRun && !mock) {
+      if (!dryRun) {
         removeLeadFn(companyNum, { leadsPath });
         logger.log(`Purged non-target lead ${companyNum} from leads.csv to prevent queue blocking.`);
       }
       continue;
     }
 
+    const leadType = String(lead.type || '').trim().toLowerCase();
+    if (leadType && (leadType === 'trades' || leadType === 'tech' || leadType === 'b2b' || leadType === 'general' || leadType === 'corporate')) {
+      logger.warn(`Skipping lead ${companyName} (${companyNum}): non-target sector type ("${leadType}")`);
+      if (!dryRun) {
+        removeLeadFn(companyNum, { leadsPath });
+        logger.log(`Purged non-target sector lead ${companyNum} from leads.csv to prevent queue blocking.`);
+      }
+      continue;
+    }
+
     if (isDisqualified(lead) || isDisqualified(companyInfo)) {
       logger.warn(`Skipping lead ${companyName} (${companyNum}): disqualified company name pattern`);
-      if (!dryRun && !mock) {
+      if (!dryRun) {
         removeLeadFn(companyNum, { leadsPath });
         logger.log(`Purged disqualified lead ${companyNum} from leads.csv to prevent queue blocking.`);
       }

@@ -77,8 +77,8 @@ test('Unit 5.71: Core Luxury and High-Ticket niches remain 100% active in TARGET
     '47770', '95250',          // Luxury Watches & Jewellery
     '96020', '96040',          // Aesthetic Clinics & Salons
     '86230',                   // Cosmetic Dentistry
-    '74100', '43320',          // Bespoke Kitchens & Joinery
-    '56101', '56102', '56103', '55100' // Fine Dining & Hospitality
+    '74100',                   // Bespoke Kitchens & Interior Design
+    '56101', '55100'           // Fine Dining & Luxury Hotels
   ];
 
   for (const code of luxuryTier1Codes) {
