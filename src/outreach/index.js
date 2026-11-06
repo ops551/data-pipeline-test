@@ -6,6 +6,7 @@ const {
   getPendingLeads: defaultGetPendingLeads,
   moveLeadToSent: defaultMoveLeadToSent,
   purgeSentFromLeads: defaultPurgeSentFromLeads,
+  removeLead: defaultRemoveLead,
   DEFAULT_LEADS_PATH,
   DEFAULT_SENT_LEADS_PATH
 } = require('./csv');
@@ -22,7 +23,10 @@ const {
   isSmtpQuotaExceeded: defaultIsSmtpQuotaExceeded
 } = require('./email');
 const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAddress');
-const { isTargetSic: defaultIsTargetSic } = require('../enrich/sic');
+const {
+  isTargetSic: defaultIsTargetSic,
+  isDisqualifiedCompany: defaultIsDisqualifiedCompany
+} = require('../enrich/sic');
 
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
@@ -157,6 +161,8 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   const isValidEmail = deps.isValidEmailAddress || defaultIsValidEmailAddress;
   const isSmtpQuotaExceededFn = deps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
   const isTargetSic = deps.isTargetSic || defaultIsTargetSic;
+  const isDisqualified = deps.isDisqualifiedCompany || defaultIsDisqualifiedCompany;
+  const removeLeadFn = deps.removeLead || defaultRemoveLead;
 
   const skipVerify = options.skipVerify !== undefined
     ? Boolean(options.skipVerify)
@@ -292,6 +298,19 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     const companySics = lead.sic_codes || companyInfo.sic_codes;
     if (companySics && !isTargetSic(companySics)) {
       logger.warn(`Skipping lead ${companyName} (${companyNum}): non-target SIC codes ("${companySics}")`);
+      if (!dryRun && !mock) {
+        removeLeadFn(companyNum, { leadsPath });
+        logger.log(`Purged non-target lead ${companyNum} from leads.csv to prevent queue blocking.`);
+      }
+      continue;
+    }
+
+    if (isDisqualified(lead) || isDisqualified(companyInfo)) {
+      logger.warn(`Skipping lead ${companyName} (${companyNum}): disqualified company name pattern`);
+      if (!dryRun && !mock) {
+        removeLeadFn(companyNum, { leadsPath });
+        logger.log(`Purged disqualified lead ${companyNum} from leads.csv to prevent queue blocking.`);
+      }
       continue;
     }
 
