@@ -69,11 +69,11 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Audit', as
       incorporatedTo: config.incorporatedTo,
       size: 50,
       startIndex: 0,
-      sicCodes: ['45111', '62012']
+      sicCodes: ['45111', '74100']
     });
     assert.ok(url.includes('incorporated_from=2026-04-28'));
     assert.ok(url.includes('incorporated_to=2026-07-27'));
-    assert.ok(url.includes('sic_codes=45111%2C62012'));
+    assert.ok(url.includes('sic_codes=45111%2C74100'));
 
     // 3. Simulated harvest & CSV persistence
     const mockCompanies = [
@@ -88,12 +88,12 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Audit', as
       },
       {
         company_number: '22222222',
-        company_name: 'APEX TECH CONSULTING LTD',
+        company_name: 'APEX BESPOKE INTERIORS LTD',
         date_of_creation: '2026-06-01',
         company_status: 'active',
         company_type: 'ltd',
-        sic_codes: ['62012'],
-        registered_office_address: { address_line_1: '2 Tech Way', postal_code: 'EC1A 1BB' }
+        sic_codes: ['74100'],
+        registered_office_address: { address_line_1: '2 Design Way', postal_code: 'EC1A 1BB' }
       },
       {
         company_number: '33333333',

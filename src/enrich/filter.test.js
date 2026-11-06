@@ -13,7 +13,8 @@ test('isTargetSic', (t) => {
   assert.strictEqual(isTargetSic('47770'), true); // luxury watches
   assert.strictEqual(isTargetSic('86230'), true); // cosmetic dentistry
   assert.strictEqual(isTargetSic('68310'), true); // estate agents
-  assert.strictEqual(isTargetSic('62012'), true); // tech agency
+  assert.strictEqual(isTargetSic('62012'), false); // tech agency strictly excluded
+  assert.strictEqual(isTargetSic('58290'), false); // software publishing strictly excluded
   assert.strictEqual(isTargetSic('47110; 99999'), false); // one dormant code drops it
   assert.strictEqual(isTargetSic('47110; 82990'), false);
   assert.strictEqual(isTargetSic('70229'), false); // management consultancy shell dropped

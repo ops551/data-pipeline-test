@@ -34,18 +34,18 @@ const TIER_2_SICS = [
 ];
 
 const TIER_3_SICS = [
-  // Tech & Digital Agencies
-  '62012', '62020', '62090', '58290', '73110'
+  // Tech & Digital Agencies - DEPRECATED & EXCLUDED (Non-luxury/no inventory)
 ];
 
 const TARGET_SICS = [
   ...TIER_1_SICS,
-  ...TIER_2_SICS,
-  ...TIER_3_SICS
+  ...TIER_2_SICS
 ];
 
-// SPV / holding / dormant / corporate shell codes to exclude
+// SPV / holding / dormant / corporate shell codes and non-target tech/SaaS to exclude
 const EXCLUDED_SICS = [
+  // Tech, software publishing, SaaS, and digital agencies (strictly non-target)
+  '58290', '62012', '62020', '62090', '73110',
   // Industrial, window & domestic cleaning services (strictly non-target)
   '81210', '81221', '81222', '81223', '81291', '81299',
   '64201', '64202', '64203', '64204', '64205', '64209', // holding companies
@@ -69,7 +69,8 @@ const EXCLUDED_SIC_SET = new Set(EXCLUDED_SICS);
 const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   /\b(?:charity|charities|charitable|foundation|fundraising|non[- ]?profit|social housing|cic|c\.i\.c|community trust|charitable trust)\b/i,
   /\b(?:recruitment|staffing|talent acquisition|headhunters?|personnel|workforce)\b/i,
-  /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i
+  /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i,
+  /\b(?:saas|software|cloud security|devops|cybersecurity)\b/i
 ]);
 
 function getSicPriority(sicString) {
