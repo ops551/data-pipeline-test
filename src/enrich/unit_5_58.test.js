@@ -44,10 +44,11 @@ test('Unit 5.58 - SIC Priority Scoring: Tier 2 returns 60 and Tier 3 returns 10'
   assert.equal(getSicPriority('96090'), 60, 'Pet grooming & personal services');
   assert.equal(getSicPriority('68310'), 60, 'Real estate agencies');
 
-  // Tier 3: IT contractors, generic software
-  assert.equal(getSicPriority('62012'), 10, 'Business & domestic software');
-  assert.equal(getSicPriority('62020'), 10, 'IT consultancy');
-  assert.equal(getSicPriority('62090'), 10, 'Other IT activities');
+  // Tech & software are excluded -> priority 0
+  assert.equal(getSicPriority('62012'), 0, 'Business & domestic software excluded');
+  assert.equal(getSicPriority('62020'), 0, 'IT consultancy excluded');
+  assert.equal(getSicPriority('62090'), 0, 'Other IT activities excluded');
+  assert.equal(getSicPriority('58290'), 0, 'Software publishing excluded');
 
   // Unknown or empty
   assert.equal(getSicPriority(''), 0);
@@ -58,10 +59,8 @@ test('Unit 5.58 - SIC Priority Scoring: Tier 2 returns 60 and Tier 3 returns 10'
 });
 
 test('Unit 5.58 - SIC Priority Scoring: Multi-SIC uses highest tier', () => {
-  // Company with Tier 3 (62012) and Tier 1 (74100)
-  assert.equal(getSicPriority('62012;74100'), 100, 'Must pick highest Tier 1 priority');
-  // Company with Tier 3 (62090) and Tier 2 (43220)
-  assert.equal(getSicPriority('62090;43220'), 60, 'Must pick Tier 2 over Tier 3');
+  // Company with Tier 2 (43220) and Tier 1 (74100)
+  assert.equal(getSicPriority('43220;74100'), 100, 'Must pick highest Tier 1 priority over Tier 2');
   // Array of SICs
   assert.equal(getSicPriority(['47910', '45112']), 100);
 });
@@ -155,13 +154,14 @@ test('Unit 5.58 - Filter Candidates: Tier 1 prioritisation and disqualification 
 
   const candidates = parseCSV(candidatesPath);
 
-  // Excluded recruitment agency
-  assert.equal(candidates.find(c => c.company_number === '10000004'), undefined);
+  // Excluded recruitment agency and excluded tech agency
+  assert.equal(candidates.find(c => c.company_number === '10000004'), undefined, 'Recruitment agency excluded');
+  assert.equal(candidates.find(c => c.company_number === '10000001'), undefined, 'Tech agency excluded');
 
   // Filtered order must put Tier 1 car showroom first despite older creation date
+  assert.equal(candidates.length, 2);
   assert.equal(candidates[0].company_number, '10000002', 'Tier 1 Apex Motor Group must be #1');
   assert.equal(candidates[1].company_number, '10000003', 'Tier 2 Prime Plumbers must be #2');
-  assert.equal(candidates[2].company_number, '10000001', 'Tier 3 Tech Stack Solutions must be #3');
 
   fs.rmSync(dir, { recursive: true, force: true });
 });

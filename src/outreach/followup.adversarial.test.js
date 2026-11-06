@@ -871,14 +871,14 @@ test('Adversarial Unit 5.55: getEligibleFollowUps handles polymorphic 3rd argume
 
   // Case 3: Explicit companiesMap passed directly as Map or Object
   const companiesMap = new Map([
-    ['8201', { company_number: '8201', sic_codes: '62012' }] // Overrides with valid tech SIC
+    ['8201', { company_number: '8201', sic_codes: '45111' }] // Overrides with valid car showroom SIC
   ]);
   const resMapOverride = getEligibleFollowUps(sentLeadsPath, followUpsPath, {
     now,
     companiesMap
   });
   assert.equal(resMapOverride.eligible.length, 1);
-  assert.equal(resMapOverride.eligible[0].lead_record.sic_codes, '62012');
+  assert.equal(resMapOverride.eligible[0].lead_record.sic_codes, '45111');
   assert.equal(resMapOverride.nonTargetSicCount, 0);
 });
 

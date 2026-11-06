@@ -1062,10 +1062,10 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
       verification_status: 'sniffmail'
     },
     {
-      company_number: '62012001',
-      company_name: 'Altivox Tech Agency Ltd',
+      company_number: '47770001',
+      company_name: 'Altivox Luxury Watches Ltd',
       // sic_codes omitted from lead to test companies.csv lookup
-      emails: 'founder@altivox.co.uk',
+      emails: 'founder@altivoxwatches.co.uk',
       status: 'lead',
       verification_status: 'sniffmail'
     },
@@ -1082,7 +1082,7 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
   fs.writeFileSync(
     ws.companiesPath,
     'company_number,company_name,sic_codes\n' +
-    '62012001,Altivox Tech Agency Ltd,62012\n' +
+    '47770001,Altivox Luxury Watches Ltd,47770\n' +
     '66290001,Bind Affinity Insurance Ltd,66290\n'
   );
 
@@ -1120,7 +1120,7 @@ test('Unit 5.53: runOutreachPipeline skips non-target SIC leads (corporate shell
     assert.strictEqual(result.sent, 2, 'Only the 2 target SIC leads should be sent');
     assert.strictEqual(sentEmails.length, 2);
     assert.ok(sentEmails.includes('boss@apexdetailing.co.uk'));
-    assert.ok(sentEmails.includes('founder@altivox.co.uk'));
+    assert.ok(sentEmails.includes('founder@altivoxwatches.co.uk'));
     assert.ok(!sentEmails.includes('director@pmaconsultancy.co.uk'));
     assert.ok(!sentEmails.includes('tax@sterling-tax.co.uk'));
     assert.ok(!sentEmails.includes('thomas@bindaffinity.com'));
