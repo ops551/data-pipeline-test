@@ -44,8 +44,9 @@ const TARGET_SICS = [
 
 // SPV / holding / dormant / corporate shell codes and non-target tech/SaaS to exclude
 const EXCLUDED_SICS = [
-  // Tech, software publishing, SaaS, and digital agencies (strictly non-target)
-  '58290', '62012', '62020', '62090', '73110',
+  // Tech, software publishing, SaaS, and digital/media agencies (strictly non-target)
+  '58210', '58290', '62011', '62012', '62020', '62030', '62090',
+  '63110', '63120', '63910', '63990', '70210', '73110', '73120',
   // Industrial, window & domestic cleaning services (strictly non-target)
   '81210', '81221', '81222', '81223', '81291', '81299',
   '64201', '64202', '64203', '64204', '64205', '64209', // holding companies
@@ -70,7 +71,8 @@ const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   /\b(?:charity|charities|charitable|foundation|fundraising|non[- ]?profit|social housing|cic|c\.i\.c|community trust|charitable trust)\b/i,
   /\b(?:recruitment|staffing|talent acquisition|headhunters?|personnel|workforce)\b/i,
   /\b(?:clinical psychology|psychological|psychiatry|psychiatric|psychotherapy|counselling|mental health|diagnostic clinic|paediatric)\b/i,
-  /\b(?:saas|software|cloud security|devops|cybersecurity)\b/i
+  /\b(?:saas|software|cloud security|devops|cybersecurity|robotics|subsea)\b/i,
+  /\b(?:digital marketing|marketing agency|seo agency|web design agency|lead generation)\b/i
 ]);
 
 function getSicPriority(sicString) {
@@ -92,7 +94,7 @@ function getSicPriority(sicString) {
 }
 
 function isDisqualifiedCompany(company = {}) {
-  const name = String(company.company_name || '').toLowerCase();
+  const name = String((company && company.company_name) || '').toLowerCase();
   for (const pattern of NEGATIVE_DISQUALIFY_PATTERNS) {
     if (pattern.test(name)) return true;
   }
