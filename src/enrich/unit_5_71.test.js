@@ -75,7 +75,6 @@ test('Unit 5.71: Core Luxury and High-Ticket niches remain 100% active in TARGET
     '45111', '45112', '45190', // Car Dealerships
     '45400',                   // Superbike Dealers
     '47770', '95250',          // Luxury Watches & Jewellery
-    '45200',                   // Detailing & Garages
     '96020', '96040',          // Aesthetic Clinics & Salons
     '86230',                   // Cosmetic Dentistry
     '74100', '43320',          // Bespoke Kitchens & Joinery
@@ -92,8 +91,7 @@ test('Unit 5.71: Core Luxury and High-Ticket niches remain 100% active in TARGET
     '74201', '93290',          // Weddings & Luxury Events
     '93120', '93130',          // Fitness & Pilates
     '96090',                   // Pet Grooming Spas
-    '68310',                   // High-end Estate Agents
-    '43210', '43220', '41201'  // High-ticket Trades
+    '68310'                    // High-end Estate Agents
   ];
 
   for (const code of highTicketTier2Codes) {

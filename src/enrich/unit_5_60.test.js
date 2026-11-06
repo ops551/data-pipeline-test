@@ -40,11 +40,11 @@ test('Unit 5.60 - Date Range Defaults: Config and Filter default to 30 to 180 da
   const past190 = new Date(now.getTime() - 190 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-1,TOO_YOUNG_20,${past20},45200,10 High St London W1
-2,BOUNDARY_MIN_30,${past30},45200,20 High St London W1
-3,SWEET_SPOT_90,${past90},45200,30 High St London W1
-4,BOUNDARY_MAX_180,${past180},45200,40 High St London W1
-5,TOO_OLD_190,${past190},45200,50 High St London W1
+1,TOO_YOUNG_20,${past20},45111,10 High St London W1
+2,BOUNDARY_MIN_30,${past30},45111,20 High St London W1
+3,SWEET_SPOT_90,${past90},45111,30 High St London W1
+4,BOUNDARY_MAX_180,${past180},45111,40 High St London W1
+5,TOO_OLD_190,${past190},45111,50 High St London W1
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);
@@ -120,8 +120,8 @@ test('Unit 5.60 - Extracted website email on company domain is preserved as exac
 
   // 2 companies: Motonex Ltd (has website email) and Apex Autos Ltd (subsequent company to verify batch is NOT prematurely halted)
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-12345678,Motonex Ltd,${creationDate},45200,10 Motonex Way Manchester M1 1AA
-87654321,Apex Autos Ltd,${creationDate},45200,20 Apex Road Leeds LS1 1AA
+12345678,Motonex Ltd,${creationDate},45111,10 Motonex Way Manchester M1 1AA
+87654321,Apex Autos Ltd,${creationDate},45111,20 Apex Road Leeds LS1 1AA
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);
@@ -252,7 +252,7 @@ test('Unit 5.60 - Extracted website emails on catch-all domains are NOT discarde
   const creationDate = new Date(now.getTime() - 45 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-99887766,Catchall Detailing Ltd,${creationDate},45200,50 Shine Road London E1 1AA
+99887766,Catchall Detailing Ltd,${creationDate},45111,50 Shine Road London E1 1AA
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);

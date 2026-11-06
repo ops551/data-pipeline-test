@@ -818,14 +818,14 @@ test('Adversarial Unit 5.55: getEligibleFollowUps resolves sic_codes from siblin
 
   // sent_leads missing sic_codes entirely
   const sentLeads = [
-    { company_number: '8101', company_name: 'Auto Detail Pros', sent_to: 'info@autodetail.co.uk', sent_at: past3Days, message_id: '<msg_8101@detail.co.uk>' },
+    { company_number: '8101', company_name: 'Premier Car Showroom', sent_to: 'info@premiercars.co.uk', sent_at: past3Days, message_id: '<msg_8101@premiercars.co.uk>' },
     { company_number: '8102', company_name: 'Holding Shell Corp', sent_to: 'info@holdingshell.co.uk', sent_at: past3Days, message_id: '<msg_8102@shell.co.uk>' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
 
   // companies.csv defines the SIC codes
   const companies = [
-    { company_number: '8101', company_name: 'Auto Detail Pros', sic_codes: '45200' }, // detailing (target)
+    { company_number: '8101', company_name: 'Premier Car Showroom', sic_codes: '45111' }, // car showroom (target)
     { company_number: '8102', company_name: 'Holding Shell Corp', sic_codes: '64201' }  // holding (excluded)
   ];
   writeCSVAtomic(siblingCompaniesPath, companies, ['company_number', 'company_name', 'sic_codes']);
@@ -834,7 +834,7 @@ test('Adversarial Unit 5.55: getEligibleFollowUps resolves sic_codes from siblin
 
   assert.equal(res.eligible.length, 1);
   assert.equal(res.eligible[0].company_number, '8101');
-  assert.equal(res.eligible[0].lead_record.sic_codes, '45200');
+  assert.equal(res.eligible[0].lead_record.sic_codes, '45111');
   assert.equal(res.nonTargetSicCount, 1);
 });
 

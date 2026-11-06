@@ -7,12 +7,13 @@ const { isTargetSic } = require('./sic');
 
 test('isTargetSic', (t) => {
   // Good codes
-  assert.strictEqual(isTargetSic('45200'), true);
   assert.strictEqual(isTargetSic('45111'), true); // car showroom
   assert.strictEqual(isTargetSic('45400'), true); // motorbike showroom
   assert.strictEqual(isTargetSic('47770'), true); // luxury watches
   assert.strictEqual(isTargetSic('86230'), true); // cosmetic dentistry
   assert.strictEqual(isTargetSic('68310'), true); // estate agents
+  assert.strictEqual(isTargetSic('45200'), false); // auto repair trade strictly excluded
+  assert.strictEqual(isTargetSic('43220'), false); // plumbing trade strictly excluded
   assert.strictEqual(isTargetSic('62012'), false); // tech agency strictly excluded
   assert.strictEqual(isTargetSic('58290'), false); // software publishing strictly excluded
   assert.strictEqual(isTargetSic('47110; 99999'), false); // one dormant code drops it
@@ -20,7 +21,7 @@ test('isTargetSic', (t) => {
   assert.strictEqual(isTargetSic('70229'), false); // management consultancy shell dropped
   assert.strictEqual(isTargetSic('68100'), false); // real estate SPV dropped
   assert.strictEqual(isTargetSic('11111'), false); // not in target list, strictly rejected
-  assert.strictEqual(isTargetSic('45200; 11111'), true); // has a target code, no bad codes
+  assert.strictEqual(isTargetSic('45111; 11111'), true); // has a target code, no bad codes
 });
 
 test('getDaysOld', (t) => {
@@ -70,12 +71,12 @@ test('Unit 5.53: filterCandidates rejects malformed dates, future dates, and out
   const past185 = new Date(now.getTime() - 185 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-1,MALFORMED_DATE,not_a_date,45200,Add1
-2,FUTURE_DATE,${future5},45200,Add2
-3,TOO_YOUNG_89,${past89},45200,Add3
-4,TARGET_95,${past95},45200,Add4
-5,TARGET_175,${past175},45200,Add5
-6,TOO_OLD_185,${past185},45200,Add6
+1,MALFORMED_DATE,not_a_date,45111,Add1
+2,FUTURE_DATE,${future5},45111,Add2
+3,TOO_YOUNG_89,${past89},45111,Add3
+4,TARGET_95,${past95},45111,Add4
+5,TARGET_175,${past175},45111,Add5
+6,TOO_OLD_185,${past185},45111,Add6
 `;
 
   fs.writeFileSync(tmpCompanies, companiesContent);
@@ -110,17 +111,17 @@ test('filterCandidates', (t) => {
   const past200 = new Date(now.getTime() - 200 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-1,TOO YOUNG,${past5},45200,Add1
-2,GOOD LEAD,${past100},45200,Add2
-3,DORMANT,${past100},45200;99999,Add3
-4,ALREADY CHECKED,${past100},45200,Add4
-5,TOO OLD,${past200},45200,Add5
+1,TOO YOUNG,${past5},45111,Add1
+2,GOOD LEAD,${past100},45111,Add2
+3,DORMANT,${past100},45111;99999,Add3
+4,ALREADY CHECKED,${past100},45111,Add4
+5,TOO OLD,${past200},45111,Add5
 `;
   
   // Make 20 companies at AgentAdd to trigger agent_address flag
   let agentCompanies = '';
   for (let i = 100; i < 120; i++) {
-    agentCompanies += `${i},AGENT CO,${past100},45200,AgentAdd\n`;
+    agentCompanies += `${i},AGENT CO,${past100},45111,AgentAdd\n`;
   }
   
   fs.writeFileSync(tmpCompanies, companiesContent + agentCompanies);
@@ -161,9 +162,9 @@ test('filterCandidates excludes companies present in leadsFile and sentLeadsFile
   const past100 = new Date(now.getTime() - 100 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-10,IN LEADS,${past100},45200,Add10
-20,IN SENT,${past100},45200,Add20
-30,FRESH LEAD,${past100},45200,Add30
+10,IN LEADS,${past100},45111,Add10
+20,IN SENT,${past100},45111,Add20
+30,FRESH LEAD,${past100},45111,Add30
 `;
 
   fs.writeFileSync(tmpCompanies, companiesContent);
@@ -202,8 +203,8 @@ test('filterCandidates sorts candidates freshest-first by date_of_creation desce
   const past95 = new Date(now.getTime() - 95 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
   const companiesContent = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-101,OLD CO,${past120},45200,AddOld
-102,FRESH CO,${past95},45200,AddFresh
+101,OLD CO,${past120},45111,AddOld
+102,FRESH CO,${past95},45111,AddFresh
 `;
 
   fs.writeFileSync(tmpCompanies, companiesContent);
