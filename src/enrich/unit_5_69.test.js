@@ -90,22 +90,19 @@ test('Unit 5.69: High-Value Booking Niches remain 100% active and protected in T
   assert.equal(isTargetSic('86230'), true);
   assert.equal(getSicPriority('86230'), 100);
 
-  // 5. Bespoke Kitchens & Joinery (Tier 1)
-  const kitchenCodes = ['74100', '43320'];
-  for (const code of kitchenCodes) {
-    assert.equal(isTargetSic(code), true);
-    assert.equal(getSicPriority(code), 100);
-  }
+  // 5. Bespoke Kitchens & Interior Design (Tier 1)
+  assert.equal(isTargetSic('74100'), true);
+  assert.equal(getSicPriority('74100'), 100);
 
-  // 6. Fine Dining & Hospitality (Tier 1)
-  const diningCodes = ['56101', '56102', '56103', '55100'];
+  // 6. Fine Dining & Luxury Hotels (Tier 1 strictly licensed/boutique)
+  const diningCodes = ['56101', '55100'];
   for (const code of diningCodes) {
     assert.equal(isTargetSic(code), true);
     assert.equal(getSicPriority(code), 100);
   }
 
-  // 7. General Trades are strictly excluded (Tier 2 trades removed)
-  const tradeCodes = ['41201', '41202', '43210', '43220', '43290', '43310', '43330', '43341', '43342', '43390', '43910', '45200'];
+  // 7. General Trades & Fast Food are strictly excluded
+  const tradeCodes = ['41201', '41202', '43210', '43220', '43290', '43310', '43320', '43330', '43341', '43342', '43390', '43910', '45200', '56102', '56103'];
   for (const code of tradeCodes) {
     assert.equal(isTargetSic(code), false);
     assert.equal(getSicPriority(code), 0);

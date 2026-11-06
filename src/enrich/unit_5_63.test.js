@@ -33,7 +33,7 @@ test('Unit 5.63: Town & County Joinery Ltd real scenario - validCandidates scope
 
   const creationDate = getValidCreationDate(45);
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-SC903356,Town & County Joinery Ltd,${creationDate},43320,12 High Street Edinburgh EH1 1AA
+SC903356,Town & County Joinery Ltd,${creationDate},74100,12 High Street Edinburgh EH1 1AA
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);
@@ -152,7 +152,7 @@ test('Unit 5.63: Edge case - allExtractedEmails is empty, validCandidates defaul
 
   const creationDate = getValidCreationDate(60);
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-23456789,Silent Joinery Ltd,${creationDate},43320,12 Forest Road Bristol BS1 1AA
+23456789,Silent Joinery Ltd,${creationDate},74100,12 Forest Road Bristol BS1 1AA
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);
@@ -220,7 +220,7 @@ test('Unit 5.63: Edge case - multiple valid candidate emails with different doma
 
   const creationDate = getValidCreationDate(40);
   fs.writeFileSync(companiesPathA, `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-34567890,Apex Joinery Ltd,${creationDate},43320,50 Apex Way London SW1 1AA
+34567890,Apex Joinery Ltd,${creationDate},74100,50 Apex Way London SW1 1AA
 `);
   fs.writeFileSync(enrichedPathA, 'company_number\n');
   fs.writeFileSync(leadsPathA, '');
@@ -279,7 +279,7 @@ test('Unit 5.63: Edge case - multiple valid candidate emails with different doma
   const sentLeadsPathB = path.join(dirB, 'sent_leads.csv');
 
   fs.writeFileSync(companiesPathB, `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-45678901,Summit Joinery Ltd,${creationDate},43320,88 Summit Hill Leeds LS1 1AA
+45678901,Summit Joinery Ltd,${creationDate},74100,88 Summit Hill Leeds LS1 1AA
 `);
   fs.writeFileSync(enrichedPathB, 'company_number\n');
   fs.writeFileSync(leadsPathB, '');
@@ -342,8 +342,8 @@ test('Unit 5.63: Batch halting resilience - fallback lead sets companyHadLead=tr
   // 1) Town & County Joinery Ltd: officer email causes hadExhaustedEmail=true, but fallback email is found and saved
   // 2) Subsequent Windows Ltd: must still be processed because Company 1 saved a fallback lead!
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-14567890,Town & County Joinery Ltd,${creationDate},43320,10 Pine Road London E1 6AN
-56789012,Subsequent Windows Ltd,${creationDate},43320,20 Window Row Manchester M1 1AA
+14567890,Town & County Joinery Ltd,${creationDate},74100,10 Pine Road London E1 6AN
+56789012,Subsequent Windows Ltd,${creationDate},74100,20 Window Row Manchester M1 1AA
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);
@@ -485,8 +485,8 @@ test('Unit 5.63: Adversarial guard - halts batch when companyHadLead is FALSE an
   // 1) Exhausted No Contact Ltd: officer resolution hits quota exhaustion and NO fallback email exists -> companyHadLead=false -> MUST HALT
   // 2) Protected Future Ltd: should NOT be processed because quota is exhausted
   const companiesCsv = `company_number,company_name,date_of_creation,sic_codes,registered_office_address
-90000001,Exhausted No Contact Ltd,${creationDate},43320,1 Hard Luck Way London E1
-90000002,Protected Future Ltd,${creationDate},43320,2 Safe Street Leeds LS1
+90000001,Exhausted No Contact Ltd,${creationDate},74100,1 Hard Luck Way London E1
+90000002,Protected Future Ltd,${creationDate},74100,2 Safe Street Leeds LS1
 `;
 
   fs.writeFileSync(companiesPath, companiesCsv);

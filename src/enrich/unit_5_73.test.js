@@ -106,7 +106,6 @@ test('Unit 5.73: Pure high-ticket luxury & booking niches remain 100% active and
     { code: '96020', niche: 'Aesthetics & Beauty (Tier 1)', expectedPriority: 100 },
     { code: '86230', niche: 'Cosmetic Dentistry (Tier 1)', expectedPriority: 100 },
     { code: '74100', niche: 'Bespoke Kitchens & Interior (Tier 1)', expectedPriority: 100 },
-    { code: '43320', niche: 'Bespoke Joinery Installation (Tier 1)', expectedPriority: 100 },
     { code: '56101', niche: 'Fine Dining Restaurants (Tier 1)', expectedPriority: 100 },
     { code: '74201', niche: 'Wedding & Event Photography (Tier 2)', expectedPriority: 60 },
     { code: '93120', niche: 'Fitness & Gym Studios (Tier 2)', expectedPriority: 60 },
