@@ -346,7 +346,7 @@ test('generateFollowUpEmail crafts Touch 2 (Quick Bump) for Non-Tech Persona', (
   // Signature trust verification
   assert.match(email.text, /Web Design & Business Automation/);
   assert.match(email.text, /nahid-yf63\.onrender\.com/);
-  assert.match(email.text, /github\.com\/Nahid625/);
+  assert.doesNotMatch(email.text, /github\.com\/Nahid625/);
   assert.doesNotMatch(email.text, /\+880/); // Strictly no WhatsApp
 });
 

@@ -489,8 +489,7 @@ function generateFollowUpEmail(candidate, options = {}) {
     'Best regards,',
     senderName,
     roleTitle,
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ];
   const signature = signatureLines.join('\n');
 

@@ -48,8 +48,7 @@ test('Unit 5.68 - Requirement 2: stripExternalLinks preserves "2) Hybrid 24/7 Wh
     'Best regards,',
     'Nahid',
     'Web Design & Business Automation',
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   const cleaned = stripExternalLinks(emailBody);
@@ -99,14 +98,12 @@ test('Unit 5.68 - Requirement 5: stripExternalLinks still strictly strips rogue 
 test('Unit 5.68 - Requirement 6: stripExternalLinks preserves official coordinates', () => {
   const coordinates = [
     'WhatsApp: +8801615753465',
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   const cleaned = stripExternalLinks(coordinates);
   assert.ok(cleaned.includes('WhatsApp: +8801615753465'));
-  assert.ok(cleaned.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(cleaned.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(cleaned.includes('Portfolio: https://nahid-yf63.onrender.com/'));
 });
 
 test('Unit 5.68 - Requirement 7: sendEmail transmits full Pillar 2 in both plain text and HTML payloads', async () => {

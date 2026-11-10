@@ -517,7 +517,7 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       assert.ok(fullText.includes('Nahid'), 'Must contain sender Nahid in signature');
       assert.ok(fullText.includes('Web Design & Business Automation'), 'Must contain business title');
       assert.ok(fullText.includes('https://nahid-yf63.onrender.com/'), 'Must contain portfolio website');
-      assert.ok(fullText.includes('https://github.com/Nahid625'), 'Must contain verified GitHub coordinate');
+      assert.equal(fullText.includes('GitHub:'), false, 'Must not contain GitHub coordinate');
 
       // 5. Verify forbidden spam words immunity
       for (const forbidden of FORBIDDEN_SPAM_WORDS) {
@@ -863,8 +863,8 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         // Anti-spam signature: Nahid, Web Design & Business Automation, Website, GitHub, NO WhatsApp
         assert.ok(followUp.text.includes('Best regards,\nNahid'), 'Must have Nahid signature');
         assert.ok(followUp.text.includes('Web Design & Business Automation'), 'Must have service title');
-        assert.ok(followUp.text.includes('Website: https://nahid-yf63.onrender.com/'), 'Must have verified portfolio URL');
-        assert.ok(followUp.text.includes('GitHub: https://github.com/Nahid625'), 'Must have verified GitHub URL');
+        assert.ok(followUp.text.includes('Portfolio: https://nahid-yf63.onrender.com/'), 'Must have verified portfolio URL');
+        assert.equal(followUp.text.includes('GitHub:'), false, 'Must not have GitHub in follow-up');
         assert.equal(
           followUp.text.includes('WhatsApp:'),
           false,

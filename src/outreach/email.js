@@ -9,7 +9,7 @@ const DEFAULT_MAX_RETRIES = 3;
 const OFFICIAL_COORDINATES = Object.freeze({
   whatsapp: '+8801615753465',
   website: 'https://nahid-yf63.onrender.com/',
-  github: 'https://github.com/Nahid625',
+  portfolio: 'https://nahid-yf63.onrender.com/',
 });
 
 function stripExternalLinks(content) {

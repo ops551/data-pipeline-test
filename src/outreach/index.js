@@ -32,8 +32,7 @@ const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
   'Nahid',
   'Web Design & Business Automation',
-  'Website: https://nahid-yf63.onrender.com/',
-  'GitHub: https://github.com/Nahid625'
+  'Portfolio: https://nahid-yf63.onrender.com/'
 ].join('\n');
 
 const TRUSTED_DELIVERABILITY_STATUSES = new Set([
