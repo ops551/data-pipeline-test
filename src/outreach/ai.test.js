@@ -29,7 +29,7 @@ test('constants are correctly configured', () => {
   assert.equal(DEFAULT_SIGNATURE.title, 'Web Design & Business Automation');
   assert.equal(DEFAULT_SIGNATURE.whatsapp, undefined);
   assert.equal(DEFAULT_SIGNATURE.website, 'https://nahid-yf63.onrender.com/');
-  assert.equal(DEFAULT_SIGNATURE.github, 'https://github.com/Nahid625');
+  assert.equal(DEFAULT_SIGNATURE.github, undefined);
 });
 
 test('resolveApiKey returns key from options, GEMINI_API_KEY, or GEMINI', () => {
@@ -117,14 +117,13 @@ test('buildSignature formats default signature with verified official coordinate
     'Best regards,',
     'Nahid',
     'Web Design & Business Automation',
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   assert.equal(signature, expected);
   assert.equal(signature.includes('WhatsApp:'), false);
-  assert.ok(signature.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(signature.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(signature.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(signature.includes('GitHub:'), false);
 });
 
 test('buildSignature supports sender options with coordinates', () => {
@@ -354,7 +353,7 @@ test('cleanEmailContent appends personal signature by default and honors include
   assert.ok(withSig.body.endsWith(buildSignature()));
   assert.equal(withSig.body.includes('WhatsApp:'), false);
   assert.ok(withSig.body.includes('https://nahid-yf63.onrender.com/'));
-  assert.ok(withSig.body.includes('https://github.com/Nahid625'));
+  assert.equal(withSig.body.includes('GitHub:'), false);
 
   const withoutSig = cleanEmailContent(raw, { includeSignature: false });
   assert.ok(withoutSig.body.endsWith('Best regards,\nNahid'));
@@ -373,8 +372,8 @@ test('cleanEmailContent handles null or empty input with robust fallback', () =>
   assert.ok(cleaned.body.includes('Fast Mobile Booking Page'));
   assert.ok(cleaned.body.includes('Best regards,\nNahid'));
   assert.equal(cleaned.body.includes('WhatsApp:'), false);
-  assert.ok(cleaned.body.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(cleaned.body.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(cleaned.body.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(cleaned.body.includes('GitHub:'), false);
 });
 
 test('generateEmail throws when company_name is missing', async () => {
@@ -440,8 +439,8 @@ test('generateEmail generates clean email using injected genAI mock', async () =
   assert.ok(result.body.includes('Hey Sarah,'));
   assert.ok(result.body.includes('Best regards,\nNahid'));
   assert.equal(result.body.includes('WhatsApp:'), false);
-  assert.ok(result.body.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(result.body.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(result.body.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(result.body.includes('GitHub:'), false);
   assert.ok(result.body.endsWith(buildSignature()));
   assert.equal(result.text, `Subject: ${result.subject}\n\n${result.body}`);
 });
@@ -890,7 +889,7 @@ test('generateEmail generates sector-specific mock emails across all tracks with
   assert.ok(mEcom.body.includes('24/7 WhatsApp Shopping Assistant'));
   assert.equal(mEcom.body.includes('WhatsApp:'), false);
   assert.ok(mEcom.body.includes('https://nahid-yf63.onrender.com/'));
-  assert.ok(mEcom.body.includes('https://github.com/Nahid625'));
+  assert.equal(mEcom.body.includes('GitHub:'), false);
 
   // Track 2: Healthcare
   const mHealth = await generateEmail({ company_name: 'Care Dental Ltd', sic_codes: '86210', active_directors: 'Dr David' }, { mock: true });

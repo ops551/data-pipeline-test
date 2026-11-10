@@ -38,7 +38,7 @@ const DEFAULT_SIGNATURE = Object.freeze({
   service: "Web Design & Business Automation",
   whatsapp: undefined,
   website: "https://nahid-yf63.onrender.com/",
-  github: "https://github.com/Nahid625",
+  github: undefined,
   toString() {
     const lines = [
       "Best regards,",
@@ -49,7 +49,7 @@ const DEFAULT_SIGNATURE = Object.freeze({
       lines.push(`WhatsApp: ${this.whatsapp}`);
     }
     if (this.website) {
-      lines.push(`Website: ${this.website}`);
+      lines.push(`Portfolio: ${this.website}`);
     }
     if (this.github) {
       lines.push(`GitHub: ${this.github}`);
@@ -112,7 +112,7 @@ function buildSignature(options = {}) {
   if (title && String(title).trim()) lines.push(String(title).trim());
   if (options.includeCoordinates !== false) {
     if (whatsapp && String(whatsapp).trim()) lines.push(`WhatsApp: ${String(whatsapp).trim()}`);
-    if (website && String(website).trim()) lines.push(`Website: ${String(website).trim()}`);
+    if (website && String(website).trim()) lines.push(`Portfolio: ${String(website).trim()}`);
     if (github && String(github).trim()) lines.push(`GitHub: ${String(github).trim()}`);
   }
 

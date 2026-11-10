@@ -206,8 +206,8 @@ test('ensureSignature appends mandatory personal signature with official coordin
   assert.ok(signed.includes('Best regards,'));
   assert.ok(signed.includes('Nahid'));
   assert.equal(signed.includes('WhatsApp:'), false);
-  assert.ok(signed.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(signed.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(signed.includes('GitHub:'), false);
 });
 
 test('ensureSignature deduplicates and preserves official coordinates signature if already present', () => {
@@ -220,14 +220,12 @@ test('ensureSignature deduplicates and preserves official coordinates signature 
     'Nahid',
     'Web Design & Business Automation',
     'WhatsApp: +8801615753465',
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   const result = ensureSignature(existing);
   assert.ok(result.includes('WhatsApp: +8801615753465'));
-  assert.ok(result.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(result.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(result.includes('Portfolio: https://nahid-yf63.onrender.com/'));
   assert.equal(result.includes('Best regards,\nNahid'), true);
   const count = (result.match(/Best regards,/g) || []).length;
   assert.equal(count, 1);
@@ -247,16 +245,14 @@ test('stripExternalLinks preserves official coordinates while stripping rogue UR
     'Nahid',
     'Web Design & Business Automation',
     'WhatsApp: +8801615753465',
-    'Website: https://nahid-yf63.onrender.com/',
-    'GitHub: https://github.com/Nahid625'
+    'Portfolio: https://nahid-yf63.onrender.com/'
   ].join('\n');
 
   const cleaned = stripExternalLinks(content);
   assert.doesNotMatch(cleaned, /https?:\/\/phishing-site\.com|http:\/\/scam\.org|www\.badlink\.co\.uk/i);
   assert.doesNotMatch(cleaned, /\+44\s*7925\s*214264/);
   assert.ok(cleaned.includes('WhatsApp: +8801615753465'));
-  assert.ok(cleaned.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(cleaned.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(cleaned.includes('Portfolio: https://nahid-yf63.onrender.com/'));
 });
 
 test('stripExternalLinks replaces markdown links with link text without leaving broken brackets', () => {
@@ -268,9 +264,8 @@ test('stripExternalLinks replaces markdown links with link text without leaving 
 });
 
 test('stripExternalLinks preserves whitelisted URL inside markdown links', () => {
-  const content = 'See my code on [GitHub](https://github.com/Nahid625) and [Website](https://nahid-yf63.onrender.com).';
+  const content = 'See my code on [Portfolio](https://nahid-yf63.onrender.com).';
   const cleaned = stripExternalLinks(content);
-  assert.ok(cleaned.includes('https://github.com/Nahid625'));
   assert.ok(cleaned.includes('https://nahid-yf63.onrender.com'));
 });
 
@@ -283,7 +278,7 @@ test('formatHtmlContent removes rogue external URLs but preserves whitelisted si
   assert.doesNotMatch(html, /https?:\/\/example\.com/i);
   assert.equal(html.includes('WhatsApp:'), false);
   assert.ok(html.includes('https://nahid-yf63.onrender.com/'));
-  assert.ok(html.includes('https://github.com/Nahid625'));
+  assert.equal(html.includes('GitHub:'), false);
   // Check alias formatEmailHtml
   assert.equal(formatEmailHtml(text), html);
 });
@@ -351,8 +346,8 @@ test('sendEmail sends offline email via jsonTransport and returns structured res
   assert.equal(parsed.to[0].address, 'founder@newbusiness.co.uk');
   assert.equal(parsed.subject, 'Web design for your new UK company');
   assert.equal(parsed.text.includes('WhatsApp:'), false);
-  assert.ok(parsed.text.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(parsed.text.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(parsed.text.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(parsed.text.includes('GitHub:'), false);
   assert.equal(parsed.html, undefined, 'outreach mail must be sent as plain text only');
 });
 
@@ -370,7 +365,7 @@ test('sendEmail strips rogue contact links and sends plain text only', async () 
   assert.doesNotMatch(parsed.text, /\+44\s*7925/i);
   assert.equal(parsed.text.includes('WhatsApp:'), false);
   assert.ok(parsed.text.includes('https://nahid-yf63.onrender.com/'));
-  assert.ok(parsed.text.includes('https://github.com/Nahid625'));
+  assert.equal(parsed.text.includes('GitHub:'), false);
   assert.equal(parsed.html, undefined);
 });
 
@@ -586,8 +581,8 @@ test('ensureSignature appends official coordinates even when text has bare Best 
   const text = 'Hi John,\n\nWe build websites.\n\nBest regards,\nNahid';
   const signed = ensureSignature(text);
   assert.equal(signed.includes('WhatsApp:'), false);
-  assert.ok(signed.includes('Website: https://nahid-yf63.onrender.com/'));
-  assert.ok(signed.includes('GitHub: https://github.com/Nahid625'));
+  assert.ok(signed.includes('Portfolio: https://nahid-yf63.onrender.com/'));
+  assert.equal(signed.includes('GitHub:'), false);
   const count = (signed.match(/Best regards,/g) || []).length;
   assert.equal(count, 1);
 });
