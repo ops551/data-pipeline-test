@@ -14,8 +14,18 @@ function toDateString(date) {
 function buildDateSlices(incorporatedFrom, incorporatedTo, chunkDays = 7, direction = 'desc') {
   const fromDate = parseUtcDate(incorporatedFrom);
   const toDate = parseUtcDate(incorporatedTo);
-  const step = Number(chunkDays) > 0 ? Number(chunkDays) : 7;
-  const isAsc = direction === 'asc';
+  if (Number.isNaN(fromDate.getTime()) || Number.isNaN(toDate.getTime())) {
+    throw new Error(`Invalid date: incorporatedFrom="${incorporatedFrom}", incorporatedTo="${incorporatedTo}"`);
+  }
+
+  const parsedStep = Math.floor(Number(chunkDays));
+  const step = Number.isFinite(parsedStep) && parsedStep >= 1 ? parsedStep : 7;
+
+  const normDir = String(direction || 'desc').trim().toLowerCase();
+  if (normDir !== 'asc' && normDir !== 'desc') {
+    throw new Error(`direction must be "asc" or "desc", got "${direction}"`);
+  }
+  const isAsc = normDir === 'asc';
 
   if (fromDate > toDate) {
     throw new Error(`incorporatedFrom (${incorporatedFrom}) cannot be after incorporatedTo (${incorporatedTo})`);
@@ -62,7 +72,13 @@ function buildDateSlices(incorporatedFrom, incorporatedTo, chunkDays = 7, direct
 async function collectCompanies(config, deps = {}) {
   const { alreadySeen = new Set(), search = searchCompanies, pageSize = PAGE_SIZE, log = console.log } = deps;
   const { apiKey, incorporatedFrom, incorporatedTo, sicCodes } = config;
-  const maxResults = deps.maxResults || config.maxResults;
+  const rawMax = deps.maxResults !== undefined
+    ? deps.maxResults
+    : (config.maxResults !== undefined ? config.maxResults : 1000);
+  const maxResults = Number.isFinite(Number(rawMax)) ? Number(rawMax) : 1000;
+  if (maxResults <= 0) {
+    return [];
+  }
 
   const chunkDays = deps.chunkDays || config.chunkDays || Number(process.env.COLLECT_CHUNK_DAYS) || 7;
   const direction = deps.direction || config.direction || process.env.COLLECT_DIRECTION || 'desc';
@@ -89,9 +105,9 @@ async function collectCompanies(config, deps = {}) {
       if (sicCodes && (Array.isArray(sicCodes) ? sicCodes.length > 0 : String(sicCodes).trim())) {
         searchParams.sicCodes = sicCodes;
       }
-      const result = await search(searchParams);
+      const result = (await search(searchParams)) || {};
       if (typeof result.hits === 'number' && result.hits === 0) break;
-      const items = result.items || [];
+      const items = Array.isArray(result.items) ? result.items : [];
       if (items.length === 0) break;
 
       let added = 0;

@@ -65,7 +65,7 @@ function loadConfig(env = process.env, today = new Date()) {
     const rawMax = env.COLLECT_MAX_DAYS_BACK || env.DAYS_BACK_MAX || env.DAYS_BACK;
     const maxDays = parsePositiveInt(maxDaysKey, rawMax, 180);
     if (minDays > maxDays) {
-      throw new Error(`DAYS_BACK_MIN (${minDays}) cannot be greater than DAYS_BACK_MAX (${maxDays}).`);
+      throw new Error(`DAYS_BACK_MIN (${minDays}) cannot be greater than ${maxDaysKey} (${maxDays}).`);
     }
     const from = new Date(today);
     from.setUTCDate(from.getUTCDate() - maxDays);
@@ -94,7 +94,11 @@ function loadConfig(env = process.env, today = new Date()) {
     config.chunkDays = parsePositiveInt('COLLECT_CHUNK_DAYS', env.COLLECT_CHUNK_DAYS, 7);
   }
   if (env.COLLECT_DIRECTION !== undefined && env.COLLECT_DIRECTION !== '') {
-    config.direction = String(env.COLLECT_DIRECTION).trim();
+    const dir = String(env.COLLECT_DIRECTION).trim().toLowerCase();
+    if (dir !== 'asc' && dir !== 'desc') {
+      throw new Error(`COLLECT_DIRECTION must be "asc" or "desc", got "${env.COLLECT_DIRECTION}"`);
+    }
+    config.direction = dir;
   }
 
   return config;
