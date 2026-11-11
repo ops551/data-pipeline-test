@@ -59,9 +59,11 @@ function loadConfig(env = process.env, today = new Date()) {
     }
     incorporatedFrom = parseDate('INCORPORATED_FROM', env.INCORPORATED_FROM);
     incorporatedTo = parseDate('INCORPORATED_TO', env.INCORPORATED_TO);
-  } else if (env.DAYS_BACK_MIN !== undefined || env.DAYS_BACK_MAX !== undefined) {
+  } else if (env.DAYS_BACK_MIN !== undefined || env.DAYS_BACK_MAX !== undefined || env.COLLECT_MAX_DAYS_BACK !== undefined) {
     const minDays = parseNonNegativeInt('DAYS_BACK_MIN', env.DAYS_BACK_MIN, 30);
-    const maxDays = parsePositiveInt('DAYS_BACK_MAX', env.DAYS_BACK_MAX || env.DAYS_BACK, 180);
+    const maxDaysKey = env.COLLECT_MAX_DAYS_BACK !== undefined ? 'COLLECT_MAX_DAYS_BACK' : 'DAYS_BACK_MAX';
+    const rawMax = env.COLLECT_MAX_DAYS_BACK || env.DAYS_BACK_MAX || env.DAYS_BACK;
+    const maxDays = parsePositiveInt(maxDaysKey, rawMax, 180);
     if (minDays > maxDays) {
       throw new Error(`DAYS_BACK_MIN (${minDays}) cannot be greater than DAYS_BACK_MAX (${maxDays}).`);
     }
@@ -86,7 +88,16 @@ function loadConfig(env = process.env, today = new Date()) {
   const maxResults = parsePositiveInt('MAX_RESULTS', env.MAX_RESULTS, 1000);
   const sicCodes = parseSicCodes(env.SIC_CODES);
 
-  return { apiKey, incorporatedFrom, incorporatedTo, maxResults, sicCodes };
+  const config = { apiKey, incorporatedFrom, incorporatedTo, maxResults, sicCodes };
+
+  if (env.COLLECT_CHUNK_DAYS !== undefined && env.COLLECT_CHUNK_DAYS !== '') {
+    config.chunkDays = parsePositiveInt('COLLECT_CHUNK_DAYS', env.COLLECT_CHUNK_DAYS, 7);
+  }
+  if (env.COLLECT_DIRECTION !== undefined && env.COLLECT_DIRECTION !== '') {
+    config.direction = String(env.COLLECT_DIRECTION).trim();
+  }
+
+  return config;
 }
 
 module.exports = { loadConfig, parseSicCodes };

@@ -64,13 +64,13 @@ function filterCandidates(
 
   const rawMin = options.minDaysOld !== undefined
     ? Number(options.minDaysOld)
-    : (envMin !== undefined ? Number(envMin) : 30);
-  const minDaysOld = Number.isFinite(rawMin) ? rawMin : 30;
+    : (envMin !== undefined && envMin !== '' ? Number(envMin) : 30);
+  const minDaysOld = Number.isFinite(rawMin) && rawMin >= 0 ? rawMin : 30;
 
   const rawMax = options.maxDaysOld !== undefined
     ? Number(options.maxDaysOld)
-    : (envMax !== undefined ? Number(envMax) : 180);
-  const maxDaysOld = Number.isFinite(rawMax) ? rawMax : 180;
+    : (envMax !== undefined && envMax !== '' ? Number(envMax) : 180);
+  const maxDaysOld = Number.isFinite(rawMax) && rawMax > 0 ? rawMax : 180;
 
   const candidates = [];
 
