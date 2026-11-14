@@ -79,16 +79,16 @@ test('Unit 5.69: High-Value Booking Niches remain 100% active and protected in T
     assert.equal(getSicPriority(code), 100);
   }
 
-  // 3. Aesthetics & Skin Clinics (Tier 1)
+  // 3. Aesthetics & Skin Clinics are excluded per Unit 5.77
   const clinicCodes = ['96020', '96040'];
   for (const code of clinicCodes) {
-    assert.equal(isTargetSic(code), true);
-    assert.equal(getSicPriority(code), 100);
+    assert.equal(isTargetSic(code), false);
+    assert.equal(getSicPriority(code), 0);
   }
 
-  // 4. Cosmetic Dentistry (Tier 1)
-  assert.equal(isTargetSic('86230'), true);
-  assert.equal(getSicPriority('86230'), 100);
+  // 4. Cosmetic Dentistry is excluded per Unit 5.77
+  assert.equal(isTargetSic('86230'), false);
+  assert.equal(getSicPriority('86230'), 0);
 
   // 5. Bespoke Kitchens & Interior Design (Tier 1)
   assert.equal(isTargetSic('74100'), true);
@@ -109,8 +109,8 @@ test('Unit 5.69: High-Value Booking Niches remain 100% active and protected in T
     assert.ok(EXCLUDED_SICS.includes(code));
   }
 
-  // 8. Luxury Events, Weddings, Fitness, Pet Grooming, Estate Agents (Tier 2)
-  const bookingTier2 = ['74201', '93120', '93130', '96090', '68310'];
+  // 8. Fitness, Pet Grooming, Estate Agents (Tier 2)
+  const bookingTier2 = ['93120', '93130', '96090', '68310'];
   for (const code of bookingTier2) {
     assert.equal(isTargetSic(code), true);
     assert.equal(getSicPriority(code), 60);
@@ -133,7 +133,7 @@ test('Unit 5.69: filterCandidates rejects cleaning companies and corner grocerie
     `1001,Pure Shine Window Cleaning Ltd,${validDate},active,ltd,81210,London`,
     `1002,Apex Car Showroom Ltd,${validDate},active,ltd,45111,London`,
     `1003,Corner Grocery Mart Ltd,${validDate},active,ltd,47110,London`,
-    `1004,Mayfair Aesthetics Clinic Ltd,${validDate},active,ltd,96020,London`,
+    `1004,Mayfair Bespoke Kitchens Ltd,${validDate},active,ltd,74100,London`,
     `1005,Scaffolding & Misc Subcontracting Ltd,${validDate},active,ltd,43999,London`
   ].join('\n');
 
@@ -144,7 +144,7 @@ test('Unit 5.69: filterCandidates rejects cleaning companies and corner grocerie
 
   const count = filterCandidates(companiesPath, enrichedPath, candidatesPath, leadsPath, sentLeadsPath);
 
-  // Only Apex Car Showroom (45111) and Mayfair Aesthetics Clinic (96020) must be accepted!
+  // Only Apex Car Showroom (45111) and Mayfair Bespoke Kitchens (74100) must be accepted!
   assert.equal(count, 2, 'Must only accept 2 valid high-value booking candidates');
 
   const { parseCSV } = require('./csvParser');
@@ -152,7 +152,7 @@ test('Unit 5.69: filterCandidates rejects cleaning companies and corner grocerie
   assert.equal(candidates.length, 2);
   const companyNumbers = candidates.map(c => c.company_number);
   assert.ok(companyNumbers.includes('1002'), 'Must include Car Showroom');
-  assert.ok(companyNumbers.includes('1004'), 'Must include Aesthetics Clinic');
+  assert.ok(companyNumbers.includes('1004'), 'Must include Bespoke Kitchens');
   assert.ok(!companyNumbers.includes('1001'), 'Must strictly reject Window Cleaning');
   assert.ok(!companyNumbers.includes('1003'), 'Must strictly reject Corner Grocery');
   assert.ok(!companyNumbers.includes('1005'), 'Must strictly reject 43999 Subcontractor');

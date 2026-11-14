@@ -70,8 +70,8 @@ test('Unit 5.72: Disqualification patterns catch marketing agencies, web design,
     'Apex Prestige Supercars Ltd',
     'Mayfair Horology Boutiques Ltd',
     'Cotswold Bespoke Kitchens & Joinery Ltd',
-    'Harley Aesthetic Skin Clinic Ltd',
-    'The Grand Ballroom Wedding Venue Ltd'
+    'Harley Detailing Studio Ltd',
+    'The Grand Ballroom Boutique Hotel Ltd'
   ];
 
   for (const name of safeLuxuryEntities) {

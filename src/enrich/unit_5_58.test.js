@@ -29,15 +29,13 @@ test('Unit 5.58 - SIC Priority Scoring: Tier 1 returns 100', () => {
   assert.equal(getSicPriority('45112'), 100, 'Used car dealership');
   assert.equal(getSicPriority('45400'), 100, 'Motorcycle dealership');
   assert.equal(getSicPriority('47770'), 100, 'Luxury watches & jewellery');
-  assert.equal(getSicPriority('86230'), 100, 'Cosmetic dentistry');
-  assert.equal(getSicPriority('96020'), 100, 'Hair and beauty salon');
   assert.equal(getSicPriority('74100'), 100, 'Specialised design / bespoke interior');
   assert.equal(getSicPriority('56101'), 100, 'Licensed restaurant');
 });
 
 test('Unit 5.58 - SIC Priority Scoring: Tier 2 returns 60 and Tier 3 returns 10', () => {
-  // Tier 2: Events, Fitness, Pet grooming, Estate agents
-  assert.equal(getSicPriority('74201'), 60, 'Photography & Events activities');
+  // Tier 2: Fitness, Pet grooming, Estate agents
+  assert.equal(getSicPriority('93120'), 60, 'Fitness facilities');
   assert.equal(getSicPriority('93130'), 60, 'Fitness facilities');
   assert.equal(getSicPriority('96090'), 60, 'Pet grooming & personal services');
   assert.equal(getSicPriority('68310'), 60, 'Real estate agencies');
@@ -63,8 +61,8 @@ test('Unit 5.58 - SIC Priority Scoring: Tier 2 returns 60 and Tier 3 returns 10'
 });
 
 test('Unit 5.58 - SIC Priority Scoring: Multi-SIC uses highest tier', () => {
-  // Company with Tier 2 (74201) and Tier 1 (74100)
-  assert.equal(getSicPriority('74201;74100'), 100, 'Must pick highest Tier 1 priority over Tier 2');
+  // Company with Tier 2 (93120) and Tier 1 (74100)
+  assert.equal(getSicPriority('93120;74100'), 100, 'Must pick highest Tier 1 priority over Tier 2');
   // Array of SICs
   assert.equal(getSicPriority(['47910', '45112']), 100);
 });
@@ -124,14 +122,14 @@ test('Unit 5.58 - Filter Candidates: Tier 1 prioritisation and disqualification 
       sic_codes: '45112',
       registered_office_address: '10 Motorway Way, Birmingham, B1 1AA, England'
     },
-    // 3. Wedding Venue created yesterday (Tier 2)
+    // 3. Pilates Studio created yesterday (Tier 2)
     {
       company_number: '10000003',
-      company_name: 'Prime Wedding Venues Ltd',
+      company_name: 'Prime Pilates Studio Ltd',
       date_of_creation: today,
       company_status: 'active',
       company_type: 'ltd',
-      sic_codes: '74201',
+      sic_codes: '93120',
       registered_office_address: '20 Manor Rd, Manchester, M1 1AA, England'
     },
     // 4. Recruitment agency (Disqualified)
@@ -165,7 +163,7 @@ test('Unit 5.58 - Filter Candidates: Tier 1 prioritisation and disqualification 
   // Filtered order must put Tier 1 car showroom first despite older creation date
   assert.equal(candidates.length, 2);
   assert.equal(candidates[0].company_number, '10000002', 'Tier 1 Apex Motor Group must be #1');
-  assert.equal(candidates[1].company_number, '10000003', 'Tier 2 Prime Wedding Venues must be #2');
+  assert.equal(candidates[1].company_number, '10000003', 'Tier 2 Prime Pilates Studio must be #2');
 
   fs.rmSync(dir, { recursive: true, force: true });
 });
