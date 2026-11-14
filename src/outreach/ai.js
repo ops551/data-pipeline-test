@@ -411,7 +411,7 @@ function classifySector(company = {}) {
   }
 
   if (
-    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading|hair salon|beauty salon|nail salon|dreadlocks?|loc extensions?|locs? salon|loc install)\b/i.test(
+    /\b(?:aesthetics? clinic|botox|dermal fillers?|lip fillers?|skin clinic|laser clinic|facial clinic|microblading)\b/i.test(
       textToScan,
     )
   ) {
@@ -1357,19 +1357,68 @@ function getMockEmail(company = {}, options = {}) {
   return { subject: cleanSubject, body, text: `Subject: ${cleanSubject}\n\n${body}` };
 }
 
-function resolveApiKey(options = {}) {
-  const key = (
-    options.apiKey ||
-    process.env.GEMINI_API_KEY ||
-    process.env.GEMINI ||
-    ""
-  ).trim();
-  if (!key || key === "your_gemini_api_key_here" || key === "your_key_here") {
+function resolveApiKeys(options = {}) {
+  const rawSources = [];
+
+  const hasOptionKeys = (
+    options.apiKeys !== undefined && options.apiKeys !== null && options.apiKeys !== ""
+  ) || (
+    options.apiKey !== undefined && options.apiKey !== null && options.apiKey !== ""
+  );
+
+  if (hasOptionKeys) {
+    if (Array.isArray(options.apiKeys)) {
+      rawSources.push(...options.apiKeys);
+    } else if (typeof options.apiKeys === "string") {
+      rawSources.push(options.apiKeys);
+    }
+
+    if (Array.isArray(options.apiKey)) {
+      rawSources.push(...options.apiKey);
+    } else if (typeof options.apiKey === "string") {
+      rawSources.push(options.apiKey);
+    }
+  } else {
+    if (process.env.GEMINI_API_KEYS) rawSources.push(process.env.GEMINI_API_KEYS);
+    if (process.env.GEMINI_API_KEY) {
+      rawSources.push(process.env.GEMINI_API_KEY);
+      if (process.env.GEMINI_API_KEY_2) rawSources.push(process.env.GEMINI_API_KEY_2);
+      if (process.env.GEMINI_API_KEY_3) rawSources.push(process.env.GEMINI_API_KEY_3);
+    }
+    if (process.env.GEMINI) rawSources.push(process.env.GEMINI);
+  }
+
+  const keys = [];
+  for (const item of rawSources) {
+    if (!item) continue;
+    const parts = String(item)
+      .split(/[,\n;]/)
+      .map((k) => k.trim())
+      .filter(Boolean);
+    for (const p of parts) {
+      if (
+        p &&
+        p !== "your_gemini_api_key_here" &&
+        p !== "your_key_here" &&
+        !keys.includes(p)
+      ) {
+        keys.push(p);
+      }
+    }
+  }
+
+  if (keys.length === 0) {
     throw new Error(
       "GEMINI_API_KEY is missing. Set it in .env or pass apiKey in options.",
     );
   }
-  return key;
+
+  return keys;
+}
+
+function resolveApiKey(options = {}) {
+  const keys = resolveApiKeys(options);
+  return keys[0];
 }
 
 function buildPrompt(company = {}, options = {}) {
@@ -1945,114 +1994,137 @@ async function generateEmail(company, options = {}) {
     }
   }
 
-  const apiKey = resolveApiKey(options);
-  const aiClient = options.genAI || new GoogleGenerativeAI(apiKey);
-  const configuredModelName =
-    options.modelName || process.env.GEMINI_MODEL || DEFAULT_MODEL;
+  const apiKeys = options.genAI ? [null] : resolveApiKeys(options);
+  let lastError = null;
 
-  const candidateModels = [
-    configuredModelName,
-    ...FALLBACK_MODELS.filter((m) => m !== configuredModelName),
-  ];
+  for (let kIndex = 0; kIndex < apiKeys.length; kIndex++) {
+    const currentApiKey = apiKeys[kIndex];
+    const aiClient = options.genAI || new GoogleGenerativeAI(currentApiKey);
+    const configuredModelName =
+      options.modelName || process.env.GEMINI_MODEL || DEFAULT_MODEL;
 
-  for (let mIndex = 0; mIndex < candidateModels.length; mIndex++) {
-    const currentModelName = candidateModels[mIndex];
-    const generativeModel = aiClient.getGenerativeModel({
-      model: currentModelName,
-      generationConfig: {
-        temperature: 0.7,
-        maxOutputTokens: 1000,
-      },
-    });
+    const candidateModels = [
+      configuredModelName,
+      ...FALLBACK_MODELS.filter((m) => m !== configuredModelName),
+    ];
 
-    let currentPrompt = prompt;
-    let spamAttempts = 0;
-    const maxSpamRetries =
-      typeof options.maxSpamRetries === "number"
-        ? options.maxSpamRetries
-        : 2;
+    let rotatedToNextKey = false;
 
-    for (let attempt = 1; ; attempt++) {
-      try {
-        const result = await generativeModel.generateContent(currentPrompt);
-        let rawText = "";
-        if (result && result.response) {
-          if (typeof result.response.text === "function") {
-            rawText = result.response.text();
-          } else if (typeof result.response.text === "string") {
-            rawText = result.response.text;
+    for (let mIndex = 0; mIndex < candidateModels.length; mIndex++) {
+      if (rotatedToNextKey) break;
+      const currentModelName = candidateModels[mIndex];
+      const generativeModel = aiClient.getGenerativeModel({
+        model: currentModelName,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000,
+        },
+      });
+
+      let currentPrompt = prompt;
+      let spamAttempts = 0;
+      const maxSpamRetries =
+        typeof options.maxSpamRetries === "number"
+          ? options.maxSpamRetries
+          : 2;
+
+      for (let attempt = 1; ; attempt++) {
+        try {
+          const result = await generativeModel.generateContent(currentPrompt);
+          let rawText = "";
+          if (result && result.response) {
+            if (typeof result.response.text === "function") {
+              rawText = result.response.text();
+            } else if (typeof result.response.text === "string") {
+              rawText = result.response.text;
+            }
           }
-        }
-        return cleanEmailContent(rawText, {
-          ...options,
-          isTech,
-          sector: options.sector || (isTech ? "tech" : classifySector(company)),
-          type: company.type,
-          companyName: company.company_name,
-          directorName: options.directorName || extractFirstName(
-            company.person_name ||
-            company.active_directors ||
-            company.contact_name ||
-            company.director_name ||
-            company.officer_name ||
-            ""
-          )
-        });
-      } catch (err) {
-        if (err.blockedContent && spamAttempts < maxSpamRetries) {
-          spamAttempts++;
-          const blockedWord = err.blockedWord || "forbidden phrases";
-          currentPrompt = [
-            prompt,
-            "",
-            `CRITICAL CORRECTION (Retry ${spamAttempts}/${maxSpamRetries}): Your previous email draft was rejected because it contained the forbidden spam word "${blockedWord}".`,
-            `You MUST NOT use "${blockedWord}" or any forbidden words (${FORBIDDEN_SPAM_WORDS.join(", ")}).`,
-            "Please rewrite the entire outreach email using natural synonyms and clean phrasing while maintaining the same meaning.",
-          ].join("\n");
-          continue;
-        }
+          return cleanEmailContent(rawText, {
+            ...options,
+            isTech,
+            sector: options.sector || (isTech ? "tech" : classifySector(company)),
+            type: company.type,
+            companyName: company.company_name,
+            directorName: options.directorName || extractFirstName(
+              company.person_name ||
+              company.active_directors ||
+              company.contact_name ||
+              company.director_name ||
+              company.officer_name ||
+              ""
+            )
+          });
+        } catch (err) {
+          lastError = err;
+          if (err.blockedContent && spamAttempts < maxSpamRetries) {
+            spamAttempts++;
+            const blockedWord = err.blockedWord || "forbidden phrases";
+            currentPrompt = [
+              prompt,
+              "",
+              `CRITICAL CORRECTION (Retry ${spamAttempts}/${maxSpamRetries}): Your previous email draft was rejected because it contained the forbidden spam word "${blockedWord}".`,
+              `You MUST NOT use "${blockedWord}" or any forbidden words (${FORBIDDEN_SPAM_WORDS.join(", ")}).`,
+              "Please rewrite the entire outreach email using natural synonyms and clean phrasing while maintaining the same meaning.",
+            ].join("\n");
+            continue;
+          }
 
-        // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model
-        const isModelUnsupported =
-          (err.status === 404 || /\[404 Not Found\]|\b404\b/i.test(err.message || "")) &&
-          /not found|no longer available|is not supported|no longer available to new users/i.test(
+          // If Google Generative AI returns 404 (model retired/unsupported), try next candidate model
+          const isModelUnsupported =
+            (err.status === 404 || /\[404 Not Found\]|\b404\b/i.test(err.message || "")) &&
+            /not found|no longer available|is not supported|no longer available to new users/i.test(
+              err.message || "",
+            );
+          if (isModelUnsupported && mIndex < candidateModels.length - 1) {
+            break;
+          }
+
+          const isRateLimit =
+            err.status === 429 ||
+            /429|RESOURCE_EXHAUSTED/i.test(err.message || "");
+
+          // If rate limited and another API key exists in the pool, rotate immediately!
+          if (isRateLimit && kIndex < apiKeys.length - 1) {
+            console.warn(`[GeminiPool] API Key #${kIndex + 1} quota exhausted (429 RESOURCE_EXHAUSTED). Rotating to Key #${kIndex + 2}...`);
+            rotatedToNextKey = true;
+            break;
+          }
+
+          const isServerError =
+            typeof err.status === "number" &&
+            err.status >= 500 &&
+            err.status < 600;
+          const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(
             err.message || "",
           );
-        if (isModelUnsupported && mIndex < candidateModels.length - 1) {
-          break;
+
+          if (
+            (isRateLimit || isServerError || isNetwork) &&
+            attempt <= maxRetries
+          ) {
+            const waitMs = isRateLimit
+              ? 1000 * Math.pow(2, attempt)
+              : 500 * attempt;
+            await sleepFn(waitMs);
+            continue;
+          }
+
+          // If retries failed on rate limit or server error, failover to next candidate model if available
+          if ((isRateLimit || isServerError) && mIndex < candidateModels.length - 1) {
+            break;
+          }
+
+          throw err;
         }
-
-        const isRateLimit =
-          err.status === 429 ||
-          /429|RESOURCE_EXHAUSTED/i.test(err.message || "");
-        const isServerError =
-          typeof err.status === "number" &&
-          err.status >= 500 &&
-          err.status < 600;
-        const isNetwork = /fetch|ECONNRESET|ETIMEDOUT|ENOTFOUND|network/i.test(
-          err.message || "",
-        );
-
-        if (
-          (isRateLimit || isServerError || isNetwork) &&
-          attempt <= maxRetries
-        ) {
-          const waitMs = isRateLimit
-            ? 1000 * Math.pow(2, attempt)
-            : 500 * attempt;
-          await sleepFn(waitMs);
-          continue;
-        }
-
-        // If retries failed on rate limit or server error, failover to next candidate model if available
-        if ((isRateLimit || isServerError) && mIndex < candidateModels.length - 1) {
-          break;
-        }
-
-        throw err;
       }
     }
+
+    if (rotatedToNextKey) {
+      continue;
+    }
   }
+
+  if (lastError) throw lastError;
 }
 
 module.exports = {
@@ -2066,6 +2138,7 @@ module.exports = {
   TECH_SIGNATURE_TITLE,
   buildSignature,
   resolveApiKey,
+  resolveApiKeys,
   extractFirstName,
   INVALID_FIRST_NAME_TOKENS,
   mapSicToIndustry,

@@ -10,6 +10,7 @@ const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompany
 const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted, hasValidMx } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
+const { isDisqualifiedCompany, isDisqualifiedWebsiteContext } = require('./sic');
 
 const PUBLIC_EMAIL_PROVIDERS = new Set([
   'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com',
@@ -143,6 +144,11 @@ async function runEnrichment(options = {}) {
             url: page.finalUrl || resolvedWebsiteUrl,
             context: extractWebsiteContext(page.html)
           };
+          if (website.context && isDisqualifiedWebsiteContext(website.context)) {
+            console.log(`  Disqualified by homepage context for ${company.company_name} (${company.company_number}): non-target sector pattern detected. Skipping lead generation.`);
+            recordEnriched(enrichedFile, company.company_number);
+            continue;
+          }
           websiteEmails = extractEmails(page.html);
           if (!website.context) {
             console.warn('  Company homepage returned no readable page content.');
@@ -238,6 +244,17 @@ async function runEnrichment(options = {}) {
       if (leadershipRes.html) {
         const leadEmails = extractEmails(leadershipRes.html);
         if (leadEmails.length > 0) extractedData.emails.push(...leadEmails);
+      }
+
+      const candidateContext = {
+        ...company,
+        website_context: website.context,
+        website_url: website.url
+      };
+      if (isDisqualifiedCompany(candidateContext) || isDisqualifiedWebsiteContext(website.context)) {
+        console.log(`  Disqualified company/website context for ${company.company_name} (${company.company_number}). Skipping lead generation.`);
+        recordEnriched(enrichedFile, company.company_number);
+        continue;
       }
 
       const allExtractedEmails = [...new Set([...websiteEmails, ...extractedData.emails])];

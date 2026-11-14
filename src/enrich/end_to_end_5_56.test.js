@@ -115,14 +115,14 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000002',
-          company_name: 'GLOW AESTHETICS CLINIC LTD',
+          company_name: 'GLOW LUXURY RESTAURANT LTD',
           date_of_creation: getPastDate(130),
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: ['96020'], // Aesthetic Clinics & Wellbeing
+          sic_codes: ['56101'], // Fine Dining & Luxury Hospitality
           registered_office_address: {
             premises: 'Suite 2A',
-            address_line_1: 'Harley Medical Street',
+            address_line_1: 'King Street',
             locality: 'Manchester',
             postal_code: 'M1 2WD',
             country: 'England'
@@ -175,13 +175,13 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000006',
-          company_name: 'APEX DENTAL STUDIO LTD',
+          company_name: 'APEX SUPERBIKES SHOWROOM LTD',
           date_of_creation: getPastDate(120),
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: ['86230'], // Cosmetic Dentistry & Dental Practices
+          sic_codes: ['45400'], // Superbike & Motorbike Dealers
           registered_office_address: {
-            premises: 'Dental Care Centre',
+            premises: 'Motorbike Centre',
             address_line_1: 'Grey Street',
             locality: 'Newcastle',
             postal_code: 'NE1 6EE',
@@ -190,11 +190,11 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000007',
-          company_name: 'METRO WEDDING EVENTS LTD',
+          company_name: 'METRO FITNESS & PILATES LTD',
           date_of_creation: getPastDate(140),
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: ['74201'], // Photography / Wedding & Event Specialists
+          sic_codes: ['93120'], // Fitness & Gym Studios
           registered_office_address: {
             premises: 'Unit 9',
             address_line_1: 'Trade Park',
@@ -547,9 +547,9 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         },
         {
           company_number: '10000002',
-          company_name: 'GLOW AESTHETICS CLINIC LTD',
-          sic_codes: '96020',
-          registered_office_address: 'Harley Street, Manchester'
+          company_name: 'GLOW LUXURY RESTAURANT LTD',
+          sic_codes: '56101',
+          registered_office_address: 'King Street, Manchester'
         },
         {
           company_number: '10000003',
@@ -583,18 +583,18 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
           contact_type: 'person',
           verification_status: 'quickemailverification'
         },
-        // Lead 2: Target Aesthetics Clinic with trusted exact_match status
+        // Lead 2: Target Restaurant with trusted exact_match status
         {
           company_number: '10000002',
-          company_name: 'GLOW AESTHETICS CLINIC LTD',
+          company_name: 'GLOW LUXURY RESTAURANT LTD',
           date_of_creation: getPastDate(130),
-          emails: 'dr.sarah@glowaesthetics.co.uk',
+          emails: 'dr.sarah@glowrestaurant.co.uk',
           phones: '+447700900222',
           whatsapp_candidate: 'yes',
           status: 'lead',
           sources: 'officers_api; web_scrape',
-          person_name: 'Dr. Sarah Jenkins',
-          job_title: 'Founder & Medical Director',
+          person_name: 'Sarah Jenkins',
+          job_title: 'Founder & General Manager',
           contact_type: 'person',
           verification_status: 'exact_match'
         },
@@ -692,7 +692,7 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       const dispatchedRecipients = dispatchedEmails.map(e => e.to);
       assert.deepEqual(dispatchedRecipients, [
         'james.sterling@premiercars.co.uk',
-        'dr.sarah@glowaesthetics.co.uk',
+        'dr.sarah@glowrestaurant.co.uk',
         'alex@precisionwatches.co.uk'
       ]);
 
@@ -735,7 +735,7 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
       // Companies House mapping for SIC verification
       const companiesData = [
         { company_number: '10000001', company_name: 'PREMIER CAR SHOWROOM LTD', sic_codes: '45111' },
-        { company_number: '10000002', company_name: 'GLOW AESTHETICS CLINIC LTD', sic_codes: '96020' },
+        { company_number: '10000002', company_name: 'GLOW LUXURY RESTAURANT LTD', sic_codes: '56101' },
         { company_number: '10000003', company_name: 'PRECISION WATCH ATELIER LTD', sic_codes: '47770' },
         { company_number: '90000001', company_name: 'GLOBAL HOLDINGS SPV LTD', sic_codes: '64209' } // Corporate shell
       ];
@@ -754,16 +754,16 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
           subject: 'PREMIER CAR SHOWROOM - vehicle showcase & viewings',
           sic_codes: '45111'
         },
-        // Lead 2: Eligible Aesthetics Clinic for Touch 2
+        // Lead 2: Eligible Restaurant for Touch 2
         {
           company_number: '10000002',
-          company_name: 'GLOW AESTHETICS CLINIC LTD',
+          company_name: 'GLOW LUXURY RESTAURANT LTD',
           person_name: 'Dr. Sarah Jenkins',
-          sent_to: 'dr.sarah@glowaesthetics.co.uk',
+          sent_to: 'dr.sarah@glowrestaurant.co.uk',
           sent_at: touch1Timestamp,
-          message_id: '<msg_glow_aesthetics_002@coldoutreach.io>',
-          subject: 'GLOW AESTHETICS CLINIC - patient bookings & treatments',
-          sic_codes: '96020'
+          message_id: '<msg_glow_restaurant_002@coldoutreach.io>',
+          subject: 'GLOW LUXURY RESTAURANT - table bookings & dining',
+          sic_codes: '56101'
         },
         // Lead 3: Eligible Watch Atelier for Touch 2
         {
@@ -878,10 +878,10 @@ test('Unit 5.56: End-to-End Pipeline Integrity & Production Readiness Verificati
         generatedFollowUps[0].text.includes('automating vehicle showcase Reels, social scheduling, and 24/7 test-drive bookings'),
         'Car showroom follow-up must contain vehicle showcase Reels & test-drive hook'
       );
-      // Aesthetics clinic hook
+      // Fine dining restaurant hook
       assert.ok(
-        generatedFollowUps[1].text.includes('treatment transformation Reels, open cancellation Stories, and consultation bookings'),
-        'Aesthetics clinic follow-up must contain transformation Reels & consultation hook'
+        generatedFollowUps[1].text.includes('dish highlight Reels, daily special Stories, and 24/7 WhatsApp table reservations'),
+        'Restaurant follow-up must contain dining Reels & table reservation hook'
       );
       // Watch atelier hook
       assert.ok(

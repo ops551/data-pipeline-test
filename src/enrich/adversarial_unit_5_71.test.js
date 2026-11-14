@@ -44,8 +44,8 @@ test('Adversarial SIC: Whitespace padding and boundary delimiters', () => {
   assert.equal(isTargetSic(' \t 74100 \n '), true, 'Padded Tier 1 interior design must be accepted');
   assert.equal(getSicPriority(' \t 74100 \n '), 100, 'Padded Tier 1 interior design must have priority 100');
 
-  assert.equal(isTargetSic('  74201  '), true, 'Padded Tier 2 wedding photography must be accepted');
-  assert.equal(getSicPriority('  74201  '), 60, 'Padded Tier 2 wedding photography must have priority 60');
+  assert.equal(isTargetSic('  93120  '), true, 'Padded Tier 2 fitness studio must be accepted');
+  assert.equal(getSicPriority('  93120  '), 60, 'Padded Tier 2 fitness studio must have priority 60');
 
   // Whitespace-only strings
   const whitespaceOnly = ['', ' ', '   ', '\t', '\n', '\r\n \t '];
@@ -60,8 +60,8 @@ test('Adversarial SIC: Numeric inputs, null, undefined, and non-string types', (
   assert.equal(isTargetSic(45111), true, 'Numeric 45111 must be accepted as Tier 1');
   assert.equal(getSicPriority(45111), 100, 'Numeric 45111 must have priority 100');
 
-  assert.equal(isTargetSic(74201), true, 'Numeric 74201 must be accepted as Tier 2');
-  assert.equal(getSicPriority(74201), 60, 'Numeric 74201 must have priority 60');
+  assert.equal(isTargetSic(93120), true, 'Numeric 93120 must be accepted as Tier 2');
+  assert.equal(getSicPriority(93120), 60, 'Numeric 93120 must have priority 60');
 
   assert.equal(isTargetSic(41201), false, 'Numeric trade 41201 must be excluded');
   assert.equal(getSicPriority(41201), 0, 'Numeric trade 41201 must have priority 0');
@@ -179,24 +179,24 @@ test('Adversarial SIC: Complex multi-SIC combinations and contamination override
   assert.equal(isTargetSic('45111; 74100'), true, 'Two Tier 1 codes must pass');
   assert.equal(getSicPriority('45111; 74100'), 100, 'Two Tier 1 codes must have priority 100');
 
-  assert.equal(isTargetSic('45111, 74201'), true, 'Tier 1 + Tier 2 must pass');
-  assert.equal(getSicPriority('45111, 74201'), 100, 'Tier 1 + Tier 2 must take Tier 1 priority (100)');
+  assert.equal(isTargetSic('45111, 93120'), true, 'Tier 1 + Tier 2 must pass');
+  assert.equal(getSicPriority('45111, 93120'), 100, 'Tier 1 + Tier 2 must take Tier 1 priority (100)');
 
-  assert.equal(isTargetSic('74201; 93120'), true, 'Two Tier 2 codes must pass');
-  assert.equal(getSicPriority('74201; 93120'), 60, 'Two Tier 2 codes must have priority 60');
+  assert.equal(isTargetSic('93120; 96090'), true, 'Two Tier 2 codes must pass');
+  assert.equal(getSicPriority('93120; 96090'), 60, 'Two Tier 2 codes must have priority 60');
 
   assert.equal(isTargetSic(['45111', '47770']), true, 'Array of Tier 1 codes must pass');
   assert.equal(getSicPriority(['45111', '47770']), 100);
 
-  assert.equal(isTargetSic(['74201', '93120']), true, 'Array of Tier 2 codes must pass');
-  assert.equal(getSicPriority(['74201', '93120']), 60);
+  assert.equal(isTargetSic(['93120', '96090']), true, 'Array of Tier 2 codes must pass');
+  assert.equal(getSicPriority(['93120', '96090']), 60);
 
   // Valid target code paired with harmless unrecognized non-target code
   assert.equal(isTargetSic('45111; 11111'), true, 'Tier 1 + unrecognized non-target must pass');
   assert.equal(getSicPriority('45111; 11111'), 100, 'Tier 1 + unrecognized non-target must have priority 100');
 
-  assert.equal(isTargetSic('74201; 11111'), true, 'Tier 2 + unrecognized non-target must pass');
-  assert.equal(getSicPriority('74201; 11111'), 60, 'Tier 2 + unrecognized non-target must have priority 60');
+  assert.equal(isTargetSic('93120; 11111'), true, 'Tier 2 + unrecognized non-target must pass');
+  assert.equal(getSicPriority('93120; 11111'), 60, 'Tier 2 + unrecognized non-target must have priority 60');
 
   // Verify trade combination is strictly rejected
   assert.equal(isTargetSic('45111, 41201'), false, 'Trade 41201 combination must be rejected');
@@ -254,13 +254,13 @@ test('Adversarial Disqualification: Word boundary integrity & luxury brand immun
   const genuineLuxuryCompanies = [
     'Prestige Auto Glass Ltd',
     'Bespoke Joinery Ltd',
-    'Harley Skin Clinic Ltd',
+    'Harley Detailing Studio Ltd',
     'Savile Row Bespoke Tailors Ltd',
     'Mayfair Horology & Fine Watches Ltd',
     'Cotswold Architectural Joinery Ltd',
-    'Kensington Dental & Facial Aesthetics Ltd',
+    'Kensington Architectural Design Ltd',
     'Knightsbridge Supercar Specialists Ltd',
-    'The Grand Ballroom Wedding Venue Ltd',
+    'The Grand Ballroom Boutique Hotel Ltd',
     'Apex Performance Car Detailing Ltd',
     'Elite Canine Grooming Spa Ltd',
     'Chobham Supercar Storage Ltd',
@@ -326,10 +326,10 @@ test('Adversarial filterCandidates: 10+ company mixed adversarial batch strictly
     `SC800009,Kensington Luxury Supercars Ltd,${d(40)},active,ltd,45111,100 Pall Mall London`,
     // 10. Genuine Tier 1 Bespoke Luxury: Interior Design (valid date, valid SIC, distinct address)
     `SC800010,Cotswold Bespoke Kitchens Ltd,${d(70)},active,ltd,74100,12 High St Burford`,
-    // 11. Genuine Tier 1 Aesthetic Clinic (valid date, valid SIC 96020, but at formation agent address)
-    `SC800011,Harley Aesthetic Skin Clinic Ltd,${d(50)},active,ltd,96020,"${formationAgentAddr}"`,
-    // 12. Genuine Tier 2 Luxury: Wedding Photography & Events (valid date, valid SIC 74201)
-    `SC800012,Westminster Luxury Events Ltd,${d(55)},active,ltd,74201,14 Victoria St`
+    // 11. Genuine Tier 1 Luxury Watch Dealer (valid date, valid SIC 47770, but at formation agent address)
+    `SC800011,Mayfair Luxury Watches Ltd,${d(50)},active,ltd,47770,"${formationAgentAddr}"`,
+    // 12. Genuine Tier 2 Luxury: Pilates Studio (valid date, valid SIC 93120)
+    `SC800012,Westminster Pilates Studio Ltd,${d(55)},active,ltd,93120,14 Victoria St`
   ];
 
   // Add 20 filler shell records at the formation agent address to trigger AGENT_ADDRESS_THRESHOLD (20)
@@ -351,9 +351,9 @@ test('Adversarial filterCandidates: 10+ company mixed adversarial batch strictly
 
     // Exactly 4 genuine luxury candidates must pass:
     // SC800009 (Supercars, Tier 1, priority 100)
-    // SC800011 (Harley Aesthetic Clinic, Tier 1, priority 100)
+    // SC800011 (Mayfair Watches, Tier 1, priority 100)
     // SC800010 (Bespoke Kitchens, Tier 1, priority 100)
-    // SC800012 (Westminster Luxury Events, Tier 2, priority 60)
+    // SC800012 (Westminster Pilates, Tier 2, priority 60)
     assert.equal(count, 4, `Expected exactly 4 genuine luxury candidates to pass, but got ${count}`);
 
     const candidateLines = fs.readFileSync(candFile, 'utf8').trim().split('\n');
@@ -456,7 +456,7 @@ test('Adversarial Deduplication: Previously enriched or sent leads are never re-
     `LUX01,Mayfair Supercars Ltd,${d(45)},active,ltd,45111,10 Park Lane`,
     `LUX02,Knightsbridge Horology Ltd,${d(50)},active,ltd,47770,20 Brompton Rd`,
     `LUX03,Savile Row Tailors Ltd,${d(55)},active,ltd,74100,30 Savile Row`,
-    `LUX04,Fresh Luxury Clinic Ltd,${d(60)},active,ltd,96020,40 Harley St`
+    `LUX04,Fresh Canine Spa Ltd,${d(60)},active,ltd,96090,40 High St`
   ].join('\n');
 
   fs.writeFileSync(compFile, companies);

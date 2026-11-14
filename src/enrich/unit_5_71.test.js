@@ -57,8 +57,8 @@ test('Unit 5.71: Disqualification shield catches SaaS, Software, Cloud Security,
     'Apex Prestige Supercars Ltd',
     'Mayfair Luxury Timepieces Ltd',
     'Cotswold Bespoke Kitchens & Joinery Ltd',
-    'Harley Aesthetic Skin Clinic Ltd',
-    'The Grand Ballroom Wedding Venue Ltd'
+    'Harley Detailing Studio Ltd',
+    'The Grand Ballroom Boutique Hotel Ltd'
   ];
 
   for (const name of luxuryNames) {
@@ -75,8 +75,6 @@ test('Unit 5.71: Core Luxury and High-Ticket niches remain 100% active in TARGET
     '45111', '45112', '45190', // Car Dealerships
     '45400',                   // Superbike Dealers
     '47770', '95250',          // Luxury Watches & Jewellery
-    '96020', '96040',          // Aesthetic Clinics & Salons
-    '86230',                   // Cosmetic Dentistry
     '74100',                   // Bespoke Kitchens & Interior Design
     '56101', '55100'           // Fine Dining & Luxury Hotels
   ];
@@ -88,7 +86,6 @@ test('Unit 5.71: Core Luxury and High-Ticket niches remain 100% active in TARGET
   }
 
   const highTicketTier2Codes = [
-    '74201', '93290',          // Weddings & Luxury Events
     '93120', '93130',          // Fitness & Pilates
     '96090',                   // Pet Grooming Spas
     '68310'                    // High-end Estate Agents
@@ -115,7 +112,7 @@ test('Unit 5.71: filterCandidates excludes SaaS / software publishing and IT com
     `12345678,DEV CLOUD CONSULTING LTD,${creationDate},active,ltd,62012,"10 Silicon Way, London, EC1"`,
     `23456789,PRESTIGE SUPERCARS LONDON LTD,${creationDate},active,ltd,45111,"1 Park Lane, London, W1K 1AA"`,
     `34567890,MAYFAIR BESPOKE KITCHENS LTD,${creationDate},active,ltd,74100,"5 Design Blvd, London, SW1"`,
-    `45678901,HARLEY AESTHETICS CLINIC LTD,${creationDate},active,ltd,96020,"12 Harley St, London, W1G"`
+    `45678901,KENSINGTON HOROLOGY & WATCHES LTD,${creationDate},active,ltd,47770,"12 Bond St, London, W1G"`
   ].join('\n');
 
   fs.writeFileSync(companiesPath, companiesCsv);

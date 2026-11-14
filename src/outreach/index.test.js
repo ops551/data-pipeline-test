@@ -622,7 +622,7 @@ test('runOutreachPipeline enriches AI prompt with company SIC codes and register
           date_of_creation: '2026-08-01',
           company_status: 'active',
           company_type: 'ltd',
-          sic_codes: '74201',
+          sic_codes: '45111',
           registered_office_address: '10 High Street, Manchester, M1 1AA, England'
         }
       ],
@@ -651,7 +651,7 @@ test('runOutreachPipeline enriches AI prompt with company SIC codes and register
     assert.equal(result.sent, 1);
     assert.ok(receivedCompany);
     assert.equal(receivedCompany.company_number, '11111111');
-    assert.equal(receivedCompany.sic_codes, '74201');
+    assert.equal(receivedCompany.sic_codes, '45111');
     assert.equal(receivedCompany.registered_office_address, '10 High Street, Manchester, M1 1AA, England');
   } finally {
     ws.cleanup();

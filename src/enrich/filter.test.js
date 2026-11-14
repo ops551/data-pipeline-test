@@ -10,8 +10,9 @@ test('isTargetSic', (t) => {
   assert.strictEqual(isTargetSic('45111'), true); // car showroom
   assert.strictEqual(isTargetSic('45400'), true); // motorbike showroom
   assert.strictEqual(isTargetSic('47770'), true); // luxury watches
-  assert.strictEqual(isTargetSic('86230'), true); // cosmetic dentistry
+  assert.strictEqual(isTargetSic('74100'), true); // bespoke kitchens & interior
   assert.strictEqual(isTargetSic('68310'), true); // estate agents
+  assert.strictEqual(isTargetSic('86230'), false); // cosmetic dentistry strictly excluded per Unit 5.77
   assert.strictEqual(isTargetSic('45200'), false); // auto repair trade strictly excluded
   assert.strictEqual(isTargetSic('43220'), false); // plumbing trade strictly excluded
   assert.strictEqual(isTargetSic('62012'), false); // tech agency strictly excluded

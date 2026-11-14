@@ -794,7 +794,7 @@ test('Adversarial Unit 5.55: getEligibleFollowUps strictly filters non-target/ex
 
     // Approved Target Leads (should pass)
     { company_number: '8005', company_name: 'Apex Car Sales Ltd', sent_to: 'sales@apexcar.co.uk', sent_at: past3Days, message_id: '<msg_8005@apexcar.co.uk>', sic_codes: '45111' },
-    { company_number: '8006', company_name: 'Elite Smiles Dental Ltd', sent_to: 'hello@elitesmiles.co.uk', sent_at: past3Days, message_id: '<msg_8006@elitesmiles.co.uk>', sic_codes: '86230' }
+    { company_number: '8006', company_name: 'Mayfair Timepieces Ltd', sent_to: 'hello@mayfairtime.co.uk', sent_at: past3Days, message_id: '<msg_8006@mayfairtime.co.uk>', sic_codes: '47770' }
   ];
 
   writeCSVAtomic(sentLeadsPath, sentLeads, [...SENT_LEADS_COLUMNS, 'sic_codes']);
@@ -806,7 +806,7 @@ test('Adversarial Unit 5.55: getEligibleFollowUps strictly filters non-target/ex
   assert.equal(res.eligible[0].company_number, '8005');
   assert.equal(res.eligible[1].company_number, '8006');
   assert.equal(res.eligible[0].lead_record.sic_codes, '45111');
-  assert.equal(res.eligible[1].lead_record.sic_codes, '86230');
+  assert.equal(res.eligible[1].lead_record.sic_codes, '47770');
 });
 
 test('Adversarial Unit 5.55: getEligibleFollowUps resolves sic_codes from sibling companies.csv', () => {
@@ -889,7 +889,7 @@ test('Adversarial Unit 5.55: runFollowUpPipeline logs skipped non-target SICs an
 
   const sentLeads = [
     { company_number: '8301', company_name: 'Holding Shell', sent_to: 'shell@holdings.co.uk', sent_at: past3Days, message_id: '<msg_8301@shell.co.uk>', sic_codes: '64201' },
-    { company_number: '8302', company_name: 'Modern Aesthetics', sent_to: 'dr@modernaesthetics.co.uk', sent_at: past3Days, message_id: '<msg_8302@clinic.co.uk>', sic_codes: '96020' }
+    { company_number: '8302', company_name: 'Apex Superbikes', sent_to: 'sales@apexsuperbikes.co.uk', sent_at: past3Days, message_id: '<msg_8302@bikes.co.uk>', sic_codes: '45400' }
   ];
   writeCSVAtomic(sentLeadsPath, sentLeads, [...SENT_LEADS_COLUMNS, 'sic_codes']);
 
