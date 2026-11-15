@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17369591,TS IMPORTS LTD,2026-07-29,car_showroom,sales@tsimports.co.uk,,no,lead,officers_api; existing_website; web_scrape,http://tsimports.co.uk/,,Mohammad Tausif Arshad,director,person_fallback,,,,,,exact_match,yes
