@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17381596,DAPA RIDEZ LTD,2026-08-04,bike_showroom,daparidez@gmail.com,,no,lead,officers_api; web_scrape,,,Dane Anthony Bowen,director,person_fallback,,,,,,quickemailverification,yes
