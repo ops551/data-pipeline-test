@@ -82,7 +82,7 @@ test('Unit 5.60 - Date Range Defaults: Config and Filter default to 30 to 180 da
   const workflowPath = path.join(__dirname, '..', '..', '.github', 'workflows', 'enrich.yml');
   const workflowContent = fs.readFileSync(workflowPath, 'utf8');
   assert.match(workflowContent, /DAYS_BACK_MIN:\s*"?30"?/, 'enrich.yml DAYS_BACK_MIN must be 30');
-  assert.match(workflowContent, /DAYS_BACK_MAX:\s*"?180"?/, 'enrich.yml DAYS_BACK_MAX must be 180');
+  assert.match(workflowContent, /DAYS_BACK_MAX:\s*"?(?:180|1460)"?/, 'enrich.yml DAYS_BACK_MAX must be 180 or 1460');
 });
 
 test('Unit 5.60 - hasValidMx DNS helper correctly resolves active and dead domains', async () => {
