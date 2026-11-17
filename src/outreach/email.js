@@ -613,7 +613,8 @@ function ensureSignature(content, options = {}) {
 }
 
 function formatHtmlContent(text, options = {}) {
-  if (!text && !options.html) return '';
+  if (options && options.html) return options.html;
+  if (!text) return '';
 
   const raw = stripExternalLinks(ensureSignature(text, options));
   const escapeHtml = (str) =>
@@ -683,7 +684,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       text,
       replyTo: config.replyTo,
       ...((combined.enableHtml !== undefined ? Boolean(combined.enableHtml) : (process.env.ENABLE_HTML_EMAIL === 'true' || (combined.env && combined.env.ENABLE_HTML_EMAIL === 'true')))
-        ? { html: formatHtmlContent(text, combined) }
+        ? { html: mailOptions.html || combined.html || formatHtmlContent(text, combined) }
         : {}),
       ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),
       ...(mailOptions.references || combined.references ? { references: mailOptions.references || combined.references } : {}),
@@ -769,7 +770,7 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
       text,
       replyTo: config.replyTo,
       ...((combined.enableHtml !== undefined ? Boolean(combined.enableHtml) : (process.env.ENABLE_HTML_EMAIL === 'true' || (combined.env && combined.env.ENABLE_HTML_EMAIL === 'true')))
-        ? { html: formatHtmlContent(text, combined) }
+        ? { html: mailOptions.html || combined.html || formatHtmlContent(text, combined) }
         : {}),
       ...(mailOptions.inReplyTo || combined.inReplyTo ? { inReplyTo: mailOptions.inReplyTo || combined.inReplyTo } : {}),
       ...(mailOptions.references || combined.references ? { references: mailOptions.references || combined.references } : {}),

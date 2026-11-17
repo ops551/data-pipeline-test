@@ -16,7 +16,8 @@ const {
   formatCleanCompanyName,
   extractFirstName,
   isTechOrSoftwareCompany,
-  classifySector
+  classifySector,
+  getMockEmail
 } = require('./ai');
 
 const MAX_FOLLOWUP_AGE_DAYS = 10;
@@ -426,6 +427,73 @@ function formatThreadSubject(originalSubject, fallbackContext = '') {
   return 'Re: Quick question';
 }
 
+function formatAttribution(dateVal, senderName = 'Nahid', senderEmail = 'nahid@nahid.usasocialhubofficial.com') {
+  let dateStr = '';
+  if (dateVal) {
+    const d = new Date(dateVal);
+    if (!isNaN(d.getTime())) {
+      try {
+        dateStr = d.toLocaleDateString('en-GB', {
+          weekday: 'short',
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'UTC'
+        });
+      } catch {
+        dateStr = d.toISOString().slice(0, 10);
+      }
+    }
+  }
+  return dateStr
+    ? `On ${dateStr}, ${senderName} <${senderEmail}> wrote:`
+    : `On previous message, ${senderName} <${senderEmail}> wrote:`;
+}
+
+function formatFollowUpHtml(freshText, quotedBody, attribution) {
+  const escapeHtml = (str) =>
+    String(str || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+
+  const freshParagraphs = freshText
+    .split(/\r?\n\r?\n/)
+    .map(p => `<p style="margin: 0 0 16px 0; line-height: 1.6;">${escapeHtml(p.trim()).replace(/\r?\n/g, '<br>')}</p>`)
+    .join('\n');
+
+  let quoteBlock = '';
+  if (quotedBody && quotedBody.trim()) {
+    const quotedParagraphs = quotedBody
+      .trim()
+      .split(/\r?\n\r?\n/)
+      .map(p => `<p style="margin: 0 0 16px 0; line-height: 1.6;">${escapeHtml(p.trim()).replace(/\r?\n/g, '<br>')}</p>`)
+      .join('\n');
+
+    quoteBlock = `
+<br>
+<div class="gmail_quote">
+  <div dir="ltr" class="gmail_attr">${escapeHtml(attribution)}<br></div>
+  <blockquote class="gmail_quote" style="margin: 0px 0px 0px 0.8ex; border-left: 1px solid rgb(204, 204, 204); padding-left: 1ex;">
+    ${quotedParagraphs}
+  </blockquote>
+</div>`.trim();
+  }
+
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"></head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; font-size: 15px; color: #1f2937; margin: 0; padding: 16px;">
+  ${freshParagraphs}
+  ${quoteBlock}
+</body>
+</html>`.trim();
+}
+
 /**
  * Generates personalized, persona-aware Touch 2 and Touch 3 follow-up copy.
  *
@@ -434,6 +502,7 @@ function formatThreadSubject(originalSubject, fallbackContext = '') {
  * - Touch 3 (Day 7-10 Breakup Note): Polite 2-sentence closure note gracefully closing the loop.
  * - Persona aware: Tech companies get backend/API overflow pitch; non-tech get enquiry automation/social pitch.
  * - Clean signature: Nahid + verified Website & GitHub, zero WhatsApp.
+ * - Quoted History: Standard RFC 2822 & Gmail-compatible blockquote history so client & sender see prior context folded under "...".
  */
 function generateFollowUpEmail(candidate, options = {}) {
   const leadRec = candidate.lead_record || {};
@@ -493,7 +562,42 @@ function generateFollowUpEmail(candidate, options = {}) {
   ];
   const signature = signatureLines.join('\n');
 
-  const text = `${greeting}\n\n${body}\n\n${signature}`;
+  const freshText = `${greeting}\n\n${body}\n\n${signature}`;
+
+  // Build quoted prior email history (RFC 2822 / Gmail quote standard)
+  let text = freshText;
+  let html = undefined;
+  let quotedText = '';
+  const includeQuotedHistory = options.includeQuotedHistory !== false && candidate.includeQuotedHistory !== false;
+
+  if (includeQuotedHistory) {
+    let priorBody = options.previousEmailBody || candidate.previous_body || candidate.previous_text || leadRec.body || '';
+    if (!priorBody && typeof getMockEmail === 'function') {
+      try {
+        const mockPrior = getMockEmail(combinedContext, { isTech, sector });
+        priorBody = mockPrior && mockPrior.body ? mockPrior.body : '';
+      } catch {
+        priorBody = '';
+      }
+    }
+
+    if (priorBody && priorBody.trim()) {
+      const priorDate = candidate.touch1_sent_at || leadRec.sent_at || candidate.touch2_sent_at || options.previousSentAt;
+      const priorSenderEmail = options.previousSenderEmail || options.senderEmail || leadRec.sender_account || 'nahid@nahid.usasocialhubofficial.com';
+      const cleanSenderEmail = String(priorSenderEmail).replace(/^.*<([^>]+)>.*$/, '$1').trim();
+      const attribution = formatAttribution(priorDate, senderName, cleanSenderEmail);
+
+      const quotedLines = priorBody
+        .trim()
+        .split('\n')
+        .map(l => (l.length > 0 ? `> ${l}` : '>'))
+        .join('\n');
+
+      quotedText = quotedLines;
+      text = `${freshText}\n\n${attribution}\n${quotedLines}`;
+      html = formatFollowUpHtml(freshText, priorBody, attribution);
+    }
+  }
 
   const originalSubject = leadRec.subject || candidate.subject || options.originalSubject || '';
   const subject = formatThreadSubject(originalSubject, cleanCompany);
@@ -502,6 +606,9 @@ function generateFollowUpEmail(candidate, options = {}) {
   return {
     subject,
     text,
+    html,
+    freshText,
+    quotedText,
     due_touch: touch,
     followup_number: candidate.followup_number || (touch === 3 ? 2 : 1),
     inReplyTo,
@@ -667,6 +774,7 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
             to: recipient,
             subject: emailData.subject,
             text: emailData.text,
+            html: emailData.html,
             inReplyTo: emailData.inReplyTo,
             references: emailData.references,
             enableHtml: true, // Enables Resend 1x1 Open Tracking Pixel injection!
@@ -773,6 +881,8 @@ module.exports = {
   getEligibleFollowUps,
   getDailyFollowUpCount,
   formatThreadSubject,
+  formatAttribution,
+  formatFollowUpHtml,
   generateFollowUpEmail,
   runFollowUpPipeline
 };
