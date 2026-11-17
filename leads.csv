@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17311797,SIMIE LONDON LTD,2026-07-01,watch_showroom,simie@simielondon.com,,no,lead,officers_api; existing_website; web_scrape,https://simielondon.com/contact/,,Simi Setia,director,person_fallback,,,,,,exact_match,yes
