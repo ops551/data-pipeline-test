@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17299876,CAR VALETING & TRADE LTD,2026-06-24,detailing,zymer@mobilecarvaleting.co.uk,,no,lead,officers_api; existing_website,https://www.mobilecarvaleting.co.uk/,,Zymer Bajraliu,director,person,inferred,officers_api,,0,0,quickemailverification,no
