@@ -87,7 +87,9 @@ const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   // Commodities, energy, lumber yards, wholesale trading (fake SIC registrations)
   /\b(?:energy investment|oil & gas|petroleum|commodity trading|commodities trading|procurement|(?:timber|lumber)\s*(?:suppliers?|supply|supplies|merchant|merchants|yard|yards|wholesale|trading)|wholesale\s*(?:timber|lumber))\b/i,
   // Film, music video, TV/theatre production & set design (strictly excluded from bespoke kitchen/interior design)
-  /\b(?:music\s*videos?|film\s*(?:set|sets|production)|tv\s*production|video\s*production|stage\s*(?:set|sets|design(?:er|ers)?)|set\s*design(?:er|ers)?|production\s*designer|performing\s*arts?|casting|theatre\s*production)\b/i
+  /\b(?:music\s*videos?|film\s*(?:set|sets|production)|tv\s*production|video\s*production|stage\s*(?:set|sets|design(?:er|ers)?)|set\s*design(?:er|ers)?|production\s*designer|performing\s*arts?|casting|theatre\s*production)\b/i,
+  // Dead, removed, suspended, expired, or parked domains/websites
+  /\b(?:website\s*unavailable|this\s*company\s*has\s*been\s*removed|website\s*(?:previously\s*)?hosted\s*(?:at\s*this\s*address\s*)?is\s*no\s*longer\s*available|(?:website|domain|site)\s*(?:is\s*)?no\s*longer\s*available|domain\s*(?:has\s*)?expired|domain\s*(?:is\s*)?for\s*sale|buy\s*this\s*domain|domain\s*parked|parked\s*domain|account\s*(?:has\s*been\s*)?suspended|website\s*suspended|suspended\s*domain|holding\s*page|godaddy\s*parked|sedo\s*domain|afternic|hugedomains)\b/i
 ]);
 
 function isDisqualifiedWebsiteContext(text = '') {
