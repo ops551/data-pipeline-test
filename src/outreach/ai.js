@@ -321,6 +321,11 @@ function classifySector(company = {}) {
       textToScan,
     );
 
+  const isEntertainmentOrSetDesign =
+    /\b(?:music\s*videos?|film\s*(?:set|sets|production)|tv\s*production|video\s*production|stage\s*(?:set|sets|design(?:er|ers)?)|set\s*design(?:er|ers)?|production\s*designer|performing\s*arts?|casting|theatre\s*production)\b/i.test(
+      textToScan,
+    );
+
   if (
     [
       "ecommerce",
@@ -371,6 +376,7 @@ function classifySector(company = {}) {
 
   // 1. High-precision contextual keywords (Brand intent & explicit names override loose SIC codes)
   if (
+    !isEntertainmentOrSetDesign &&
     /\b(?:bespoke kitchen|fitted kitchen|fitted wardrobes?|joinery|interior design(?:er)?|luxury joinery)\b/i.test(
       textToScan,
     )
@@ -456,6 +462,24 @@ function classifySector(company = {}) {
       return "estate_agent";
     }
     if (code === "74100" || code === "43320") {
+      if (
+        isEntertainmentOrSetDesign ||
+        codes.some((c) =>
+          [
+            "90010",
+            "90020",
+            "90030",
+            "59111",
+            "59112",
+            "59113",
+            "59120",
+            "59130",
+            "59140",
+          ].includes(c),
+        )
+      ) {
+        return "general";
+      }
       return "kitchen_interior";
     }
     if (code === "93120" || code === "93130") {
@@ -582,6 +606,7 @@ function classifySector(company = {}) {
   }
 
   if (
+    !isEntertainmentOrSetDesign &&
     /\b(?:bespoke kitchen|fitted kitchen|fitted wardrobes?|joinery|interior design(?:er)?|luxury joinery)\b/i.test(
       textToScan,
     )

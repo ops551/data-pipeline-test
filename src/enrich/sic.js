@@ -47,6 +47,8 @@ const EXCLUDED_SICS = [
   '74201', '74202', '74203', '74209', '93290',
   // Travel agencies, tour operators, travel concierges (strictly excluded)
   '79110', '79120', '79901', '79909',
+  // Entertainment, music video, film/TV, performing arts & set production (strictly non-target)
+  '90010', '90020', '90030', '59111', '59112', '59113', '59120', '59130', '59140',
   '64201', '64202', '64203', '64204', '64205', '64209', // holding companies
   '64301', '64302', '64303', '64304', '64305', '64306', // trusts, funds
   '64991', '64992', '64999', // other financial
@@ -83,7 +85,9 @@ const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   // Low-ticket barbershops, hair salons, nail bars, lashes
   /\b(?:haircut|hairstylist|hairdresser|hairdressers|hairdressing|hair salon|hair studio|hair lounge|hair by|hair\s*(?:design|bar|boutique)|barber|barbers|barbering|barbershop|nail bar|nail spa|nails?\s*(?:and|&)\s*spa|nails?\s*salon|acrylic nails?|nail art|nail care|gel nails?|biab|lashes|lash tech|eyebrow|eyebrow\s*threading|threading\s*salon|tanning salon|sunbed)\b/i,
   // Commodities, energy, lumber yards, wholesale trading (fake SIC registrations)
-  /\b(?:energy investment|oil & gas|petroleum|commodity trading|commodities trading|procurement|(?:timber|lumber)\s*(?:suppliers?|supply|supplies|merchant|merchants|yard|yards|wholesale|trading)|wholesale\s*(?:timber|lumber))\b/i
+  /\b(?:energy investment|oil & gas|petroleum|commodity trading|commodities trading|procurement|(?:timber|lumber)\s*(?:suppliers?|supply|supplies|merchant|merchants|yard|yards|wholesale|trading)|wholesale\s*(?:timber|lumber))\b/i,
+  // Film, music video, TV/theatre production & set design (strictly excluded from bespoke kitchen/interior design)
+  /\b(?:music\s*videos?|film\s*(?:set|sets|production)|tv\s*production|video\s*production|stage\s*(?:set|sets|design(?:er|ers)?)|set\s*design(?:er|ers)?|production\s*designer|performing\s*arts?|casting|theatre\s*production)\b/i
 ]);
 
 function isDisqualifiedWebsiteContext(text = '') {
