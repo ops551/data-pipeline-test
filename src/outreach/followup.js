@@ -299,11 +299,11 @@ function getEligibleFollowUps(
 
     const previousFollowUps = followUpMap.get(candidateKey) || [];
 
-    // Opt-out / Unsubscribe / Bounce Guard:
-    // If the lead or any previous follow-up is marked unsubscribed, opt_out, bounced, or do_not_contact, skip!
+    // Opt-out / Unsubscribe / Bounce / Replied Guard:
+    // If the lead or any previous follow-up is marked unsubscribed, opt_out, bounced, replied, or do_not_contact, skip!
     const isOptedOut =
-      /unsub|opt_?out|do_not_contact|block|suppress|bounce/i.test(String(lead.status || '')) ||
-      previousFollowUps.some(f => /unsub|opt_?out|do_not_contact|block|suppress|bounce/i.test(String(f.status || '')));
+      /unsub|opt_?out|do_not_contact|block|suppress|bounce|replied|reply|converted/i.test(String(lead.status || '')) ||
+      previousFollowUps.some(f => /unsub|opt_?out|do_not_contact|block|suppress|bounce|replied|reply|converted/i.test(String(f.status || '')));
 
     if (isOptedOut) {
       continue;
