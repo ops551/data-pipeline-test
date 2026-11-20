@@ -38,6 +38,13 @@ function resetExhaustedKeys() {
 }
 
 async function alertProviderOnce(provider, details) {
+  if (
+    process.env.DISABLE_QUOTA_ALERTS === 'true' ||
+    process.env.DISABLE_QUOTA_ALERTS === '1' ||
+    ['off', 'none', 'disabled', 'false', '0'].includes(String(process.env.QUOTA_ALERT_EMAIL || '').trim().toLowerCase())
+  ) {
+    return;
+  }
   if (alertedProvidersInProcess.has(provider)) return;
   alertedProvidersInProcess.add(provider);
   await sendQuotaExhaustionAlert(provider, details);
@@ -914,6 +921,7 @@ module.exports = {
   exhaustedKeys,
   areAllVerificationApisExhausted,
   parseKeys,
-  hasValidMx
+  hasValidMx,
+  GENERIC_PREFIXES
 };
 

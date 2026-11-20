@@ -141,6 +141,7 @@ const INVALID_FIRST_NAME_TOKENS = new Set([
   "SUPPORT", "ENQUIRIES", "ENQUIRY", "CONTACT", "OFFICE", "GENERAL", "CUSTOMER",
   "ABOUT", "US", "READ", "MORE", "SERVICE", "SERVICES", "COMPANY",
   "HELP", "DESK", "CARE", "LINE", "CENTRE", "CENTER", "COMMUNITY",
+  "UNKNOWN", "TEST", "DEMO", "USER", "NOBODY", "GUEST", "CLIENT", "ANONYMOUS",
   // Prepositions & functional connectives
   "OF", "FOR", "AND", "IN", "AT", "TO", "WITH", "BY",
   // Generic department names
@@ -188,6 +189,89 @@ function extractFirstName(rawName) {
     const cleanToken = token.replace(/[^a-zA-Z]/g, "").toUpperCase();
     if (cleanToken && !INVALID_FIRST_NAME_TOKENS.has(cleanToken)) {
       return cleanToken.charAt(0).toUpperCase() + cleanToken.slice(1).toLowerCase();
+    }
+  }
+
+  return "";
+}
+
+const GENERIC_EMAIL_PREFIXES = new Set([
+  'info', 'contact', 'hello', 'sales', 'support', 'admin', 'team',
+  'office', 'enquiries', 'enquiry', 'marketing', 'press', 'jobs', 'careers',
+  'help', 'accounts', 'billing', 'general', 'mail', 'reception', 'service',
+  'services', 'customercare', 'customer', 'unknown', 'test', 'demo', 'user',
+  'nobody', 'guest', 'client', 'anonymous'
+]);
+
+function resolveRecipientGreetingName(company = {}, options = {}) {
+  const rawPerson = (
+    options.directorName ||
+    company.person_name ||
+    company.active_directors ||
+    company.contact_name ||
+    company.director_name ||
+    company.officer_name ||
+    ""
+  );
+  const directorFirstName = extractFirstName(rawPerson);
+
+  const rawEmail = (
+    options.to ||
+    options.recipient ||
+    company.sent_to ||
+    company.email ||
+    (Array.isArray(company.emails) ? company.emails[0] : "") ||
+    company.lead_email ||
+    ""
+  );
+  const email = String(rawEmail).trim().toLowerCase();
+
+  if (!email || !email.includes('@')) {
+    return directorFirstName;
+  }
+
+  const localPart = email.split('@')[0].trim();
+  if (!localPart || GENERIC_EMAIL_PREFIXES.has(localPart)) {
+    return directorFirstName;
+  }
+
+  // If email local-part is derived from the company name (e.g. craft@kitchencraft.co.uk, hubdubcampers@icloud.com),
+  // it represents an organizational mailbox rather than a competing person's personal name.
+  const compNameStr = String(company.company_name || company.name || '').toLowerCase();
+  const companyTokens = compNameStr
+    .split(/[\s,._-]+/)
+    .filter((t) => t.length >= 3 && !['ltd', 'limited', 'llp', 'plc', 'the', 'and', 'inc', 'corp', 'company', 'group', 'services'].includes(t));
+  if (companyTokens.some((tok) => localPart.includes(tok))) {
+    return directorFirstName;
+  }
+
+  if (directorFirstName) {
+    const dirLower = directorFirstName.toLowerCase();
+    const rawTokens = String(rawPerson)
+      .toLowerCase()
+      .split(/[\s,._-]+/)
+      .filter((t) => t.length >= 3);
+
+    const matchesDirector =
+      localPart === dirLower ||
+      localPart.startsWith(dirLower + '.') ||
+      localPart.startsWith(dirLower + '_') ||
+      localPart.startsWith(dirLower + '-') ||
+      localPart.endsWith('.' + dirLower) ||
+      localPart.endsWith('_' + dirLower) ||
+      rawTokens.some((tok) => localPart.includes(tok));
+
+    if (matchesDirector) {
+      return directorFirstName;
+    }
+  }
+
+  const userTokens = localPart.split(/[._-]/).filter(Boolean);
+  const firstToken = userTokens[0] || '';
+  if (/^[a-zA-Z]{2,15}$/.test(firstToken) && !GENERIC_EMAIL_PREFIXES.has(firstToken.toLowerCase())) {
+    const candidateName = firstToken.charAt(0).toUpperCase() + firstToken.slice(1).toLowerCase();
+    if (!INVALID_FIRST_NAME_TOKENS.has(candidateName.toUpperCase())) {
+      return candidateName;
     }
   }
 
@@ -948,14 +1032,7 @@ function getSectorPillars(sector) {
 function getMockEmail(company = {}, options = {}) {
   const companyName = (company.company_name || "your business").trim();
   const emailCompanyName = getEmailCompanyName(companyName);
-  const directorName = extractFirstName(
-    company.person_name ||
-      company.active_directors ||
-      company.contact_name ||
-      company.director_name ||
-      company.officer_name ||
-      "",
-  );
+  const directorName = resolveRecipientGreetingName(company, options);
   const isTech =
     options.isTech !== undefined
       ? Boolean(options.isTech)
@@ -1474,14 +1551,7 @@ function buildPrompt(company = {}, options = {}) {
   const websiteContext = String(company?.website_context || "").trim();
   const hasVerifiedWebsite = Boolean(websiteUrl);
   const hasInspectedWebsite = Boolean(websiteUrl && websiteContext);
-  const directorName = extractFirstName(
-    company?.person_name ||
-      company?.active_directors ||
-      company?.contact_name ||
-      company?.director_name ||
-      company?.officer_name ||
-      "",
-  );
+  const directorName = resolveRecipientGreetingName(company, options);
   const senderName = String(
     options.senderName ||
     process.env.SENDER_NAME ||
@@ -1970,14 +2040,7 @@ async function generateEmail(company, options = {}) {
           sector: options.sector || (isTech ? "tech" : classifySector(company)),
           type: company.type,
           companyName: company.company_name,
-          directorName: options.directorName || extractFirstName(
-            company.person_name ||
-            company.active_directors ||
-            company.contact_name ||
-            company.director_name ||
-            company.officer_name ||
-            ""
-          )
+          directorName: options.directorName || resolveRecipientGreetingName(company, options)
         });
       } catch (err) {
         if (err.blockedContent && spamAttempts < maxSpamRetries) {
@@ -2070,14 +2133,7 @@ async function generateEmail(company, options = {}) {
             sector: options.sector || (isTech ? "tech" : classifySector(company)),
             type: company.type,
             companyName: company.company_name,
-            directorName: options.directorName || extractFirstName(
-              company.person_name ||
-              company.active_directors ||
-              company.contact_name ||
-              company.director_name ||
-              company.officer_name ||
-              ""
-            )
+            directorName: options.directorName || resolveRecipientGreetingName(company, options)
           });
         } catch (err) {
           lastError = err;
@@ -2165,6 +2221,7 @@ module.exports = {
   resolveApiKey,
   resolveApiKeys,
   extractFirstName,
+  resolveRecipientGreetingName,
   INVALID_FIRST_NAME_TOKENS,
   mapSicToIndustry,
   isTechOrSoftwareCompany,

@@ -15,6 +15,7 @@ const { loadFollowUpSmtpConfig, sendEmail, isSmtpQuotaExceeded } = require('./em
 const {
   formatCleanCompanyName,
   extractFirstName,
+  resolveRecipientGreetingName,
   isTechOrSoftwareCompany,
   classifySector,
   getMockEmail
@@ -509,12 +510,10 @@ function generateFollowUpEmail(candidate, options = {}) {
   const companyRec = candidate.company_record || options.companyRec || {};
   const compName = candidate.company_name || leadRec.company_name || companyRec.company_name || '';
   const cleanCompany = formatCleanCompanyName(compName) || 'there';
-  const rawPerson = candidate.person_name || leadRec.person_name || companyRec.person_name || '';
-  const firstName = extractFirstName(rawPerson);
+  const combinedContext = { ...leadRec, ...companyRec, ...candidate };
+  const firstName = resolveRecipientGreetingName(combinedContext, options);
 
   const greeting = firstName ? `Hey ${firstName},` : `Hey ${cleanCompany},`;
-
-  const combinedContext = { ...leadRec, ...companyRec, ...candidate };
 
   const isTech = options.isTech !== undefined
     ? Boolean(options.isTech)

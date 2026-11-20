@@ -64,6 +64,17 @@ async function sendQuotaExhaustionAlert(providerName, details = {}, options = {}
     const safeDetails = (details && typeof details === 'object') ? details : {};
     const safeOptions = (options && typeof options === 'object') ? options : {};
 
+    const isExplicitlyDisabled =
+      process.env.DISABLE_QUOTA_ALERTS === 'true' ||
+      process.env.DISABLE_QUOTA_ALERTS === '1' ||
+      ['off', 'none', 'disabled', 'false', '0'].includes(String(process.env.QUOTA_ALERT_EMAIL || '').trim().toLowerCase()) ||
+      ['off', 'none', 'disabled', 'false', '0'].includes(String(safeOptions.alertEmail || safeDetails.alertEmail || '').trim().toLowerCase()) ||
+      safeOptions.disableAlerts === true;
+
+    if (isExplicitlyDisabled) {
+      return { skipped: true, reason: 'alerts_disabled' };
+    }
+
     const provider = (providerName !== null && providerName !== undefined && String(providerName).trim())
       ? String(providerName).trim()
       : 'UnknownProvider';
