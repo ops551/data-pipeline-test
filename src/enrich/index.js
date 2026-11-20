@@ -7,7 +7,7 @@ const { extractActiveDirectors, getActiveOfficers } = require('./officers');
 const { createScraper } = require('./scraper');
 const { searchCompany, searchCompanyLeadership, extractWebsiteContext, DIRECTORY_DOMAINS, BLOCKED_DOMAINS, isLikelyCompanyWebsite } = require('./search');
 const { extractContactDetails, extractEmails, extractPhones, rankEmailsByCompanyName, extractPeople } = require('./extract');
-const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted, hasValidMx } = require('./pattern');
+const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEmail, areAllVerificationApisExhausted, hasValidMx, GENERIC_PREFIXES } = require('./pattern');
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
 const { isDisqualifiedCompany, isDisqualifiedWebsiteContext } = require('./sic');
@@ -515,13 +515,23 @@ async function runEnrichment(options = {}) {
            }
          }
          
-         const topPerson = peopleList.length > 0 ? peopleList[0] : null;
+         let matchedPerson = null;
+         if (bestGeneric && peopleList.length > 0) {
+           const localPart = (bestGeneric.split('@')[0] || '').toLowerCase().trim();
+           if (localPart && !GENERIC_PREFIXES.has(localPart)) {
+             matchedPerson = peopleList.find((p) => {
+               const tokens = String(p.name || '').toLowerCase().split(/[\s,._-]+/).filter((t) => t.length >= 3);
+               return tokens.some((tok) => localPart.includes(tok));
+             });
+           }
+         }
+         const topPerson = matchedPerson || (peopleList.length > 0 ? peopleList[0] : null);
          const leadData = {
             emails: bestGeneric ? [bestGeneric] : [],
             phones: extractedData.phones,
             person_name: topPerson ? topPerson.name : '',
             job_title: topPerson ? topPerson.job_title : '',
-            contact_type: topPerson ? 'person_fallback' : 'company',
+            contact_type: topPerson ? (matchedPerson ? 'director' : 'person_fallback') : 'company',
             fallback_used: bestGeneric ? 'yes' : 'no',
             verification_status: vStatus
          };
