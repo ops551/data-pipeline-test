@@ -32,6 +32,8 @@ jobs:
     env:
       GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
       ENRICH_BATCH_SIZE: ${{ inputs.batch_size || '50' }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_API_KEY_2: ${{ secrets.GEMINI_API_KEY_2 }}
       COMPANIES_HOUSE_API_KEY: ${{ secrets.COMPANIES_HOUSE_API_KEY }}
       DAYS_BACK_MIN: "30"
       DAYS_BACK_MAX: "1460"

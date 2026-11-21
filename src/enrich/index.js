@@ -11,6 +11,7 @@ const { detectPattern, inferEmails, verifyEmail, checkCatchAll, resolvePersonEma
 const { formatLead, appendLead, recordEnriched } = require('./leads');
 const { TRUSTED_DELIVERABILITY_STATUSES } = require('../outreach/index');
 const { isDisqualifiedCompany, isDisqualifiedWebsiteContext } = require('./sic');
+const { classifyLuxuryWebsiteWithAi } = require('./aiClassifier');
 
 const PUBLIC_EMAIL_PROVIDERS = new Set([
   'gmail.com', 'googlemail.com', 'outlook.com', 'hotmail.com',
@@ -92,6 +93,12 @@ async function runEnrichment(options = {}) {
   // 2. Initialize scraper
   console.log('Initializing Puppeteer scraper...');
   const scraper = options.scraper || (await createScraper());
+  const shouldRunAiQualifier = Boolean(
+    options.classifyLuxuryWebsiteWithAi ||
+    options.enableAiQualifier ||
+    !options.scraper
+  );
+  const classifyLuxury = options.classifyLuxuryWebsiteWithAi || classifyLuxuryWebsiteWithAi;
 
   try {
     const BATCH_SIZE = options.batchSize || process.env.ENRICH_BATCH_SIZE || 25;
@@ -144,10 +151,23 @@ async function runEnrichment(options = {}) {
             url: page.finalUrl || resolvedWebsiteUrl,
             context: extractWebsiteContext(page.html)
           };
-          if (website.context && isDisqualifiedWebsiteContext(website.context)) {
-            console.log(`  Disqualified by homepage context for ${company.company_name} (${company.company_number}): non-target sector pattern detected. Skipping lead generation.`);
-            recordEnriched(enrichedFile, company.company_number);
-            continue;
+          if (website.context) {
+            if (isDisqualifiedWebsiteContext(website.context)) {
+              console.log(`  Disqualified by homepage context for ${company.company_name} (${company.company_number}): non-target sector pattern detected. Skipping lead generation.`);
+              recordEnriched(enrichedFile, company.company_number);
+              continue;
+            }
+            if (shouldRunAiQualifier) {
+              const aiQual = await classifyLuxury(company, website.context, options);
+              if (!aiQual.qualified) {
+                console.log(`  [AI Qualifier] Disqualified ${company.company_name} (${company.company_number}): ${aiQual.reason}. Skipping lead generation.`);
+                recordEnriched(enrichedFile, company.company_number);
+                continue;
+              }
+              if (aiQual.category && aiQual.category !== 'None') {
+                company.type = aiQual.category;
+              }
+            }
           }
           websiteEmails = extractEmails(page.html);
           if (!website.context) {
@@ -255,6 +275,17 @@ async function runEnrichment(options = {}) {
         console.log(`  Disqualified company/website context for ${company.company_name} (${company.company_number}). Skipping lead generation.`);
         recordEnriched(enrichedFile, company.company_number);
         continue;
+      }
+      if (shouldRunAiQualifier && website.context) {
+        const aiQual = await classifyLuxury(company, website.context, options);
+        if (!aiQual.qualified) {
+          console.log(`  [AI Qualifier] Disqualified ${company.company_name} (${company.company_number}): ${aiQual.reason}. Skipping lead generation.`);
+          recordEnriched(enrichedFile, company.company_number);
+          continue;
+        }
+        if (aiQual.category && aiQual.category !== 'None') {
+          company.type = aiQual.category;
+        }
       }
 
       const allExtractedEmails = [...new Set([...websiteEmails, ...extractedData.emails])];
