@@ -446,10 +446,18 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       }
     } catch (leadErr) {
       if (leadErr.blockedContent) {
+        const isSpamAlertDisabled =
+          !spamAlertEmail ||
+          ['off', 'none', 'disabled', 'false', '0'].includes(String(spamAlertEmail).trim().toLowerCase()) ||
+          String(spamAlertEmail).toLowerCase().includes('jr6259094') ||
+          process.env.DISABLE_SPAM_ALERTS === 'true' ||
+          process.env.DISABLE_SPAM_ALERTS === '1' ||
+          process.env.DISABLE_ALERTS === 'true';
+
         if (dryRun) {
           logger.warn(`[DRY-RUN] Spam block alert for ${companyName} was not sent.`);
-        } else if (!spamAlertEmail) {
-          logger.warn(`Spam block alert not sent for ${companyName}: set SPAM_ALERT_EMAIL to receive alerts.`);
+        } else if (isSpamAlertDisabled) {
+          logger.log(`[SpamGuard] Spam block alert suppressed for ${companyName} (${spamAlertEmail ? 'user-suppressed or alerts disabled' : 'no recipient'}).`);
         } else {
           const blockedSubject = leadErr.blockedContent.subject || '';
           const blockedBody = leadErr.blockedContent.body || '';

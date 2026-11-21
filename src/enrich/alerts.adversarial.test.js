@@ -41,6 +41,9 @@ function createWorkspace() {
 test.beforeEach(() => {
   resetAlertedKeys();
   resetExhaustedKeys();
+  delete process.env.DISABLE_QUOTA_ALERTS;
+  delete process.env.DISABLE_ALERTS;
+  process.env.QUOTA_ALERT_EMAIL = 'admin-alerts@test.local';
 });
 
 // =========================================================================

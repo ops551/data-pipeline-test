@@ -20,6 +20,11 @@ const silentLogger = {
   info: () => {}
 };
 
+test.beforeEach(() => {
+  delete process.env.DISABLE_SPAM_ALERTS;
+  delete process.env.DISABLE_ALERTS;
+});
+
 function createWorkspace() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'outreach-pipeline-test-'));
   const leadsPath = path.join(dir, 'leads.csv');

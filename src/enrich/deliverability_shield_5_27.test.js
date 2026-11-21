@@ -203,6 +203,13 @@ test('Objective 4: runOutreachPipeline skips any lead with unverified or fallbac
 // ============================================================================
 
 test('Objective 5: sendQuotaExhaustionAlert persists cooldown to a JSON cache file across process restarts', async () => {
+  const origDisableQuota = process.env.DISABLE_QUOTA_ALERTS;
+  const origDisableAlerts = process.env.DISABLE_ALERTS;
+  const origQuotaAlertEmail = process.env.QUOTA_ALERT_EMAIL;
+  delete process.env.DISABLE_QUOTA_ALERTS;
+  delete process.env.DISABLE_ALERTS;
+  delete process.env.QUOTA_ALERT_EMAIL;
+
   const tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'alert-cache-test-'));
   const cachePath = path.join(tmpDir, 'alert_cooldown.json');
 
@@ -217,39 +224,44 @@ test('Objective 5: sendQuotaExhaustionAlert persists cooldown to a JSON cache fi
     sendEmail: mockSend
   };
 
-  // First call: Should send and write to cache
-  const firstRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
-  assert.equal(firstRes.sent, true, 'First alert should be sent');
-  assert.equal(sendCount, 1);
-  assert.ok(fs.existsSync(cachePath), 'Cache file must be created on disk');
-
-  // Verify cache content has timestamp
-  const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
-  const cacheKey = 'Reoon:test_key_123';
-  assert.ok(cacheData[cacheKey], 'Cache must contain provider:key entry');
-  const alertTime = new Date(cacheData[cacheKey]).getTime();
-  assert.ok(!isNaN(alertTime), 'Cache entry must be valid ISO date or timestamp');
-
-  // Simulate process restart by resetting in-memory state
-  resetAlertedKeys();
-
-  // Second call within 24 hours: MUST read from cache file and skip
-  const secondRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
-  assert.equal(secondRes.skipped, true, 'Subsequent alert within 24h must be skipped across restarts');
-  assert.equal(sendCount, 1, 'Email must not be sent during cooldown');
-
-  // Test cooldown expiry after 24 hours
-  cacheData[cacheKey] = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
-  fs.writeFileSync(cachePath, JSON.stringify(cacheData), 'utf8');
-  resetAlertedKeys();
-
-  const thirdRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
-  assert.equal(thirdRes.sent, true, 'Alert after 24h cooldown expired must send');
-  assert.equal(sendCount, 2);
-
   try {
-    fs.rmSync(tmpDir, { recursive: true, force: true });
-  } catch {}
+    // First call: Should send and write to cache
+    const firstRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
+    assert.equal(firstRes.sent, true, 'First alert should be sent');
+    assert.equal(sendCount, 1);
+    assert.ok(fs.existsSync(cachePath), 'Cache file must be created on disk');
+
+    // Verify cache content has timestamp
+    const cacheData = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+    const cacheKey = 'Reoon:test_key_123';
+    assert.ok(cacheData[cacheKey], 'Cache must contain provider:key entry');
+    const alertTime = new Date(cacheData[cacheKey]).getTime();
+    assert.ok(!isNaN(alertTime), 'Cache entry must be valid ISO date or timestamp');
+
+    // Simulate process restart by resetting in-memory state
+    resetAlertedKeys();
+
+    // Second call within 24 hours: MUST read from cache file and skip
+    const secondRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
+    assert.equal(secondRes.skipped, true, 'Subsequent alert within 24h must be skipped across restarts');
+    assert.equal(sendCount, 1, 'Email must not be sent during cooldown');
+
+    // Test cooldown expiry after 24 hours
+    cacheData[cacheKey] = new Date(Date.now() - 25 * 60 * 60 * 1000).toISOString();
+    fs.writeFileSync(cachePath, JSON.stringify(cacheData), 'utf8');
+    resetAlertedKeys();
+
+    const thirdRes = await sendQuotaExhaustionAlert('Reoon', { key: 'test_key_123' }, options);
+    assert.equal(thirdRes.sent, true, 'Alert after 24h cooldown expired must send');
+    assert.equal(sendCount, 2);
+  } finally {
+    if (origDisableQuota !== undefined) process.env.DISABLE_QUOTA_ALERTS = origDisableQuota;
+    if (origDisableAlerts !== undefined) process.env.DISABLE_ALERTS = origDisableAlerts;
+    if (origQuotaAlertEmail !== undefined) process.env.QUOTA_ALERT_EMAIL = origQuotaAlertEmail;
+    try {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+    } catch {}
+  }
 });
 
 // ============================================================================
