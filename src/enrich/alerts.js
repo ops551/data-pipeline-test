@@ -67,8 +67,11 @@ async function sendQuotaExhaustionAlert(providerName, details = {}, options = {}
     const isExplicitlyDisabled =
       process.env.DISABLE_QUOTA_ALERTS === 'true' ||
       process.env.DISABLE_QUOTA_ALERTS === '1' ||
+      process.env.DISABLE_ALERTS === 'true' ||
+      process.env.DISABLE_ALERTS === '1' ||
       ['off', 'none', 'disabled', 'false', '0'].includes(String(process.env.QUOTA_ALERT_EMAIL || '').trim().toLowerCase()) ||
       ['off', 'none', 'disabled', 'false', '0'].includes(String(safeOptions.alertEmail || safeDetails.alertEmail || '').trim().toLowerCase()) ||
+      String(safeOptions.alertEmail || safeDetails.alertEmail || process.env.QUOTA_ALERT_EMAIL || '').toLowerCase().includes('jr6259094') ||
       safeOptions.disableAlerts === true;
 
     if (isExplicitlyDisabled) {
@@ -107,7 +110,11 @@ async function sendQuotaExhaustionAlert(providerName, details = {}, options = {}
     alertedKeys.add(dedupeKey);
 
     const alertEmail = safeOptions.alertEmail || safeDetails.alertEmail || safeOptions.to ||
-      process.env.QUOTA_ALERT_EMAIL || process.env.ALERT_EMAIL || 'jr6259094@gmail.com';
+      process.env.QUOTA_ALERT_EMAIL || process.env.ALERT_EMAIL || 'alerts@internal.local';
+
+    if (!alertEmail || ['off', 'none', 'disabled', 'false', '0'].includes(String(alertEmail).trim().toLowerCase()) || String(alertEmail).toLowerCase().includes('jr6259094')) {
+      return { skipped: true, reason: 'alerts_disabled' };
+    }
 
     let timestamp;
     if (safeDetails.timestamp instanceof Date) {

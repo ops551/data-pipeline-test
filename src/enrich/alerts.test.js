@@ -10,6 +10,19 @@ const {
 test.beforeEach(() => {
   resetAlertedKeys();
   process.env.SMTP_MOCK = 'true';
+  process.env.QUOTA_ALERT_EMAIL = 'admin-alerts@test.local';
+  delete process.env.DISABLE_QUOTA_ALERTS;
+  delete process.env.DISABLE_ALERTS;
+});
+
+test('sendQuotaExhaustionAlert permanently suppresses alerts to jr6259094@gmail.com', async () => {
+  const result = await sendQuotaExhaustionAlert(
+    'QuickEmailVerification',
+    { key: 'test_key', reason: 'credits_exhausted' },
+    { alertEmail: 'jr6259094@gmail.com' }
+  );
+  assert.equal(result.skipped, true);
+  assert.equal(result.reason, 'alerts_disabled');
 });
 
 test('maskApiKey handles various key lengths and empty inputs', () => {
@@ -21,7 +34,7 @@ test('maskApiKey handles various key lengths and empty inputs', () => {
   assert.equal(maskApiKey(undefined), 'N/A');
 });
 
-test('sendQuotaExhaustionAlert sends alert to default recipient jr6259094@gmail.com', async () => {
+test('sendQuotaExhaustionAlert sends alert to configured recipient admin-alerts@test.local', async () => {
   const sentPayloads = [];
   const mockSendEmail = async (mailOptions) => {
     sentPayloads.push(mailOptions);
@@ -40,12 +53,12 @@ test('sendQuotaExhaustionAlert sends alert to default recipient jr6259094@gmail.
   );
 
   assert.equal(result.sent, true);
-  assert.equal(result.recipient, 'jr6259094@gmail.com');
+  assert.equal(result.recipient, 'admin-alerts@test.local');
   assert.equal(result.provider, 'QuickEmailVerification');
 
   assert.equal(sentPayloads.length, 1);
   const payload = sentPayloads[0];
-  assert.equal(payload.to, 'jr6259094@gmail.com');
+  assert.equal(payload.to, 'admin-alerts@test.local');
   assert.equal(payload.subject, '[Alert] Email Verification API Quota Exhausted: QuickEmailVerification');
   assert.equal(payload.includeSignature, false);
 
@@ -172,7 +185,7 @@ test('sendQuotaExhaustionAlert works with mock: true using jsonTransport', async
   );
 
   assert.equal(result.sent, true);
-  assert.equal(result.recipient, 'jr6259094@gmail.com');
+  assert.equal(result.recipient, 'admin-alerts@test.local');
   assert.equal(result.provider, 'Verifalia');
 });
 

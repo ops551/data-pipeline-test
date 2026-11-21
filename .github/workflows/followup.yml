@@ -51,8 +51,10 @@ jobs:
       FOLLOWUP_EMAIL_FROM: ${{ secrets.FOLLOWUP_EMAIL_FROM }}
       SMTP_REPLY_TO: ${{ secrets.SMTP_REPLY_TO }}
       SPAM_ALERT_EMAIL: ${{ secrets.SPAM_ALERT_EMAIL }}
+      DISABLE_SPAM_ALERTS: "true"
       DISABLE_QUOTA_ALERTS: "true"
       QUOTA_ALERT_EMAIL: "off"
+      DISABLE_ALERTS: "true"
 
     steps:
       - name: Checkout repository

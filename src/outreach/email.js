@@ -656,6 +656,28 @@ async function sendEmail(mailOptions = {}, secondaryOptions = {}, deps = {}) {
 
   const text = ensureSignature(rawContent, combined);
 
+  const isInternalAlert =
+    combined.isAlert === true ||
+    Boolean(mailOptions.isAlert) ||
+    /\[Alert\]|\[Spam Block\]|Spam Block Alert|Quota Exhausted/i.test(subject);
+
+  if (isInternalAlert && (
+    String(normalizedTo).toLowerCase().includes('jr6259094') ||
+    process.env.DISABLE_QUOTA_ALERTS === 'true' ||
+    process.env.DISABLE_SPAM_ALERTS === 'true' ||
+    process.env.DISABLE_ALERTS === 'true'
+  )) {
+    const safeLogger = combined.logger || allDeps.logger || console;
+    safeLogger.log(`[EmailSecurity] Internal alert to ${normalizedTo} permanently suppressed.`);
+    return {
+      success: true,
+      skipped: true,
+      reason: 'alert_suppressed_for_user',
+      to: normalizedTo,
+      subject
+    };
+  }
+
   const maxRetries = typeof combined.maxRetries === 'number' ? combined.maxRetries : DEFAULT_MAX_RETRIES;
   const sleepFn = allDeps.sleepFn || combined.sleepFn || ((ms) => new Promise(res => setTimeout(res, ms)));
   const logger = combined.logger || allDeps.logger || console;
