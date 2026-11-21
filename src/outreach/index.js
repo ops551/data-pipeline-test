@@ -25,8 +25,10 @@ const {
 const { isValidEmailAddress: defaultIsValidEmailAddress } = require('../emailAddress');
 const {
   isTargetSic: defaultIsTargetSic,
-  isDisqualifiedCompany: defaultIsDisqualifiedCompany
+  isDisqualifiedCompany: defaultIsDisqualifiedCompany,
+  isDisqualifiedWebsiteContext: defaultIsDisqualifiedWebsiteContext
 } = require('../enrich/sic');
+const { classifyLuxuryWebsiteWithAi: defaultClassifyLuxuryWebsiteWithAi } = require('../enrich/aiClassifier');
 
 const DEFAULT_SIGNATURE_STRING = [
   'Best regards,',
@@ -125,6 +127,7 @@ Environment Variables:
 }
 
 async function runOutreachPipeline(options = {}, deps = {}) {
+  const activeDeps = { ...(options.deps || {}), ...deps };
   const logger = options.logger || console;
 
   const leadsPath = options.leadsPath || process.env.LEADS_PATH || DEFAULT_LEADS_PATH;
@@ -150,22 +153,22 @@ async function runOutreachPipeline(options = {}, deps = {}) {
     ? parseInt(options.delay, 10)
     : (process.env.OUTREACH_DELAY ? parseInt(process.env.OUTREACH_DELAY, 10) : 1000);
 
-  const getLeads = deps.getPendingLeads || defaultGetPendingLeads;
-  const moveLead = deps.moveLeadToSent || defaultMoveLeadToSent;
-  const genEmail = deps.generateEmail || defaultGenerateEmail;
-  const send = deps.sendEmail || defaultSendEmail;
-  const verify = deps.verifyConnection || defaultVerifyConnection;
-  const sleep = deps.sleepFn || ((ms) => new Promise(resolve => setTimeout(resolve, ms)));
-  const parseCsvFn = deps.parseCSV || defaultParseCSV;
-  const isValidEmail = deps.isValidEmailAddress || defaultIsValidEmailAddress;
-  const isSmtpQuotaExceededFn = deps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
-  const isTargetSic = deps.isTargetSic || defaultIsTargetSic;
-  const isDisqualified = deps.isDisqualifiedCompany || defaultIsDisqualifiedCompany;
-  const removeLeadFn = deps.removeLead || defaultRemoveLead;
+  const getLeads = activeDeps.getPendingLeads || defaultGetPendingLeads;
+  const moveLead = activeDeps.moveLeadToSent || defaultMoveLeadToSent;
+  const genEmail = activeDeps.generateEmail || defaultGenerateEmail;
+  const send = activeDeps.sendEmail || defaultSendEmail;
+  const verify = activeDeps.verifyConnection || defaultVerifyConnection;
+  const sleep = activeDeps.sleepFn || ((ms) => new Promise(resolve => setTimeout(resolve, ms)));
+  const parseCsvFn = activeDeps.parseCSV || defaultParseCSV;
+  const isValidEmail = activeDeps.isValidEmailAddress || defaultIsValidEmailAddress;
+  const isSmtpQuotaExceededFn = activeDeps.isSmtpQuotaExceeded || defaultIsSmtpQuotaExceeded;
+  const isTargetSic = activeDeps.isTargetSic || defaultIsTargetSic;
+  const isDisqualified = activeDeps.isDisqualifiedCompany || defaultIsDisqualifiedCompany;
+  const removeLeadFn = activeDeps.removeLead || defaultRemoveLead;
 
   const skipVerify = options.skipVerify !== undefined
     ? Boolean(options.skipVerify)
-    : Boolean(mock || (deps.sendEmail && !options.transporter && !deps.verifyConnection));
+    : Boolean(mock || (activeDeps.sendEmail && !options.transporter && !activeDeps.verifyConnection));
 
   // Pre-flight connection check via verifyConnection (skip if dry-run, mock, or skipVerify)
   if (!dryRun && !mock && !skipVerify) {
@@ -190,7 +193,7 @@ async function runOutreachPipeline(options = {}, deps = {}) {
   }
 
   // Auto-purge any already-sent leads before fetching pending leads
-  const purgeSent = deps.purgeSentFromLeads || defaultPurgeSentFromLeads;
+  const purgeSent = activeDeps.purgeSentFromLeads || defaultPurgeSentFromLeads;
   if (typeof purgeSent === 'function') {
     const purgeResult = purgeSent(leadsPath, sentLeadsPath, { dryRun });
     if (purgeResult && purgeResult.purgedCount > 0) {
@@ -323,6 +326,29 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       continue;
     }
 
+    const websiteContext = lead.website_context || companyInfo.website_context || '';
+    if (websiteContext) {
+      const isDisqualifiedCtx = activeDeps.isDisqualifiedWebsiteContext || defaultIsDisqualifiedWebsiteContext;
+      if (isDisqualifiedCtx(websiteContext)) {
+        logger.warn(`Skipping lead ${companyName} (${companyNum}): non-target sector pattern in website context`);
+        if (!dryRun) {
+          removeLeadFn(companyNum, { leadsPath });
+          logger.log(`Purged disqualified non-target lead ${companyNum} from leads.csv.`);
+        }
+        continue;
+      }
+      const classifyAi = activeDeps.classifyLuxuryWebsiteWithAi || defaultClassifyLuxuryWebsiteWithAi;
+      const aiQual = await classifyAi({ ...companyInfo, ...lead }, websiteContext, options);
+      if (!aiQual.qualified) {
+        logger.warn(`Skipping lead ${companyName} (${companyNum}): AI qualifier rejected - ${aiQual.reason}`);
+        if (!dryRun) {
+          removeLeadFn(companyNum, { leadsPath });
+          logger.log(`Purged lead ${companyNum} rejected by AI qualifier from leads.csv.`);
+        }
+        continue;
+      }
+    }
+
     let isSending = false;
     try {
       // 1. Enrich company data
@@ -350,8 +376,8 @@ async function runOutreachPipeline(options = {}, deps = {}) {
       let body = emailContent.body || emailContent.text || '';
       const hasMandatorySignature = body.includes('Best regards,') && body.includes('Nahid');
       if (!hasMandatorySignature) {
-        const sig = typeof deps.buildSignature === 'function'
-          ? deps.buildSignature()
+        const sig = typeof activeDeps.buildSignature === 'function'
+          ? activeDeps.buildSignature()
           : (typeof buildSignature === 'function' ? buildSignature() : DEFAULT_SIGNATURE_STRING);
         body = `${body.trim()}\n\n${sig}`;
       }

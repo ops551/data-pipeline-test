@@ -187,10 +187,12 @@ function isTargetSic(sicString) {
 
 module.exports = {
   TARGET_SICS,
+  TARGET_SIC_SET,
   TIER_1_SICS,
   TIER_2_SICS,
   TIER_3_SICS,
   EXCLUDED_SICS,
+  EXCLUDED_SIC_SET,
   isTargetSic,
   getSicPriority,
   isDisqualifiedCompany,
