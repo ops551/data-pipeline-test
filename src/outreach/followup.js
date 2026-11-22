@@ -20,6 +20,7 @@ const {
   classifySector,
   getMockEmail
 } = require('./ai');
+const { safeSyncBouncedLeads: defaultSafeSyncBouncedLeads } = require('./bounceSync');
 
 const MAX_FOLLOWUP_AGE_DAYS = 10;
 const DEFAULT_MAX_DAILY_FOLLOWUPS = 100;
@@ -701,6 +702,25 @@ async function runFollowUpPipeline(options = {}, deps = {}) {
 
   const remainingDailyCapacity = Math.max(0, dailyCap - sentTodayCount);
   const effectiveLimit = Math.min(limit, remainingDailyCapacity > 0 ? remainingDailyCapacity : limit);
+
+  // ── Pre-flight Bounce Sync: mark bounced leads BEFORE computing eligibility ──
+  const syncBouncesFn = deps.syncBounces || deps.safeSyncBouncedLeads || defaultSafeSyncBouncedLeads;
+  if (options.skipBounceSync !== true && !isDryRun) {
+    try {
+      const syncRes = await syncBouncesFn({
+        sentLeadsPath,
+        followUpsPath,
+        leadsPath: options.leadsPath,
+        logger,
+        mock: isMock
+      }, deps);
+      if (syncRes && syncRes.modifiedSentLeads > 0) {
+        logger.log(`[FollowUp] Pre-flight bounce sync marked ${syncRes.modifiedSentLeads} lead(s) as bounced.`);
+      }
+    } catch (syncErr) {
+      logger.warn(`[FollowUp] Pre-flight bounce sync skipped: ${syncErr.message}`);
+    }
+  }
 
   const eligibilityResult = getEligibleFollowUps(sentLeadsPath, followUpsPath, {
     now,
