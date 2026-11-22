@@ -637,6 +637,142 @@ function optOutLead(target, options = {}) {
   };
 }
 
+/**
+ * Permanently marks bounced leads in sent_leads.csv, follow_ups.csv, and purges from leads.csv.
+ * 
+ * @param {Array<Object|string>|Object|string} targetBounces - Array of { recipient, messageId } or string email addresses.
+ * @param {Object} options - Custom paths and logger.
+ * @returns {Object} { success: boolean, modifiedSentLeads: number, modifiedFollowUps: number, removedLeads: number, matchedEmails: Array<string> }
+ */
+function markLeadsAsBounced(targetBounces, options = {}) {
+  const sentLeadsPath = options.sentLeadsPath || DEFAULT_SENT_LEADS_PATH;
+  const followUpsPath = options.followUpsPath || DEFAULT_FOLLOWUPS_PATH;
+  const leadsPath = options.leadsPath || DEFAULT_LEADS_PATH;
+
+  const rawList = Array.isArray(targetBounces)
+    ? targetBounces
+    : (targetBounces ? [targetBounces] : []);
+
+  if (rawList.length === 0) {
+    return { success: true, modifiedSentLeads: 0, modifiedFollowUps: 0, removedLeads: 0, matchedEmails: [] };
+  }
+
+  // Normalize targets into Sets
+  const targetEmails = new Set();
+  const targetMessageIds = new Set();
+
+  for (const item of rawList) {
+    if (typeof item === 'string') {
+      const clean = item.trim().toLowerCase();
+      if (clean) targetEmails.add(clean);
+    } else if (item && typeof item === 'object') {
+      if (item.recipient && typeof item.recipient === 'string') {
+        const clean = item.recipient.trim().toLowerCase();
+        if (clean) targetEmails.add(clean);
+      }
+      if (item.email && typeof item.email === 'string') {
+        const clean = item.email.trim().toLowerCase();
+        if (clean) targetEmails.add(clean);
+      }
+      if (item.messageId && typeof item.messageId === 'string') {
+        const cleanMsgId = item.messageId.trim();
+        if (cleanMsgId) {
+          targetMessageIds.add(cleanMsgId);
+          targetMessageIds.add(cleanMsgId.replace(/^<|>$/g, ''));
+        }
+      }
+    }
+  }
+
+  if (targetEmails.size === 0 && targetMessageIds.size === 0) {
+    return { success: true, modifiedSentLeads: 0, modifiedFollowUps: 0, removedLeads: 0, matchedEmails: [] };
+  }
+
+  let modifiedSentLeads = 0;
+  let modifiedFollowUps = 0;
+  let removedLeads = 0;
+  const matchedEmailsSet = new Set();
+
+  // 1. Update sent_leads.csv if exists
+  if (fs.existsSync(sentLeadsPath)) {
+    const sentLeads = parseCSV(sentLeadsPath);
+    let changed = false;
+    for (const row of sentLeads) {
+      const rowEmail = (row.sent_to || '').trim().toLowerCase();
+      const rawMsgId = (row.message_id || '').trim();
+      const cleanMsgId = rawMsgId.replace(/^<|>$/g, '');
+
+      const matchEmail = rowEmail && targetEmails.has(rowEmail);
+      const matchMsgId = (rawMsgId && targetMessageIds.has(rawMsgId)) || (cleanMsgId && targetMessageIds.has(cleanMsgId));
+
+      if (matchEmail || matchMsgId) {
+        if (!/bounce/i.test(String(row.status || ''))) {
+          row.status = 'bounced';
+          changed = true;
+          modifiedSentLeads++;
+          if (rowEmail) matchedEmailsSet.add(rowEmail);
+        }
+      }
+    }
+    if (changed) {
+      writeCSVAtomic(sentLeadsPath, sentLeads, SENT_LEADS_COLUMNS);
+    }
+  }
+
+  // 2. Update follow_ups.csv if exists
+  if (fs.existsSync(followUpsPath)) {
+    const followUps = readFollowUps(followUpsPath);
+    let changed = false;
+    for (const row of followUps) {
+      const rowEmail = (row.sent_to || '').trim().toLowerCase();
+      const rawMsgId = (row.message_id || '').trim();
+      const cleanMsgId = rawMsgId.replace(/^<|>$/g, '');
+
+      const matchEmail = rowEmail && targetEmails.has(rowEmail);
+      const matchMsgId = (rawMsgId && targetMessageIds.has(rawMsgId)) || (cleanMsgId && targetMessageIds.has(cleanMsgId));
+
+      if (matchEmail || matchMsgId) {
+        if (!/bounce/i.test(String(row.status || ''))) {
+          row.status = 'bounced';
+          changed = true;
+          modifiedFollowUps++;
+          if (rowEmail) matchedEmailsSet.add(rowEmail);
+        }
+      }
+    }
+    if (changed) {
+      writeCSVAtomic(followUpsPath, followUps, FOLLOWUPS_COLUMNS);
+    }
+  }
+
+  // 3. Purge from leads.csv if exists
+  if (fs.existsSync(leadsPath)) {
+    const leads = parseCSV(leadsPath);
+    const beforeLen = leads.length;
+    const filtered = [];
+    for (const row of leads) {
+      const rowEmail = (row.email || '').trim().toLowerCase();
+      if (rowEmail && targetEmails.has(rowEmail)) {
+        removedLeads++;
+        matchedEmailsSet.add(rowEmail);
+        continue;
+      }
+      filtered.push(row);
+    }
+    if (filtered.length !== beforeLen) {
+      writeCSVAtomic(leadsPath, filtered, LEADS_COLUMNS);
+    }
+  }
+
+  return {
+    success: true,
+    modifiedSentLeads,
+    modifiedFollowUps,
+    removedLeads,
+    matchedEmails: Array.from(matchedEmailsSet)
+  };
+}
+
 module.exports = {
   DEFAULT_COMPANIES_PATH,
   DEFAULT_LEADS_PATH,
@@ -662,5 +798,6 @@ module.exports = {
   moveLeadsToSent,
   purgeSentFromLeads,
   optOutLead,
+  markLeadsAsBounced,
   writeCSVAtomic
 };

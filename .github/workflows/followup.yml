@@ -55,6 +55,8 @@ jobs:
       DISABLE_QUOTA_ALERTS: "true"
       QUOTA_ALERT_EMAIL: "off"
       DISABLE_ALERTS: "true"
+      IMAP_USER: ${{ secrets.SMTP_USER }}
+      IMAP_PASS: ${{ secrets.SMTP_PASS }}
 
     steps:
       - name: Checkout repository

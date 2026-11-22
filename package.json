@@ -9,6 +9,7 @@
     "outreach": "node src/outreach/index.js",
     "followup": "node src/outreach/followup-cli.js",
     "optout": "node src/outreach/optout-cli.js",
+    "sync-bounces": "node src/outreach/bounceSync-cli.js",
     "test": "node --test",
     "verify": "npm run test",
     "whatsapp": "node src/whatsapp/send.js"
@@ -21,6 +22,7 @@
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "dotenv": "^18.0.1",
+    "imapflow": "^2.12.2",
     "nodemailer": "^10.0.11",
     "puppeteer": "^25.12.0",
     "puppeteer-extra": "^3.3.6",
