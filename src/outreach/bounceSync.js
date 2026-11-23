@@ -382,22 +382,100 @@ async function syncBouncesFromImap(options = {}, deps = {}) {
 }
 
 /**
- * Top-level fail-safe wrapper for invoking bounce synchronization.
- * Guaranteed never to crash the outreach or follow-up pipeline.
+ * Extracts all unique Resend API keys from environment and options.
  */
-async function safeSyncBouncedLeads(options = {}, deps = {}) {
-  const logger = options.logger || console;
-  try {
-    const result = await syncBouncesFromImap(options, deps);
-    if (result && result.modifiedSentLeads > 0) {
-      logger.log(`[BounceSync] Marked ${result.modifiedSentLeads} bounced lead(s) across sent_leads.csv.`);
+function getResendApiKeys(options = {}, env = process.env) {
+  const keys = new Set();
+  const addKey = (val) => {
+    if (!val || typeof val !== 'string') return;
+    for (const part of val.split(',')) {
+      const clean = part.trim();
+      if (clean && clean.startsWith('re_')) {
+        keys.add(clean);
+      }
     }
-    return result;
-  } catch (err) {
-    logger.warn(`[BounceSync] Background sync exception: ${err.message}. Proceeding safely.`);
+  };
+
+  if (options.resendApiKey) addKey(options.resendApiKey);
+  if (options.resendApiKeys) {
+    if (Array.isArray(options.resendApiKeys)) options.resendApiKeys.forEach(addKey);
+    else addKey(options.resendApiKeys);
+  }
+  if (options.apiKey) addKey(options.apiKey);
+
+  if (env) {
+    addKey(env.FOLLOWUP_RESEND_API_KEY);
+    addKey(env.RESEND_API_KEY_FOLLOWUP);
+    addKey(env.RESEND_API_KEY);
+    addKey(env.SMTP_PASS);
+    addKey(env.FOLLOWUP_SMTP_PASS);
+  }
+
+  return Array.from(keys);
+}
+
+/**
+ * Network fetcher for Resend API emails endpoint.
+ */
+function defaultFetchResendEmails(apiKey, options = {}) {
+  return new Promise((resolve, reject) => {
+    const https = require('node:https');
+    const req = https.request({
+      hostname: 'api.resend.com',
+      path: '/emails?limit=100',
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'User-Agent': 'RecentUKCompanies-BounceSync/1.0'
+      },
+      timeout: options.timeoutMs || 10000
+    }, (res) => {
+      let body = '';
+      res.on('data', chunk => { body += chunk; });
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) {
+          try {
+            const data = JSON.parse(body);
+            resolve(Array.isArray(data.data) ? data.data : []);
+          } catch (e) {
+            reject(new Error(`Failed to parse Resend API response: ${e.message}`));
+          }
+        } else {
+          reject(new Error(`Resend API returned status ${res.statusCode}: ${body.slice(0, 200)}`));
+        }
+      });
+    });
+
+    req.on('timeout', () => {
+      req.destroy();
+      reject(new Error('Resend API request timed out'));
+    });
+
+    req.on('error', (err) => {
+      reject(err);
+    });
+
+    req.end();
+  });
+}
+
+/**
+ * Connects directly to Resend API across all configured accounts,
+ * retrieves bounced emails (last_event: 'bounced' / 'complained'),
+ * and updates local CSV files safely (row preserved, status marked 'bounced').
+ */
+async function syncBouncesFromResend(options = {}, deps = {}) {
+  const logger = options.logger || console;
+  const isMock = Boolean(options.mock || process.env.SMTP_MOCK === 'true' || process.env.RESEND_MOCK === 'true');
+  const env = options.env || process.env;
+  const apiKeys = deps.getResendApiKeys ? deps.getResendApiKeys(options, env) : getResendApiKeys(options, env);
+
+  if (isMock && !deps.fetchResendEmails) {
+    logger.log('[BounceSync:Resend] Mock mode enabled, skipping remote Resend API call.');
     return {
-      success: false,
-      error: err.message,
+      success: true,
+      skipped: true,
+      reason: 'mock_mode',
       count: 0,
       modifiedSentLeads: 0,
       modifiedFollowUps: 0,
@@ -405,6 +483,138 @@ async function safeSyncBouncedLeads(options = {}, deps = {}) {
       matchedEmails: []
     };
   }
+
+  if (apiKeys.length === 0) {
+    logger.log('[BounceSync:Resend] No Resend API keys found. Skipping Resend bounce sync.');
+    return {
+      success: true,
+      skipped: true,
+      reason: 'no_api_keys',
+      count: 0,
+      modifiedSentLeads: 0,
+      modifiedFollowUps: 0,
+      removedLeads: 0,
+      matchedEmails: []
+    };
+  }
+
+  const fetchFn = deps.fetchResendEmails || defaultFetchResendEmails;
+  const bouncesFound = [];
+  const seenRecipients = new Set();
+
+  for (const key of apiKeys) {
+    try {
+      const emailList = await fetchFn(key, options);
+      if (Array.isArray(emailList)) {
+        for (const item of emailList) {
+          const event = String(item.last_event || '').trim().toLowerCase();
+          if (event === 'bounced' || event === 'complained' || event === 'delivery_failed') {
+            const toList = Array.isArray(item.to) ? item.to : [item.to];
+            for (const rawTo of toList) {
+              const cleanTo = (rawTo || '').trim().toLowerCase();
+              if (cleanTo && !isExcludedRecipient(cleanTo, options) && !seenRecipients.has(cleanTo)) {
+                seenRecipients.add(cleanTo);
+                bouncesFound.push({
+                  recipient: cleanTo,
+                  messageId: item.message_id || null,
+                  status: '550',
+                  diagnostic: `Resend event: ${event}`,
+                  source: 'resend'
+                });
+              }
+            }
+          }
+        }
+      }
+    } catch (err) {
+      logger.warn(`[BounceSync:Resend] Error querying Resend key (...${key.slice(-6)}): ${err.message}`);
+    }
+  }
+
+  let updateResult = { modifiedSentLeads: 0, modifiedFollowUps: 0, removedLeads: 0, matchedEmails: [] };
+  if (bouncesFound.length > 0) {
+    const applyFn = deps.markLeadsAsBounced || markLeadsAsBounced;
+    updateResult = applyFn(bouncesFound, options);
+  }
+
+  return {
+    success: true,
+    count: bouncesFound.length,
+    modifiedSentLeads: updateResult.modifiedSentLeads,
+    modifiedFollowUps: updateResult.modifiedFollowUps,
+    removedLeads: updateResult.removedLeads,
+    matchedEmails: updateResult.matchedEmails
+  };
+}
+
+/**
+ * Top-level fail-safe wrapper for invoking bounce synchronization.
+ * Synchronizes from both Resend API (primary) and Gmail IMAP (secondary).
+ * Guaranteed never to crash the outreach or follow-up pipeline.
+ */
+async function safeSyncBouncedLeads(options = {}, deps = {}) {
+  const logger = options.logger || console;
+  let totalModifiedSent = 0;
+  let totalModifiedFollowUps = 0;
+  let totalRemovedLeads = 0;
+  const allMatchedEmails = new Set();
+  let resendResult = null;
+  let imapResult = null;
+
+  // 1. Primary: Direct Resend API Bounce Sync
+  const shouldRunResend = options.skipResend !== true &&
+                          options.resend !== false &&
+                          (!deps.createImapClient || deps.fetchResendEmails || deps.syncBouncesFromResend);
+
+  if (shouldRunResend) {
+    try {
+      const resendFn = deps.syncBouncesFromResend || syncBouncesFromResend;
+      resendResult = await resendFn(options, deps);
+      if (resendResult) {
+        totalModifiedSent += resendResult.modifiedSentLeads || 0;
+        totalModifiedFollowUps += resendResult.modifiedFollowUps || 0;
+        totalRemovedLeads += resendResult.removedLeads || 0;
+        (resendResult.matchedEmails || []).forEach(e => allMatchedEmails.add(e));
+      }
+    } catch (err) {
+      logger.warn(`[BounceSync] Resend bounce sync warning: ${err.message}. Proceeding safely.`);
+    }
+  }
+
+  // 2. Secondary / Fallback: Gmail IMAP Bounce Sync
+  try {
+    const imapFn = deps.syncBouncesFromImap || syncBouncesFromImap;
+    imapResult = await imapFn(options, deps);
+    if (imapResult) {
+      totalModifiedSent += imapResult.modifiedSentLeads || 0;
+      totalModifiedFollowUps += imapResult.modifiedFollowUps || 0;
+      totalRemovedLeads += imapResult.removedLeads || 0;
+      (imapResult.matchedEmails || []).forEach(e => allMatchedEmails.add(e));
+    }
+  } catch (err) {
+    logger.warn(`[BounceSync] IMAP bounce sync warning: ${err.message}. Proceeding safely.`);
+  }
+
+  const isAllSuccess = (!resendResult || resendResult.success !== false) && (!imapResult || imapResult.success !== false);
+  const combinedError = (resendResult && resendResult.error) || (imapResult && imapResult.error) || null;
+
+  const combined = {
+    success: isAllSuccess,
+    ...(combinedError ? { error: combinedError } : {}),
+    resend: resendResult,
+    imap: imapResult,
+    count: (resendResult?.count || 0) + (imapResult?.count || 0),
+    modifiedSentLeads: totalModifiedSent,
+    modifiedFollowUps: totalModifiedFollowUps,
+    removedLeads: totalRemovedLeads,
+    matchedEmails: Array.from(allMatchedEmails)
+  };
+
+  if (totalModifiedSent > 0 || totalModifiedFollowUps > 0) {
+    logger.log(`[BounceSync] Marked ${totalModifiedSent} in sent_leads.csv and ${totalModifiedFollowUps} in follow_ups.csv as bounced.`);
+  }
+
+  return combined;
 }
 
 module.exports = {
@@ -415,5 +625,8 @@ module.exports = {
   isExcludedRecipient,
   parseBounceMessage,
   syncBouncesFromImap,
+  getResendApiKeys,
+  defaultFetchResendEmails,
+  syncBouncesFromResend,
   safeSyncBouncedLeads
 };

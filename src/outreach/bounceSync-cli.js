@@ -5,7 +5,7 @@ require('dotenv').config({ quiet: true });
 const { safeSyncBouncedLeads } = require('./bounceSync');
 
 async function main() {
-  console.log('[BounceSync CLI] Connecting to Gmail IMAP to scan for delivery failure notices...');
+  console.log('[BounceSync CLI] Connecting to Resend API and Gmail IMAP to scan for delivery failure notices...');
   const res = await safeSyncBouncedLeads({
     logger: console
   });
