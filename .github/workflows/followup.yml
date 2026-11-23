@@ -55,6 +55,7 @@ jobs:
       DISABLE_QUOTA_ALERTS: "true"
       QUOTA_ALERT_EMAIL: "off"
       DISABLE_ALERTS: "true"
+      SMTP_PASS: ${{ secrets.SMTP_PASS }}
       IMAP_USER: ${{ secrets.SMTP_USER }}
       IMAP_PASS: ${{ secrets.SMTP_PASS }}
 

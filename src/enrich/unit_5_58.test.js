@@ -17,6 +17,7 @@ const {
 const { filterCandidates } = require('./filter');
 const { extractUkPostcode, searchCompany } = require('./search');
 const { classifySector, SECTOR_CONFIGS } = require('../outreach/ai');
+const { TARGET_LUXURY_PRODUCTS } = require('./aiClassifier');
 const { parseCSV } = require('./csvParser');
 
 test('Unit 5.58 - SIC Priority Scoring: Tier 1 returns 100', () => {
@@ -281,6 +282,10 @@ test('Unit 5.58 - Active leads.csv and legacy_leads_archive.csv integrity', () =
 
   const qualifiedTypes = new Set([
     ...Object.keys(SECTOR_CONFIGS),
+    ...(TARGET_LUXURY_PRODUCTS || []),
+    'Motorcycles, Superbikes, Luxury Bikes',
+    'Luxury Cars, Supercars, Sports Cars, Classic Cars',
+    'Luxury Watches, Fine Jewellery, Diamonds, Gold & Silver Bullion',
     'restaurant'
   ]);
 

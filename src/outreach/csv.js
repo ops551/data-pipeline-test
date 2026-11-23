@@ -698,7 +698,7 @@ function markLeadsAsBounced(targetBounces, options = {}) {
     const sentLeads = parseCSV(sentLeadsPath);
     let changed = false;
     for (const row of sentLeads) {
-      const rowEmail = (row.sent_to || '').trim().toLowerCase();
+      const rowEmail = (row.sent_to || row.email || '').trim().toLowerCase();
       const rawMsgId = (row.message_id || '').trim();
       const cleanMsgId = rawMsgId.replace(/^<|>$/g, '');
 
