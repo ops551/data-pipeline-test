@@ -552,6 +552,53 @@ function appendFollowUp(filePath, followup) {
 }
 
 /**
+ * Helper to check if a lead's email, company number, or domain matches an opt-out target.
+ */
+function isOptOutMatch(emailOrList, companyNumber, target) {
+  if (!target) return false;
+  const cleanTarget = String(target).trim().toLowerCase();
+
+  // 1. Company Number match
+  if (companyNumber && String(companyNumber).trim().toLowerCase() === cleanTarget) {
+    return true;
+  }
+
+  // 2. Email or Domain match
+  if (emailOrList) {
+    const raw = String(emailOrList).toLowerCase();
+    const emails = raw.split(/[\s,;]+/).map(e => e.trim()).filter(Boolean);
+
+    // Exact email match
+    if (emails.includes(cleanTarget) || raw === cleanTarget) {
+      return true;
+    }
+
+    // Substring match for email
+    if (raw.includes(cleanTarget)) {
+      return true;
+    }
+
+    // Domain matching: e.g. "@essexporschespecialist.co.uk" or "essexporschespecialist.co.uk"
+    let domain = '';
+    if (cleanTarget.startsWith('@')) {
+      domain = cleanTarget.slice(1);
+    } else if (!cleanTarget.includes('@') && cleanTarget.includes('.')) {
+      domain = cleanTarget;
+    }
+
+    if (domain) {
+      for (const email of emails) {
+        if (email.endsWith('@' + domain) || email === domain) {
+          return true;
+        }
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
  * Permanently suppresses an email address or company number from future outreach & follow-ups.
  * 
  * 1. Sets status: 'opt_out' in sent_leads.csv.
@@ -577,9 +624,9 @@ function optOutLead(target, options = {}) {
     const sentLeads = parseCSV(sentLeadsPath);
     let changed = false;
     for (const row of sentLeads) {
-      const matchEmail = (row.sent_to && row.sent_to.toLowerCase() === cleanTarget) ||
-                         (row.emails && row.emails.toLowerCase().includes(cleanTarget));
-      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      const matchEmail = (row.sent_to && isOptOutMatch(row.sent_to, null, cleanTarget)) ||
+                         (row.emails && isOptOutMatch(row.emails, null, cleanTarget));
+      const matchCompNum = row.company_number && isOptOutMatch(null, row.company_number, cleanTarget);
       if (matchEmail || matchCompNum) {
         if (row.status !== 'opt_out') {
           row.status = 'opt_out';
@@ -598,8 +645,8 @@ function optOutLead(target, options = {}) {
     const followUps = readFollowUps(followUpsPath);
     let changed = false;
     for (const row of followUps) {
-      const matchEmail = row.sent_to && row.sent_to.toLowerCase() === cleanTarget;
-      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      const matchEmail = row.sent_to && isOptOutMatch(row.sent_to, null, cleanTarget);
+      const matchCompNum = row.company_number && isOptOutMatch(null, row.company_number, cleanTarget);
       if (matchEmail || matchCompNum) {
         if (row.status !== 'opt_out') {
           row.status = 'opt_out';
@@ -618,8 +665,8 @@ function optOutLead(target, options = {}) {
     const leads = parseCSV(leadsPath);
     const beforeLen = leads.length;
     const filtered = leads.filter(row => {
-      const matchEmail = (row.emails && row.emails.toLowerCase().includes(cleanTarget));
-      const matchCompNum = row.company_number && row.company_number.toLowerCase() === cleanTarget;
+      const matchEmail = row.emails && isOptOutMatch(row.emails, null, cleanTarget);
+      const matchCompNum = row.company_number && isOptOutMatch(null, row.company_number, cleanTarget);
       return !(matchEmail || matchCompNum);
     });
     if (filtered.length !== beforeLen) {
@@ -782,6 +829,7 @@ module.exports = {
   SENT_LEADS_COLUMNS,
   FOLLOWUPS_COLUMNS,
   FOLLOWUP_COLUMNS,
+  parseCSV,
   readLeads,
   getPendingLeads,
   readSentCompanyNumbers,
