@@ -1,7 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { parseCSV, writeCSV } = require('./csvParser');
-const { isTargetSic, getSicPriority, isDisqualifiedCompany } = require('./sic');
+const { isTargetSic, getSicPriority, isDisqualifiedCompany, getLuxurySortRank } = require('./sic');
 
 const AGENT_ADDRESS_THRESHOLD = 20;
 
@@ -108,12 +108,17 @@ function filterCandidates(
     'agent_address'
   ];
 
-  // Prioritize Tier 1 prime luxury/showroom niches first, then freshest candidates
+  // Prioritize Tier 1 prime luxury physical product niches first (Rank 2 Showrooms/Assets > Rank 1 Luxury Retail > Rank 0 Legacy), then freshest candidates
   candidates.sort((a, b) => {
     const scoreA = getSicPriority(a.sic_codes);
     const scoreB = getSicPriority(b.sic_codes);
     if (scoreB !== scoreA) {
       return scoreB - scoreA;
+    }
+    const luxA = getLuxurySortRank(a.sic_codes);
+    const luxB = getLuxurySortRank(b.sic_codes);
+    if (luxB !== luxA) {
+      return luxB - luxA;
     }
     const dateA = a.date_of_creation || '';
     const dateB = b.date_of_creation || '';

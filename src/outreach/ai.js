@@ -536,8 +536,11 @@ function classifySector(company = {}) {
     if (code === "45400") {
       return "bike_showroom";
     }
-    if (code === "47770" || code === "95250") {
+    if (code === "47770" || code === "95250" || code === "46480" || code === "32120") {
       return "watch_showroom";
+    }
+    if (code === "30120") {
+      return "ecommerce";
     }
     if (code === "86230") {
       return "dentistry";

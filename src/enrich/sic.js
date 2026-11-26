@@ -1,14 +1,29 @@
+// Rank A (Prime High-Ticket Showrooms & Assets): Cars, Supercars, Motorcycles, Watches, Jewellery, Yachts, Art & Antiques
+const PRIME_LUXURY_ASSET_SICS = [
+  '45111', '45112', '45190',
+  '45400',
+  '47770', '95250', '46480', '32120',
+  '30120',
+  '47781', '47791'
+];
+
+// Rank B (Luxury Retail & Home/Lifestyle Goods): Fashion, Footwear, Leather, Perfumes, Furniture, Audio, Instruments, Premium Sports
+const SECONDARY_LUXURY_RETAIL_SICS = [
+  '47710', '47721', '47722', '47750',
+  '47599', '47591', '47430', '47640', '47789'
+];
+
+// Target luxury physical product & asset SIC codes (aligned with aiClassifier TARGET_LUXURY_PRODUCTS)
+const LUXURY_PHYSICAL_PRODUCT_SICS = [
+  ...PRIME_LUXURY_ASSET_SICS,
+  ...SECONDARY_LUXURY_RETAIL_SICS
+];
+
 // Target SIC codes that represent our high-converting sectors
 const TIER_1_SICS = [
-  // 1. Car Showrooms & Dealerships
-  '45111', '45112', '45190',
-  // 2. Motorbike & Superbike Dealers
-  '45400',
-  // 3. Luxury Watches & Jewellery
-  '47770', '95250',
-  // 4. Bespoke Kitchens & Interior Design (High-ticket architectural)
+  ...LUXURY_PHYSICAL_PRODUCT_SICS,
+  // Legacy Tier 1 codes retained for priority backward compatibility (ranked after luxury product SICs in filter.js)
   '74100',
-  // 5. Fine Dining & Luxury Hospitality (strictly licensed dining and boutique hotels only)
   '56101', '55100'
 ];
 
@@ -32,6 +47,8 @@ const TARGET_SICS = [
 
 // SPV / holding / dormant / corporate shell codes, tech/SaaS, general trades, clinics, weddings, travel, and fast food to exclude
 const EXCLUDED_SICS = [
+  // Grocery, supermarkets, generic convenience/food retail & chemist/medical retail (never luxury assets)
+  '47110', '47190', '47210', '47220', '47230', '47240', '47290', '47730', '47741', '47749',
   // Fast food, takeaways, unlicensed cafes, mobile stalls, and generic drinking pubs (strictly non-luxury)
   '56102', '56103', '56210', '56290', '56301', '56302', '55201', '55202', '55209', '55300',
   // Construction, plumbing, electrical, carpentry/joinery fitting, and general trades (strictly non-target)
@@ -62,10 +79,45 @@ const EXCLUDED_SICS = [
 ];
 
 const TARGET_SIC_SET = new Set(TARGET_SICS);
+const PRIME_LUXURY_ASSET_SIC_SET = new Set(PRIME_LUXURY_ASSET_SICS);
+const SECONDARY_LUXURY_RETAIL_SIC_SET = new Set(SECONDARY_LUXURY_RETAIL_SICS);
+const LUXURY_PHYSICAL_PRODUCT_SIC_SET = new Set(LUXURY_PHYSICAL_PRODUCT_SICS);
 const TIER_1_SET = new Set(TIER_1_SICS);
 const TIER_2_SET = new Set(TIER_2_SICS);
 const TIER_3_SET = new Set(TIER_3_SICS);
 const EXCLUDED_SIC_SET = new Set(EXCLUDED_SICS);
+
+/**
+ * Returns luxury physical product sub-rank within Tier 1:
+ *  2 = Prime luxury showrooms & assets (Cars, Bikes, Watches, Jewellery, Yachts, Art/Antiques)
+ *  1 = Luxury retail goods (Fashion, Footwear, Leather, Perfumes, Furniture, Audio, Sports)
+ *  0 = Non-luxury-asset / legacy Tier 1 (Restaurants, Hotels, Solo design) or excluded
+ */
+function getLuxurySortRank(sicString) {
+  if (!sicString) return 0;
+  const raw = Array.isArray(sicString) ? sicString.join(';') : String(sicString || '');
+  const codes = raw
+    .split(/[;,]/)
+    .map(c => c.trim())
+    .filter(Boolean);
+
+  if (codes.length === 0) return 0;
+  for (const code of codes) {
+    if (EXCLUDED_SIC_SET.has(code)) return 0;
+  }
+  if (codes.some(code => PRIME_LUXURY_ASSET_SIC_SET.has(code))) return 2;
+  if (codes.some(code => SECONDARY_LUXURY_RETAIL_SIC_SET.has(code))) return 1;
+  return 0;
+}
+
+/**
+ * Returns true if any SIC code belongs to a core luxury physical product/asset sector
+ * (and none are excluded). Used to prioritize pure luxury companies ahead of legacy
+ * restaurant/hotel/solo-design Tier 1 codes during candidate queue sorting.
+ */
+function isLuxuryPhysicalProductSic(sicString) {
+  return getLuxurySortRank(sicString) > 0;
+}
 
 const NEGATIVE_DISQUALIFY_PATTERNS = Object.freeze([
   /\b(?:charity|charities|charitable|foundation|fundraising|non[- ]?profit|social housing|cic|c\.i\.c|community trust|charitable trust)\b/i,
@@ -188,12 +240,18 @@ function isTargetSic(sicString) {
 module.exports = {
   TARGET_SICS,
   TARGET_SIC_SET,
+  PRIME_LUXURY_ASSET_SICS,
+  SECONDARY_LUXURY_RETAIL_SICS,
+  LUXURY_PHYSICAL_PRODUCT_SICS,
+  LUXURY_PHYSICAL_PRODUCT_SIC_SET,
   TIER_1_SICS,
   TIER_2_SICS,
   TIER_3_SICS,
   EXCLUDED_SICS,
   EXCLUDED_SIC_SET,
   isTargetSic,
+  isLuxuryPhysicalProductSic,
+  getLuxurySortRank,
   getSicPriority,
   isDisqualifiedCompany,
   isDisqualifiedWebsiteContext,
