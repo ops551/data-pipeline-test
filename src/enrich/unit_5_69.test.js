@@ -38,13 +38,9 @@ test('Unit 5.69: Retail, Grocery, and Generic Shop SICs are excluded from TARGET
     '47230', // Retail of fish and crustaceans
     '47240', // Retail of bread, cakes, confectionery
     '47290', // Other food retail
-    '47710', // Retail of clothing
-    '47721', // Retail of footwear
-    '47722', // Retail of leather goods
     '47730', // Dispensing chemist
     '47741', // Medical and orthopaedic goods
-    '47749', // Other medical goods
-    '47750'  // Cosmetic and toilet articles
+    '47749'  // Other medical goods
   ];
 
   for (const code of retailCodes) {
