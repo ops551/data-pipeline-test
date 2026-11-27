@@ -1,2 +1,1 @@
 company_number,company_name,date_of_creation,type,emails,phones,whatsapp_candidate,status,sources,website_url,website_context,person_name,job_title,contact_type,email_source_url,role_source_url,pattern_detected,pattern_sample_count,pattern_confidence,verification_status,fallback_used
-17074930,KEDZE MOTOR GROUP LTD,2026-03-06,car_showroom,info@kedzemotorgroup.co.uk,+447496932739; +447991855615,yes,lead,officers_api; web_scrape,,,Roosvelt Kedze Kery,director,person_fallback,,,,,,exact_match,yes
